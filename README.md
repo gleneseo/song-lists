@@ -1,6 +1,6 @@
-# gleneseo-ts-template
+# song-lists
 
-TypeScript project template.
+Songs and lists
 
 ## Requirements
 

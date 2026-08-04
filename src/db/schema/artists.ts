@@ -1,11 +1,4 @@
-import {
-  integer,
-  pgTable,
-  serial,
-  text,
-  timestamp,
-  uuid,
-} from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import users from "./users.js";
 
@@ -14,7 +7,7 @@ const artists = pgTable("artists", {
   resource_id: uuid("resource_id").defaultRandom().notNull().unique(),
   name: text("name").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  createdBy: integer("created_by")
+  createdBy: uuid("created_by")
     .notNull()
     .references(() => users.id),
 });

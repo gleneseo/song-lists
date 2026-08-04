@@ -20,7 +20,6 @@ describe("users", () => {
 
     expect(columnNames).toEqual([
       "id",
-      "resource_id",
       "email",
       "full_name",
       "display_name",
@@ -30,14 +29,10 @@ describe("users", () => {
     ]);
   });
 
-  it("has a primary key on id", () => {
+  it("has a randomly-generated uuid primary key", () => {
     expect(users.id.primary).toBe(true);
-  });
-
-  it("requires a unique resource_id", () => {
-    expect(users.resource_id.notNull).toBe(true);
-    expect(users.resource_id.isUnique).toBe(true);
-    expect(users.resource_id.hasDefault).toBe(true);
+    expect(users.id.columnType).toBe("PgUUID");
+    expect(users.id.hasDefault).toBe(true);
   });
 
   it("requires a unique email", () => {

@@ -49,6 +49,7 @@ describe("artists", () => {
     const { foreignKeys } = getTableConfig(artists);
 
     expect(artists.createdBy.notNull).toBe(true);
+    expect(artists.createdBy.columnType).toBe(users.id.columnType);
     expect(foreignKeys).toHaveLength(1);
 
     const reference = foreignKeys[0]?.reference();

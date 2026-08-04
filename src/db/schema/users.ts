@@ -1,12 +1,5 @@
 import { relations } from "drizzle-orm";
-import {
-  pgEnum,
-  pgTable,
-  serial,
-  text,
-  timestamp,
-  uuid,
-} from "drizzle-orm/pg-core";
+import { pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import artists from "./artists.ts";
 
 const USER_ROLE = {
@@ -21,8 +14,7 @@ const userRole = pgEnum(
 );
 
 const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  resource_id: uuid("resource_id").defaultRandom().notNull().unique(),
+  id: uuid("id").defaultRandom().primaryKey(),
   email: text("email").notNull().unique(),
   fullName: text("full_name"),
   displayName: text("display_name").unique(),

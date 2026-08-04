@@ -10,7 +10,12 @@ export default defineConfig({
         "100": true,
       },
       include: ["src"],
-      exclude: ["dist", "src/index.ts"],
+      exclude: [
+        "dist",
+        "src/index.ts",
+        "src/db/migrations/**",
+        "src/db/docs/**",
+      ],
       reportsDirectory: ".coverage",
     },
   },

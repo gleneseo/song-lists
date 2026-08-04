@@ -72,7 +72,7 @@ describe("users", () => {
     expect(users.lastName.notNull).toBe(false);
   });
 
-  it("defaults role to USER and enumerates all roles", () => {
+  it("defaults role to USER and allows any role string", () => {
     expect(USER_ROLE).toEqual({
       USER: "user",
       ADMIN: "admin",
@@ -80,7 +80,7 @@ describe("users", () => {
     });
     expect(users.role.notNull).toBe(true);
     expect(users.role.default).toBe(USER_ROLE.USER);
-    expect(users.role.enumValues).toEqual(Object.values(USER_ROLE));
+    expect(users.role.columnType).toBe("PgText");
   });
 
   it("makes bio optional", () => {

@@ -2,7 +2,6 @@ import { relations } from "drizzle-orm";
 import {
   type AnyPgColumn,
   boolean,
-  pgEnum,
   pgTable,
   text,
   timestamp,
@@ -16,11 +15,6 @@ const USER_ROLE = {
   MANAGER: "manager",
 } as const;
 
-const userRole = pgEnum(
-  "user_role",
-  Object.values(USER_ROLE) as [string, ...string[]],
-);
-
 const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   email: text("email").notNull().unique(),
@@ -28,7 +22,7 @@ const users = pgTable("users", {
   name: text("name").notNull(),
   firstName: text("first_name"),
   lastName: text("last_name"),
-  role: userRole("role").default(USER_ROLE.USER).notNull(),
+  role: text("role").default(USER_ROLE.USER).notNull(),
   bio: text("bio"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   createdBy: uuid("created_by").references((): AnyPgColumn => users.id),

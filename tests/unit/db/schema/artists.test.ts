@@ -6,6 +6,15 @@ import artists, {
 } from "../../../../src/db/schema/artists.ts";
 import users from "../../../../src/db/schema/users.ts";
 
+function findForeignKeyFrom(
+  foreignKeys: ReturnType<typeof getTableConfig>["foreignKeys"],
+  column: unknown,
+) {
+  return foreignKeys.find(
+    (foreignKey) => foreignKey.reference().columns[0] === column,
+  );
+}
+
 describe("artists", () => {
   it("is named artists", () => {
     const { name } = getTableConfig(artists);
@@ -23,6 +32,8 @@ describe("artists", () => {
       "name",
       "created_at",
       "created_by",
+      "updated_at",
+      "updated_by",
     ]);
   });
 
@@ -47,21 +58,34 @@ describe("artists", () => {
 
   it("requires created_by and references the creating user", () => {
     const { foreignKeys } = getTableConfig(artists);
+    const foreignKey = findForeignKeyFrom(foreignKeys, artists.createdBy);
 
     expect(artists.createdBy.notNull).toBe(true);
     expect(artists.createdBy.columnType).toBe(users.id.columnType);
-    expect(foreignKeys).toHaveLength(1);
-
-    const reference = foreignKeys[0]?.reference();
-
-    expect(reference?.foreignTable).toBe(users);
-    expect(reference?.foreignColumns).toEqual([users.id]);
+    expect(foreignKey?.reference().foreignTable).toBe(users);
+    expect(foreignKey?.reference().foreignColumns).toEqual([users.id]);
   });
 
-  it("relates each artist to its creator", () => {
+  it("defaults updated_at to now", () => {
+    expect(artists.updatedAt.notNull).toBe(true);
+    expect(artists.updatedAt.hasDefault).toBe(true);
+  });
+
+  it("requires updated_by and references the last updating user", () => {
+    const { foreignKeys } = getTableConfig(artists);
+    const foreignKey = findForeignKeyFrom(foreignKeys, artists.updatedBy);
+
+    expect(artists.updatedBy.notNull).toBe(true);
+    expect(artists.updatedBy.columnType).toBe(users.id.columnType);
+    expect(foreignKey?.reference().foreignTable).toBe(users);
+    expect(foreignKey?.reference().foreignColumns).toEqual([users.id]);
+  });
+
+  it("relates each artist to its creator and last updater", () => {
     const helpers = createTableRelationsHelpers(artists);
-    const { creator } = artistsRelations.config(helpers);
+    const { creator, updater } = artistsRelations.config(helpers);
 
     expect(creator.referencedTable).toBe(users);
+    expect(updater.referencedTable).toBe(users);
   });
 });

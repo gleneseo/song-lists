@@ -7,6 +7,15 @@ import users, {
   usersRelations,
 } from "../../../../src/db/schema/users.ts";
 
+function findForeignKeyFrom(
+  foreignKeys: ReturnType<typeof getTableConfig>["foreignKeys"],
+  column: unknown,
+) {
+  return foreignKeys.find(
+    (foreignKey) => foreignKey.reference().columns[0] === column,
+  );
+}
+
 describe("users", () => {
   it("is named users", () => {
     const { name } = getTableConfig(users);
@@ -21,11 +30,16 @@ describe("users", () => {
     expect(columnNames).toEqual([
       "id",
       "email",
-      "full_name",
-      "display_name",
+      "email_verified",
+      "name",
+      "first_name",
+      "last_name",
       "role",
-      "notes",
+      "bio",
       "created_at",
+      "created_by",
+      "updated_at",
+      "updated_by",
     ]);
   });
 
@@ -40,13 +54,22 @@ describe("users", () => {
     expect(users.email.isUnique).toBe(true);
   });
 
-  it("makes full_name optional", () => {
-    expect(users.fullName.notNull).toBe(false);
+  it("defaults email_verified to false", () => {
+    expect(users.emailVerified.notNull).toBe(true);
+    expect(users.emailVerified.default).toBe(false);
   });
 
-  it("makes display_name optional but unique", () => {
-    expect(users.displayName.notNull).toBe(false);
-    expect(users.displayName.isUnique).toBe(true);
+  it("requires a name", () => {
+    expect(users.name.notNull).toBe(true);
+    expect(users.name.isUnique).toBe(false);
+  });
+
+  it("makes first_name optional", () => {
+    expect(users.firstName.notNull).toBe(false);
+  });
+
+  it("makes last_name optional", () => {
+    expect(users.lastName.notNull).toBe(false);
   });
 
   it("defaults role to USER and enumerates all roles", () => {
@@ -60,8 +83,8 @@ describe("users", () => {
     expect(users.role.enumValues).toEqual(Object.values(USER_ROLE));
   });
 
-  it("makes notes optional", () => {
-    expect(users.notes.notNull).toBe(false);
+  it("makes bio optional", () => {
+    expect(users.bio.notNull).toBe(false);
   });
 
   it("defaults created_at to now", () => {
@@ -69,10 +92,42 @@ describe("users", () => {
     expect(users.createdAt.hasDefault).toBe(true);
   });
 
-  it("relates each user to the artists they created", () => {
-    const helpers = createTableRelationsHelpers(users);
-    const { artists: relatedArtists } = usersRelations.config(helpers);
+  it("defaults updated_at to now", () => {
+    expect(users.updatedAt.notNull).toBe(true);
+    expect(users.updatedAt.hasDefault).toBe(true);
+  });
 
-    expect(relatedArtists.referencedTable).toBe(artists);
+  it("allows created_by to reference the user that created this user", () => {
+    const { foreignKeys } = getTableConfig(users);
+    const foreignKey = findForeignKeyFrom(foreignKeys, users.createdBy);
+
+    expect(users.createdBy.notNull).toBe(false);
+    expect(foreignKey?.reference().foreignTable).toBe(users);
+    expect(foreignKey?.reference().foreignColumns).toEqual([users.id]);
+  });
+
+  it("allows updated_by to reference the user that last updated this user", () => {
+    const { foreignKeys } = getTableConfig(users);
+    const foreignKey = findForeignKeyFrom(foreignKeys, users.updatedBy);
+
+    expect(users.updatedBy.notNull).toBe(false);
+    expect(foreignKey?.reference().foreignTable).toBe(users);
+    expect(foreignKey?.reference().foreignColumns).toEqual([users.id]);
+  });
+
+  it("relates each user to the artists they created and last updated", () => {
+    const helpers = createTableRelationsHelpers(users);
+    const { createdArtists, updatedArtists } = usersRelations.config(helpers);
+
+    expect(createdArtists.referencedTable).toBe(artists);
+    expect(updatedArtists.referencedTable).toBe(artists);
+  });
+
+  it("relates each user to who created and last updated it", () => {
+    const helpers = createTableRelationsHelpers(users);
+    const { creator, updater } = usersRelations.config(helpers);
+
+    expect(creator.referencedTable).toBe(users);
+    expect(updater.referencedTable).toBe(users);
   });
 });

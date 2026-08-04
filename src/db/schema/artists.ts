@@ -10,12 +10,22 @@ const artists = pgTable("artists", {
   createdBy: uuid("created_by")
     .notNull()
     .references(() => users.id),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  updatedBy: uuid("updated_by")
+    .notNull()
+    .references(() => users.id),
 });
 
 const artistsRelations = relations(artists, ({ one }) => ({
   creator: one(users, {
     fields: [artists.createdBy],
     references: [users.id],
+    relationName: "artistCreator",
+  }),
+  updater: one(users, {
+    fields: [artists.updatedBy],
+    references: [users.id],
+    relationName: "artistUpdater",
   }),
 }));
 

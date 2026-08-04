@@ -40,38 +40,44 @@ function findUnexportedNames(
     .map(([exportName]) => exportName);
 }
 
-describe("findUnexportedNames", () => {
-  it("flags an export missing from the barrel", () => {
-    const forgotten = {};
+describe("index", () => {
+  describe("checking that nothing is left out of the shared schema file", () => {
+    it("should flag something that is missing from the collection", () => {
+      const forgotten = {};
 
-    const missing = findUnexportedNames({ default: forgotten, name: "songs" }, [
-      "songs",
-    ]);
+      const missing = findUnexportedNames(
+        { default: forgotten, name: "songs" },
+        ["songs"],
+      );
 
-    expect(missing).toEqual(["default"]);
+      expect(missing).toEqual(["default"]);
+    });
+
+    it("should stay quiet when nothing is missing", () => {
+      const included = {};
+
+      const missing = findUnexportedNames({ default: included }, [included]);
+
+      expect(missing).toEqual([]);
+    });
   });
 
-  it("flags nothing when every export is present in the barrel", () => {
-    const included = {};
+  describe("the shared schema file", () => {
+    it("should find every table definition file to check", () => {
+      expect(moduleNames.length).toBeGreaterThan(0);
+    });
 
-    const missing = findUnexportedNames({ default: included }, [included]);
+    it.each(moduleNames)(
+      "should include everything that %s.ts defines",
+      async (name) => {
+        const module = (await import(
+          `../../../../src/db/schema/${name}.ts`
+        )) as Record<string, unknown>;
 
-    expect(missing).toEqual([]);
-  });
-});
+        const missing = findUnexportedNames(module, Object.values(schema));
 
-describe("schema barrel", () => {
-  it("finds schema modules to check", () => {
-    expect(moduleNames.length).toBeGreaterThan(0);
-  });
-
-  it.each(moduleNames)("re-exports every export of %s.ts", async (name) => {
-    const module = (await import(
-      `../../../../src/db/schema/${name}.ts`
-    )) as Record<string, unknown>;
-
-    const missing = findUnexportedNames(module, Object.values(schema));
-
-    expect(missing, `${name}.ts's un-exported members`).toEqual([]);
+        expect(missing, `${name}.ts's un-exported members`).toEqual([]);
+      },
+    );
   });
 });

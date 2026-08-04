@@ -30,13 +30,13 @@ function defaultSqlText(defaultValue: SQL | string | undefined): string {
 }
 
 describe("artists", () => {
-  it("is named artists", () => {
+  it("should be stored under the table name artists", () => {
     const { name } = getTableConfig(artists);
 
     expect(name).toBe("artists");
   });
 
-  it("defines the expected columns", () => {
+  it("should have exactly the expected set of columns", () => {
     const { columns } = getTableConfig(artists);
     const columnNames = columns.map((column) => column.name);
 
@@ -51,26 +51,26 @@ describe("artists", () => {
     ]);
   });
 
-  it("has a primary key on id", () => {
+  it("should be uniquely identified by a primary key", () => {
     expect(artists.id.primary).toBe(true);
   });
 
-  it("requires a unique, v7 uuid resource_id", () => {
+  it("should have a unique, randomly generated public identifier", () => {
     expect(artists.resource_id.notNull).toBe(true);
     expect(artists.resource_id.isUnique).toBe(true);
     expect(defaultSqlText(artists.resource_id.default)).toBe("uuidv7()");
   });
 
-  it("requires a name", () => {
+  it("should require a name", () => {
     expect(artists.name.notNull).toBe(true);
   });
 
-  it("defaults created_at to now", () => {
+  it("should record when it was created", () => {
     expect(artists.createdAt.notNull).toBe(true);
     expect(artists.createdAt.hasDefault).toBe(true);
   });
 
-  it("requires created_by and references the creating user", () => {
+  it("should track which user created it", () => {
     const { foreignKeys } = getTableConfig(artists);
     const foreignKey = findForeignKeyFrom(foreignKeys, artists.createdBy);
 
@@ -80,12 +80,12 @@ describe("artists", () => {
     expect(foreignKey?.reference().foreignColumns).toEqual([users.id]);
   });
 
-  it("defaults updated_at to now", () => {
+  it("should record when it was last updated", () => {
     expect(artists.updatedAt.notNull).toBe(true);
     expect(artists.updatedAt.hasDefault).toBe(true);
   });
 
-  it("requires updated_by and references the last updating user", () => {
+  it("should track which user last updated it", () => {
     const { foreignKeys } = getTableConfig(artists);
     const foreignKey = findForeignKeyFrom(foreignKeys, artists.updatedBy);
 
@@ -95,7 +95,7 @@ describe("artists", () => {
     expect(foreignKey?.reference().foreignColumns).toEqual([users.id]);
   });
 
-  it("relates each artist to its creator and last updater", () => {
+  it("should be linked back to who created and last updated it", () => {
     const helpers = createTableRelationsHelpers(artists);
     const { creator, updater } = artistsRelations.config(helpers);
 

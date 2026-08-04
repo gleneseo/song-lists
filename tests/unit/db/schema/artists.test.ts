@@ -31,8 +31,8 @@ describe("artists", () => {
       "resource_id",
       "name",
       "created_at",
-      "created_by",
       "updated_at",
+      "created_by",
       "updated_by",
     ]);
   });

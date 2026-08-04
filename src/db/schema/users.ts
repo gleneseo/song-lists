@@ -4,10 +4,10 @@ import {
   boolean,
   pgTable,
   text,
-  timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
 import artists from "./artists.ts";
+import { timestampColumns } from "./columns.ts";
 
 const USER_ROLE = {
   USER: "user",
@@ -24,9 +24,8 @@ const users = pgTable("users", {
   lastName: text("last_name"),
   role: text("role").default(USER_ROLE.USER).notNull(),
   bio: text("bio"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  ...timestampColumns,
   createdBy: uuid("created_by").references((): AnyPgColumn => users.id),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
   updatedBy: uuid("updated_by").references((): AnyPgColumn => users.id),
 });
 

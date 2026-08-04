@@ -37,8 +37,8 @@ describe("users", () => {
       "role",
       "bio",
       "created_at",
-      "created_by",
       "updated_at",
+      "created_by",
       "updated_by",
     ]);
   });

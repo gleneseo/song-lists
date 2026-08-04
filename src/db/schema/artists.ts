@@ -1,19 +1,13 @@
-import { pgTable, serial, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, uuid } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { auditColumns } from "./columns.ts";
 import users from "./users.js";
 
 const artists = pgTable("artists", {
   id: serial("id").primaryKey(),
   resource_id: uuid("resource_id").defaultRandom().notNull().unique(),
   name: text("name").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  createdBy: uuid("created_by")
-    .notNull()
-    .references(() => users.id),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  updatedBy: uuid("updated_by")
-    .notNull()
-    .references(() => users.id),
+  ...auditColumns(() => users.id),
 });
 
 const artistsRelations = relations(artists, ({ one }) => ({

@@ -1,4 +1,8 @@
-import { createTableRelationsHelpers } from "drizzle-orm";
+import {
+  createTableRelationsHelpers,
+  StringChunk,
+  type SQL,
+} from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
 import artists from "../../../../src/db/schema/artists.ts";
@@ -14,6 +18,16 @@ function findForeignKeyFrom(
   return foreignKeys.find(
     (foreignKey) => foreignKey.reference().columns[0] === column,
   );
+}
+
+function defaultSqlText(defaultValue: SQL | string | undefined): string {
+  if (typeof defaultValue === "string") {
+    return defaultValue;
+  }
+
+  const [chunk] = defaultValue?.queryChunks ?? [];
+
+  return chunk instanceof StringChunk ? chunk.value.join("") : "";
 }
 
 describe("users", () => {
@@ -43,10 +57,10 @@ describe("users", () => {
     ]);
   });
 
-  it("has a randomly-generated uuid primary key", () => {
+  it("has a v7 uuid primary key", () => {
     expect(users.id.primary).toBe(true);
     expect(users.id.columnType).toBe("PgUUID");
-    expect(users.id.hasDefault).toBe(true);
+    expect(defaultSqlText(users.id.default)).toBe("uuidv7()");
   });
 
   it("requires a unique email", () => {

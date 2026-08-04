@@ -1,11 +1,11 @@
-import { pgTable, serial, text, uuid } from "drizzle-orm/pg-core";
+import { pgTable, serial, text } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { auditColumns } from "./columns.ts";
+import { auditColumns, uuidV7 } from "./columns.ts";
 import users from "./users.js";
 
 const artists = pgTable("artists", {
   id: serial("id").primaryKey(),
-  resource_id: uuid("resource_id").defaultRandom().notNull().unique(),
+  resource_id: uuidV7("resource_id").notNull().unique(),
   name: text("name").notNull(),
   ...auditColumns(() => users.id),
 });

@@ -7,7 +7,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import artists from "./artists.ts";
-import { timestampColumns } from "./columns.ts";
+import { timestampColumns, uuidV7 } from "./columns.ts";
 
 const USER_ROLE = {
   USER: "user",
@@ -16,7 +16,7 @@ const USER_ROLE = {
 } as const;
 
 const users = pgTable("users", {
-  id: uuid("id").defaultRandom().primaryKey(),
+  id: uuidV7("id").primaryKey(),
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").notNull().default(false),
   name: text("name").notNull(),

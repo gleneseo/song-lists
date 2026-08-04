@@ -1,6 +1,11 @@
 import users, { USER_ROLE, usersRelations } from "./users.ts";
 import artists, { artistsRelations } from "./artists.ts";
-import { actorColumns, auditColumns, timestampColumns } from "./columns.ts";
+import {
+  actorColumns,
+  auditColumns,
+  timestampColumns,
+  uuidV7,
+} from "./columns.ts";
 
 export {
   users,
@@ -11,4 +16,5 @@ export {
   actorColumns,
   auditColumns,
   timestampColumns,
+  uuidV7,
 };

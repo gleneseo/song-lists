@@ -1,4 +1,8 @@
-import { createTableRelationsHelpers } from "drizzle-orm";
+import {
+  createTableRelationsHelpers,
+  StringChunk,
+  type SQL,
+} from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
 import artists, {
@@ -13,6 +17,16 @@ function findForeignKeyFrom(
   return foreignKeys.find(
     (foreignKey) => foreignKey.reference().columns[0] === column,
   );
+}
+
+function defaultSqlText(defaultValue: SQL | string | undefined): string {
+  if (typeof defaultValue === "string") {
+    return defaultValue;
+  }
+
+  const [chunk] = defaultValue?.queryChunks ?? [];
+
+  return chunk instanceof StringChunk ? chunk.value.join("") : "";
 }
 
 describe("artists", () => {
@@ -41,10 +55,10 @@ describe("artists", () => {
     expect(artists.id.primary).toBe(true);
   });
 
-  it("requires a unique resource_id", () => {
+  it("requires a unique, v7 uuid resource_id", () => {
     expect(artists.resource_id.notNull).toBe(true);
     expect(artists.resource_id.isUnique).toBe(true);
-    expect(artists.resource_id.hasDefault).toBe(true);
+    expect(defaultSqlText(artists.resource_id.default)).toBe("uuidv7()");
   });
 
   it("requires a name", () => {

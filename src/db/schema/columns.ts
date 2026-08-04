@@ -1,9 +1,14 @@
+import { sql } from "drizzle-orm";
 import { type AnyPgColumn, timestamp, uuid } from "drizzle-orm/pg-core";
 
 const timestampColumns = {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 };
+
+function uuidV7(name: string) {
+  return uuid(name).default(sql`uuidv7()`);
+}
 
 function actorColumns(getActorId: () => AnyPgColumn) {
   return {
@@ -19,4 +24,4 @@ function auditColumns(getActorId: () => AnyPgColumn) {
   };
 }
 
-export { actorColumns, auditColumns, timestampColumns };
+export { actorColumns, auditColumns, timestampColumns, uuidV7 };

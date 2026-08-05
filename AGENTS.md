@@ -22,7 +22,7 @@ All tests should be defined in files that have the `.test.ts` extension, and sho
 follow these conventions:
 
 1. Test names for `describe()` functions should match the primary object or concept under test,
-   which is usually the same as the filename before any file extensions
+   which is usually the same as the filename before any file extensions.
 2. Test names for `it()` functions need to begin with "should".
 3. Test names should avoid referencing code objects in an effort to be understood
    by the widest audience, that doesn't always include software engineers.

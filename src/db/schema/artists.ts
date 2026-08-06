@@ -1,6 +1,6 @@
 import { pgTable, serial, text } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { auditColumns, uuidV7 } from "./columns.ts";
+import { auditColumns, uuidV7 } from "./columns.js";
 import users from "./users.js";
 
 const artists = pgTable("artists", {

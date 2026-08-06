@@ -6,8 +6,8 @@ import {
   text,
   uuid,
 } from "drizzle-orm/pg-core";
-import artists from "./artists.ts";
-import { timestampColumns, uuidV7 } from "./columns.ts";
+import artists from "./artists.js";
+import { timestampColumns, uuidV7 } from "./columns.js";
 
 const USER_ROLE = {
   USER: "user",

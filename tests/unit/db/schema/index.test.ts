@@ -1,7 +1,7 @@
 import { readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import * as schema from "../../../../src/db/schema/index.ts";
+import * as schema from "../../../../src/db/schema/index.js";
 
 /**
  * src/db/schema/index.ts is the barrel file that drizzle.config.ts and the

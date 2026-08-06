@@ -1,13 +1,13 @@
 import { relations } from "drizzle-orm";
 import {
-  pgEnum,
+  type AnyPgColumn,
+  boolean,
   pgTable,
-  serial,
   text,
-  timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
 import artists from "./artists.ts";
+import { timestampColumns, uuidV7 } from "./columns.ts";
 
 const USER_ROLE = {
   USER: "user",
@@ -15,24 +15,33 @@ const USER_ROLE = {
   MANAGER: "manager",
 } as const;
 
-const userRole = pgEnum(
-  "user_role",
-  Object.values(USER_ROLE) as [string, ...string[]],
-);
-
 const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  resource_id: uuid("resource_id").defaultRandom().notNull().unique(),
+  id: uuidV7("id").primaryKey(),
   email: text("email").notNull().unique(),
-  fullName: text("full_name"),
-  displayName: text("display_name").unique(),
-  role: userRole("role").default(USER_ROLE.USER).notNull(),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  emailVerified: boolean("email_verified").notNull().default(false),
+  name: text("name").notNull(),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  role: text("role").default(USER_ROLE.USER).notNull(),
+  bio: text("bio"),
+  ...timestampColumns,
+  createdBy: uuid("created_by").references((): AnyPgColumn => users.id),
+  updatedBy: uuid("updated_by").references((): AnyPgColumn => users.id),
 });
 
-const usersRelations = relations(users, ({ many }) => ({
-  artists: many(artists),
+const usersRelations = relations(users, ({ one, many }) => ({
+  createdArtists: many(artists, { relationName: "artistCreator" }),
+  updatedArtists: many(artists, { relationName: "artistUpdater" }),
+  creator: one(users, {
+    fields: [users.createdBy],
+    references: [users.id],
+    relationName: "userCreator",
+  }),
+  updater: one(users, {
+    fields: [users.updatedBy],
+    references: [users.id],
+    relationName: "userUpdater",
+  }),
 }));
 
 export default users;

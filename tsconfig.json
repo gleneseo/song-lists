@@ -1,13 +1,17 @@
 {
   "extends": [
     "@tsconfig/node24/tsconfig.json",
-    "@tsconfig/node-ts/tsconfig.json",
     "@tsconfig/strictest/tsconfig.json"
   ],
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": ".",
-    "types": ["node"]
+    "types": ["node"],
+    "plugins": [{ "name": "@effect/language-service" }],
+    "incremental": true,
+    "composite": true,
+    "declarationMap": true,
+    "sourceMap": true
   },
   "include": ["src", "tests"]
 }

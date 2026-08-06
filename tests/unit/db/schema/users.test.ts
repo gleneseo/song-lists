@@ -5,11 +5,11 @@ import {
 } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
-import artists from "../../../../src/db/schema/artists.ts";
+import artists from "../../../../src/db/schema/artists.js";
 import users, {
   USER_ROLE,
   usersRelations,
-} from "../../../../src/db/schema/users.ts";
+} from "../../../../src/db/schema/users.js";
 
 function findForeignKeyFrom(
   foreignKeys: ReturnType<typeof getTableConfig>["foreignKeys"],

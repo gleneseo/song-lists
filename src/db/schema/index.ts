@@ -1,11 +1,11 @@
-import users, { USER_ROLE, usersRelations } from "./users.ts";
-import artists, { artistsRelations } from "./artists.ts";
+import users, { USER_ROLE, usersRelations } from "./users.js";
+import artists, { artistsRelations } from "./artists.js";
 import {
   actorColumns,
   auditColumns,
   timestampColumns,
   uuidV7,
-} from "./columns.ts";
+} from "./columns.js";
 
 export {
   users,

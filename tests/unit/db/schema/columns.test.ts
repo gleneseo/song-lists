@@ -6,7 +6,7 @@ import {
   auditColumns,
   timestampColumns,
   uuidV7,
-} from "../../../../src/db/schema/columns.ts";
+} from "../../../../src/db/schema/columns.js";
 
 function defaultSqlText(defaultValue: SQL | string | undefined): string {
   if (typeof defaultValue === "string") {

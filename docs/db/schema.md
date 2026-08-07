@@ -1,3 +1,5 @@
+Note: column names shown below are Drizzle property names, not real database column names, since this project only applies snake_case casing at query and migration time. See ./migrations for real column names.
+
 # Tables
 
 | Name | Columns | Comment |

@@ -10,12 +10,12 @@ import {
 } from "drizzle-orm/pg-core";
 
 const timestampColumns = {
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdAt: timestamp().defaultNow().notNull(),
+  updatedAt: timestamp().defaultNow().notNull(),
 };
 
-function uuidV7(name: string) {
-  return uuid(name).default(sql`uuidv7()`);
+function uuidV7() {
+  return uuid().default(sql`uuidv7()`);
 }
 
 /**
@@ -27,10 +27,10 @@ function uuidV7(name: string) {
  */
 function actorColumns() {
   return {
-    createdBy: uuid("created_by")
+    createdBy: uuid()
       .notNull()
       .references(() => users.id),
-    updatedBy: uuid("updated_by")
+    updatedBy: uuid()
       .notNull()
       .references(() => users.id),
   };
@@ -50,17 +50,17 @@ const USER_ROLE = {
 } as const;
 
 const users = pgTable("users", {
-  id: uuidV7("id").primaryKey(),
-  email: text("email").notNull().unique(),
-  emailVerified: boolean("email_verified").notNull().default(false),
-  name: text("name").notNull(),
-  firstName: text("first_name"),
-  lastName: text("last_name"),
-  role: text("role").default(USER_ROLE.USER).notNull(),
-  bio: text("bio"),
+  id: uuidV7().primaryKey(),
+  email: text().notNull().unique(),
+  emailVerified: boolean().notNull().default(false),
+  name: text().notNull(),
+  firstName: text(),
+  lastName: text(),
+  role: text().default(USER_ROLE.USER).notNull(),
+  bio: text(),
   ...timestampColumns,
-  createdBy: uuid("created_by").references((): AnyPgColumn => users.id),
-  updatedBy: uuid("updated_by").references((): AnyPgColumn => users.id),
+  createdBy: uuid().references((): AnyPgColumn => users.id),
+  updatedBy: uuid().references((): AnyPgColumn => users.id),
 });
 
 const usersRelations = relations(users, ({ one, many }) => ({
@@ -79,9 +79,9 @@ const usersRelations = relations(users, ({ one, many }) => ({
 }));
 
 const artists = pgTable("artists", {
-  id: serial("id").primaryKey(),
-  resource_id: uuidV7("resource_id").notNull().unique(),
-  name: text("name").notNull(),
+  id: serial().primaryKey(),
+  resource_id: uuidV7().notNull().unique(),
+  name: text().notNull(),
   ...auditColumns(),
 });
 

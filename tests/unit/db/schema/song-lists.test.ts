@@ -50,16 +50,16 @@ describe("users", () => {
     expect(columnNames).toEqual([
       "id",
       "email",
-      "email_verified",
+      "emailVerified",
       "name",
-      "first_name",
-      "last_name",
+      "firstName",
+      "lastName",
       "role",
       "bio",
-      "created_at",
-      "updated_at",
-      "created_by",
-      "updated_by",
+      "createdAt",
+      "updatedAt",
+      "createdBy",
+      "updatedBy",
     ]);
   });
 
@@ -167,10 +167,10 @@ describe("artists", () => {
       "id",
       "resource_id",
       "name",
-      "created_at",
-      "updated_at",
-      "created_by",
-      "updated_by",
+      "createdAt",
+      "updatedAt",
+      "createdBy",
+      "updatedBy",
     ]);
   });
 
@@ -245,7 +245,7 @@ describe("columns", () => {
 
   describe("a randomly generated unique identifier", () => {
     const source = pgTable("uuid_v7_fixture", {
-      id: uuidV7("id").primaryKey(),
+      id: uuidV7().primaryKey(),
     });
 
     it("should default to a new, time-ordered, unique value", () => {
@@ -289,10 +289,10 @@ describe("columns", () => {
 
       expect(columnNames).toEqual([
         "id",
-        "created_at",
-        "updated_at",
-        "created_by",
-        "updated_by",
+        "createdAt",
+        "updatedAt",
+        "createdBy",
+        "updatedBy",
       ]);
       expect(foreignKeys).toHaveLength(2);
     });

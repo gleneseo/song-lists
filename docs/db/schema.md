@@ -2,8 +2,51 @@
 
 | Name | Columns | Comment |
 |------|---------|---------|
+| [accounts](#accounts) | 13 |  |
 | [artists](#artists) | 7 |  |
-| [users](#users) | 12 |  |
+| [sessions](#sessions) | 8 |  |
+| [users](#users) | 13 |  |
+| [verifications](#verifications) | 6 |  |
+
+---
+
+## accounts
+
+### Columns
+
+| Name | Type | Default | Nullable | Children | Parents | Comment |
+|------|------|---------|----------|----------|---------|---------|
+| **id** | uuid | `uuidv7()` | NO | - | - | - |
+| accountId | text | - | NO | - | - | - |
+| providerId | text | - | NO | - | - | - |
+| accessToken | text | - | YES | - | - | - |
+| refreshToken | text | - | YES | - | - | - |
+| idToken | text | - | YES | - | - | - |
+| accessTokenExpiresAt | timestamp | - | YES | - | - | - |
+| refreshTokenExpiresAt | timestamp | - | YES | - | - | - |
+| scope | text | - | YES | - | - | - |
+| password | text | - | YES | - | - | - |
+| createdAt | timestamp | `now()` | NO | - | - | - |
+| updatedAt | timestamp | `now()` | NO | - | - | - |
+| userId | uuid | - | NO | - | [users.id](#users) | - |
+
+### Constraints
+
+| Name | Type | Definition |
+|------|------|------------|
+| fk_userId_users | FOREIGN KEY | (userId) → users(id) |
+
+### Indexes
+
+| Name | Columns | Unique | Type |
+|------|---------|--------|------|
+| idx_userId | userId | NO | - |
+
+### Relations
+
+| Parent | Child | Type |
+|--------|-------|------|
+| [users.id](#users) | **[accounts.userId](#accounts)** | Many to One |
 
 ---
 
@@ -16,24 +59,59 @@
 | **id** | serial | - | NO | - | - | - |
 | resource_id | uuid | `uuidv7()` | NO | - | - | - |
 | name | text | - | NO | - | - | - |
-| created_at | timestamp | `now()` | NO | - | - | - |
-| updated_at | timestamp | `now()` | NO | - | - | - |
-| created_by | uuid | - | NO | - | [users.id](#users) | - |
-| updated_by | uuid | - | NO | - | [users.id](#users) | - |
+| createdAt | timestamp | `now()` | NO | - | - | - |
+| updatedAt | timestamp | `now()` | NO | - | - | - |
+| createdBy | uuid | - | NO | - | [users.id](#users) | - |
+| updatedBy | uuid | - | NO | - | [users.id](#users) | - |
 
 ### Constraints
 
 | Name | Type | Definition |
 |------|------|------------|
-| fk_created_by_users | FOREIGN KEY | (created_by) → users(id) |
-| fk_updated_by_users | FOREIGN KEY | (updated_by) → users(id) |
+| fk_createdBy_users | FOREIGN KEY | (createdBy) → users(id) |
+| fk_updatedBy_users | FOREIGN KEY | (updatedBy) → users(id) |
 
 ### Relations
 
 | Parent | Child | Type |
 |--------|-------|------|
-| [users.id](#users) | **[artists.created_by](#artists)** | Many to One |
-| [users.id](#users) | **[artists.updated_by](#artists)** | Many to One |
+| [users.id](#users) | **[artists.createdBy](#artists)** | Many to One |
+| [users.id](#users) | **[artists.updatedBy](#artists)** | Many to One |
+
+---
+
+## sessions
+
+### Columns
+
+| Name | Type | Default | Nullable | Children | Parents | Comment |
+|------|------|---------|----------|----------|---------|---------|
+| **id** | uuid | `uuidv7()` | NO | - | - | - |
+| token | text | - | NO | - | - | - |
+| expiresAt | timestamp | - | NO | - | - | - |
+| ipAddress | text | - | YES | - | - | - |
+| userAgent | text | - | YES | - | - | - |
+| createdAt | timestamp | `now()` | NO | - | - | - |
+| updatedAt | timestamp | `now()` | NO | - | - | - |
+| userId | uuid | - | NO | - | [users.id](#users) | - |
+
+### Constraints
+
+| Name | Type | Definition |
+|------|------|------------|
+| fk_userId_users | FOREIGN KEY | (userId) → users(id) |
+
+### Indexes
+
+| Name | Columns | Unique | Type |
+|------|---------|--------|------|
+| idx_userId | userId | NO | - |
+
+### Relations
+
+| Parent | Child | Type |
+|--------|-------|------|
+| [users.id](#users) | **[sessions.userId](#sessions)** | Many to One |
 
 ---
 
@@ -43,34 +121,58 @@
 
 | Name | Type | Default | Nullable | Children | Parents | Comment |
 |------|------|---------|----------|----------|---------|---------|
-| **id** | uuid | `uuidv7()` | NO | [artists.created_by](#artists), [artists.updated_by](#artists), [users.created_by](#users), [users.updated_by](#users) | - | - |
+| **id** | uuid | `uuidv7()` | NO | [users.createdBy](#users), [users.updatedBy](#users), [artists.createdBy](#artists), [artists.updatedBy](#artists), [sessions.userId](#sessions), [accounts.userId](#accounts) | - | - |
 | email | text | - | NO | - | - | - |
-| email_verified | boolean | `false` | NO | - | - | - |
+| emailVerified | boolean | `false` | NO | - | - | - |
 | name | text | - | NO | - | - | - |
-| first_name | text | - | YES | - | - | - |
-| last_name | text | - | YES | - | - | - |
+| firstName | text | - | YES | - | - | - |
+| lastName | text | - | YES | - | - | - |
 | role | text | `'user'` | NO | - | - | - |
 | bio | text | - | YES | - | - | - |
-| created_at | timestamp | `now()` | NO | - | - | - |
-| updated_at | timestamp | `now()` | NO | - | - | - |
-| created_by | uuid | - | YES | - | [users.id](#users) | - |
-| updated_by | uuid | - | YES | - | [users.id](#users) | - |
+| image | text | - | YES | - | - | - |
+| createdAt | timestamp | `now()` | NO | - | - | - |
+| updatedAt | timestamp | `now()` | NO | - | - | - |
+| createdBy | uuid | - | YES | - | [users.id](#users) | - |
+| updatedBy | uuid | - | YES | - | [users.id](#users) | - |
 
 ### Constraints
 
 | Name | Type | Definition |
 |------|------|------------|
-| fk_created_by_users | FOREIGN KEY | (created_by) → users(id) |
-| fk_updated_by_users | FOREIGN KEY | (updated_by) → users(id) |
+| fk_createdBy_users | FOREIGN KEY | (createdBy) → users(id) |
+| fk_updatedBy_users | FOREIGN KEY | (updatedBy) → users(id) |
 
 ### Relations
 
 | Parent | Child | Type |
 |--------|-------|------|
-| **[users.id](#users)** | [artists.created_by](#artists) | Many to One |
-| **[users.id](#users)** | [artists.updated_by](#artists) | Many to One |
-| **[users.id](#users)** | [users.created_by](#users) | Many to One |
-| **[users.id](#users)** | [users.updated_by](#users) | Many to One |
+| **[users.id](#users)** | [users.createdBy](#users) | Many to One |
+| **[users.id](#users)** | [users.updatedBy](#users) | Many to One |
+| **[users.id](#users)** | [artists.createdBy](#artists) | Many to One |
+| **[users.id](#users)** | [artists.updatedBy](#artists) | Many to One |
+| **[users.id](#users)** | [sessions.userId](#sessions) | Many to One |
+| **[users.id](#users)** | [accounts.userId](#accounts) | Many to One |
+
+---
+
+## verifications
+
+### Columns
+
+| Name | Type | Default | Nullable | Children | Parents | Comment |
+|------|------|---------|----------|----------|---------|---------|
+| **id** | uuid | `uuidv7()` | NO | - | - | - |
+| identifier | text | - | NO | - | - | - |
+| value | text | - | NO | - | - | - |
+| expiresAt | timestamp | - | NO | - | - | - |
+| createdAt | timestamp | `now()` | NO | - | - | - |
+| updatedAt | timestamp | `now()` | NO | - | - | - |
+
+### Indexes
+
+| Name | Columns | Unique | Type |
+|------|---------|--------|------|
+| idx_identifier | identifier | NO | - |
 
 ---
 
@@ -78,32 +180,68 @@
 
 ```mermaid
 erDiagram
-    artists }o--|| users : "created_by"
-    artists }o--|| users : "updated_by"
-    users }o--o| users : "created_by"
-    users }o--o| users : "updated_by"
+    users }o--o| users : "createdBy"
+    users }o--o| users : "updatedBy"
+    artists }o--|| users : "createdBy"
+    artists }o--|| users : "updatedBy"
+    sessions }o--|| users : "userId"
+    accounts }o--|| users : "userId"
 
+    accounts {
+        uuid id PK
+        text accountId
+        text providerId
+        text accessToken
+        text refreshToken
+        text idToken
+        timestamp accessTokenExpiresAt
+        timestamp refreshTokenExpiresAt
+        text scope
+        text password
+        timestamp createdAt
+        timestamp updatedAt
+        uuid userId FK
+    }
     artists {
         serial id PK
         uuid resource_id UK
         text name
-        timestamp created_at
-        timestamp updated_at
-        uuid created_by FK
-        uuid updated_by FK
+        timestamp createdAt
+        timestamp updatedAt
+        uuid createdBy FK
+        uuid updatedBy FK
+    }
+    sessions {
+        uuid id PK
+        text token UK
+        timestamp expiresAt
+        text ipAddress
+        text userAgent
+        timestamp createdAt
+        timestamp updatedAt
+        uuid userId FK
     }
     users {
         uuid id PK
         text email UK
-        boolean email_verified
+        boolean emailVerified
         text name
-        text first_name
-        text last_name
+        text firstName
+        text lastName
         text role
         text bio
-        timestamp created_at
-        timestamp updated_at
-        uuid created_by FK
-        uuid updated_by FK
+        text image
+        timestamp createdAt
+        timestamp updatedAt
+        uuid createdBy FK
+        uuid updatedBy FK
+    }
+    verifications {
+        uuid id PK
+        text identifier
+        text value
+        timestamp expiresAt
+        timestamp createdAt
+        timestamp updatedAt
     }
 ```

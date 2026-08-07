@@ -9,7 +9,6 @@
     "build:tsc": "tsc",
     "db:generate": "drizzle-kit generate",
     "db:docs": "drizzle-docs generate ./src/db/schema/song-lists.ts -d postgresql -o ./docs/db/schema.md --single-file --force",
-    "auth:schema": "tsx src/scripts/print-auth-schema.ts",
     "test": "vitest --run",
     "test:coverage": "vitest --run --coverage",
     "prettier:check": "prettier . --check --no-editorconfig --ignore-unknown",

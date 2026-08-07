@@ -6,15 +6,20 @@ import {
 import { getTableConfig, pgTable, serial } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
 import {
+  accounts,
+  accountsRelations,
   actorColumns,
   artists,
   artistsRelations,
   auditColumns,
+  sessions,
+  sessionsRelations,
   timestampColumns,
   USER_ROLE,
   users,
   usersRelations,
   uuidV7,
+  verifications,
 } from "../../../../src/db/schema/song-lists.js";
 
 function findForeignKeyFrom(
@@ -23,6 +28,17 @@ function findForeignKeyFrom(
 ) {
   return foreignKeys.find(
     (foreignKey) => foreignKey.reference().columns[0] === column,
+  );
+}
+
+function hasIndexOn(
+  indexes: ReturnType<typeof getTableConfig>["indexes"],
+  columnName: string,
+) {
+  return indexes.some((index) =>
+    index.config.columns.some(
+      (column) => "name" in column && column.name === columnName,
+    ),
   );
 }
 
@@ -56,6 +72,7 @@ describe("users", () => {
       "lastName",
       "role",
       "bio",
+      "image",
       "createdAt",
       "updatedAt",
       "createdBy",
@@ -107,6 +124,10 @@ describe("users", () => {
     expect(users.bio.notNull).toBe(false);
   });
 
+  it("should make a profile image optional", () => {
+    expect(users.image.notNull).toBe(false);
+  });
+
   it("should record when it was created", () => {
     expect(users.createdAt.notNull).toBe(true);
     expect(users.createdAt.hasDefault).toBe(true);
@@ -141,6 +162,15 @@ describe("users", () => {
 
     expect(createdArtists.referencedTable).toBe(artists);
     expect(updatedArtists.referencedTable).toBe(artists);
+  });
+
+  it("should be linked to its sessions and accounts", () => {
+    const helpers = createTableRelationsHelpers(users);
+    const { sessions: sessionsRelation, accounts: accountsRelation } =
+      usersRelations.config(helpers);
+
+    expect(sessionsRelation.referencedTable).toBe(sessions);
+    expect(accountsRelation.referencedTable).toBe(accounts);
   });
 
   it("should be linked back to who created and last updated it", () => {
@@ -224,6 +254,160 @@ describe("artists", () => {
 
     expect(creator.referencedTable).toBe(users);
     expect(updater.referencedTable).toBe(users);
+  });
+});
+
+describe("sessions", () => {
+  it("should be stored under the table name sessions", () => {
+    const { name } = getTableConfig(sessions);
+
+    expect(name).toBe("sessions");
+  });
+
+  it("should have exactly the expected set of columns", () => {
+    const { columns } = getTableConfig(sessions);
+    const columnNames = columns.map((column) => column.name);
+
+    expect(columnNames).toEqual([
+      "id",
+      "token",
+      "expiresAt",
+      "ipAddress",
+      "userAgent",
+      "createdAt",
+      "updatedAt",
+      "userId",
+    ]);
+  });
+
+  it("should have a unique, randomly generated identifier", () => {
+    expect(sessions.id.primary).toBe(true);
+    expect(sessions.id.columnType).toBe("PgUUID");
+  });
+
+  it("should require a unique session token", () => {
+    expect(sessions.token.notNull).toBe(true);
+    expect(sessions.token.isUnique).toBe(true);
+  });
+
+  it("should require an expiration time", () => {
+    expect(sessions.expiresAt.notNull).toBe(true);
+  });
+
+  it("should make the requesting ip address and user agent optional", () => {
+    expect(sessions.ipAddress.notNull).toBe(false);
+    expect(sessions.userAgent.notNull).toBe(false);
+  });
+
+  it("should belong to a user, and be removed if that user is removed", () => {
+    const { foreignKeys, indexes } = getTableConfig(sessions);
+    const foreignKey = findForeignKeyFrom(foreignKeys, sessions.userId);
+
+    expect(sessions.userId.notNull).toBe(true);
+    expect(foreignKey?.reference().foreignTable).toBe(users);
+    expect(foreignKey?.reference().foreignColumns).toEqual([users.id]);
+    expect(foreignKey?.onDelete).toBe("cascade");
+    expect(hasIndexOn(indexes, "userId")).toBe(true);
+  });
+
+  it("should be linked back to the user it belongs to", () => {
+    const helpers = createTableRelationsHelpers(sessions);
+    const { user } = sessionsRelations.config(helpers);
+
+    expect(user.referencedTable).toBe(users);
+  });
+});
+
+describe("accounts", () => {
+  it("should be stored under the table name accounts", () => {
+    const { name } = getTableConfig(accounts);
+
+    expect(name).toBe("accounts");
+  });
+
+  it("should have exactly the expected set of columns", () => {
+    const { columns } = getTableConfig(accounts);
+    const columnNames = columns.map((column) => column.name);
+
+    expect(columnNames).toEqual([
+      "id",
+      "accountId",
+      "providerId",
+      "accessToken",
+      "refreshToken",
+      "idToken",
+      "accessTokenExpiresAt",
+      "refreshTokenExpiresAt",
+      "scope",
+      "password",
+      "createdAt",
+      "updatedAt",
+      "userId",
+    ]);
+  });
+
+  it("should require the provider's account and provider identifiers", () => {
+    expect(accounts.accountId.notNull).toBe(true);
+    expect(accounts.providerId.notNull).toBe(true);
+  });
+
+  it("should make provider credentials optional, since they depend on the provider", () => {
+    expect(accounts.accessToken.notNull).toBe(false);
+    expect(accounts.refreshToken.notNull).toBe(false);
+    expect(accounts.idToken.notNull).toBe(false);
+    expect(accounts.accessTokenExpiresAt.notNull).toBe(false);
+    expect(accounts.refreshTokenExpiresAt.notNull).toBe(false);
+    expect(accounts.scope.notNull).toBe(false);
+    expect(accounts.password.notNull).toBe(false);
+  });
+
+  it("should belong to a user, and be removed if that user is removed", () => {
+    const { foreignKeys, indexes } = getTableConfig(accounts);
+    const foreignKey = findForeignKeyFrom(foreignKeys, accounts.userId);
+
+    expect(accounts.userId.notNull).toBe(true);
+    expect(foreignKey?.reference().foreignTable).toBe(users);
+    expect(foreignKey?.reference().foreignColumns).toEqual([users.id]);
+    expect(foreignKey?.onDelete).toBe("cascade");
+    expect(hasIndexOn(indexes, "userId")).toBe(true);
+  });
+
+  it("should be linked back to the user it belongs to", () => {
+    const helpers = createTableRelationsHelpers(accounts);
+    const { user } = accountsRelations.config(helpers);
+
+    expect(user.referencedTable).toBe(users);
+  });
+});
+
+describe("verifications", () => {
+  it("should be stored under the table name verifications", () => {
+    const { name } = getTableConfig(verifications);
+
+    expect(name).toBe("verifications");
+  });
+
+  it("should have exactly the expected set of columns", () => {
+    const { columns } = getTableConfig(verifications);
+    const columnNames = columns.map((column) => column.name);
+
+    expect(columnNames).toEqual([
+      "id",
+      "identifier",
+      "value",
+      "expiresAt",
+      "createdAt",
+      "updatedAt",
+    ]);
+  });
+
+  it("should require an identifier, value, and expiration, and index the identifier for lookups", () => {
+    const { indexes } = getTableConfig(verifications);
+
+    expect(verifications.identifier.notNull).toBe(true);
+    expect(verifications.value.notNull).toBe(true);
+    expect(verifications.expiresAt.notNull).toBe(true);
+    expect(hasIndexOn(indexes, "identifier")).toBe(true);
   });
 });
 

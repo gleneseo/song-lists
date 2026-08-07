@@ -1,7 +1,7 @@
 import { defineConfig } from "drizzle-kit";
 
 export default defineConfig({
-  schema: "./src/db/schema/index.ts", // Points to your central hub
+  schema: "./src/db/schema/", // Picks up every schema file in the directory
   out: "./migrations",
   dialect: "postgresql",
   strict: true, // Prompts for confirmation before running data-loss statements

@@ -8,7 +8,7 @@
     "build": "npm-run-all clean prettier:check lint build:tsc test:coverage proof",
     "build:tsc": "tsc",
     "db:generate": "drizzle-kit generate",
-    "db:docs": "drizzle-docs generate ./src/db/schema/index.ts -d postgresql -o ./docs/db/schema.md --single-file --force",
+    "db:docs": "drizzle-docs generate ./src/db/schema/song-lists.ts -d postgresql -o ./docs/db/schema.md --single-file --force",
     "test": "vitest --run",
     "test:coverage": "vitest --run --coverage",
     "prettier:check": "prettier . --check --no-editorconfig --ignore-unknown",

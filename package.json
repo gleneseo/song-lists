@@ -35,6 +35,7 @@
     "@tsconfig/node24": "^24.0.4",
     "@tsconfig/strictest": "^2.0.8",
     "@types/node": "^24.13.3",
+    "@types/pg": "^8.20.4",
     "@vitest/coverage-v8": "^4.1.10",
     "cowsay": "^1.6.0",
     "drizzle-docs-generator": "^0.7.2",

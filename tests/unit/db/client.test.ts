@@ -9,7 +9,7 @@ describe("db client", () => {
     vi.unstubAllEnvs();
   });
 
-  it("should require a DATABASE_URL environment variable", async () => {
+  it("should require a database URL environment variable", async () => {
     vi.stubEnv("DATABASE_URL", "");
 
     await expect(import("../../../src/db/client.js")).rejects.toThrow(
@@ -17,7 +17,7 @@ describe("db client", () => {
     );
   });
 
-  it("should connect using the configured DATABASE_URL", async () => {
+  it("should connect using the configured database URL", async () => {
     vi.stubEnv(
       "DATABASE_URL",
       "postgres://user:pass@localhost:5432/song_lists",

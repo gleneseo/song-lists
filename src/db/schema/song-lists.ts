@@ -2,12 +2,14 @@ import { relations, sql } from "drizzle-orm";
 import {
   type AnyPgColumn,
   boolean,
-  pgTable,
+  pgSchema,
   serial,
   text,
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
+
+const songListsSchema = pgSchema("song_lists");
 
 const timestampColumns = {
   createdAt: timestamp().defaultNow().notNull(),
@@ -49,7 +51,7 @@ const USER_ROLE = {
   MANAGER: "manager",
 } as const;
 
-const users = pgTable("users", {
+const users = songListsSchema.table("users", {
   id: uuidV7().primaryKey(),
   email: text().notNull().unique(),
   emailVerified: boolean().notNull().default(false),
@@ -78,7 +80,7 @@ const usersRelations = relations(users, ({ one, many }) => ({
   }),
 }));
 
-const artists = pgTable("artists", {
+const artists = songListsSchema.table("artists", {
   id: serial().primaryKey(),
   resource_id: uuidV7().notNull().unique(),
   name: text().notNull(),
@@ -99,6 +101,7 @@ const artistsRelations = relations(artists, ({ one }) => ({
 }));
 
 export {
+  songListsSchema,
   actorColumns,
   auditColumns,
   timestampColumns,

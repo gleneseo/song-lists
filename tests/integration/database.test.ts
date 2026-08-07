@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { authConfig } from "../../src/auth/config.js";
+import authConfig from "../../src/auth/config.js";
 import * as schema from "../../src/db/schema/song-lists.js";
 
 /**
@@ -74,6 +74,7 @@ describe("database integration", () => {
   it("should let Better Auth sign a user up through the real adapter and schema", async () => {
     const auth = betterAuth({
       ...authConfig,
+      baseURL: "http://localhost:3000",
       database: drizzleAdapter(db, { schema, provider: "pg" }),
     });
 

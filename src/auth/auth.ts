@@ -2,7 +2,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "../db/client.js";
 import * as schema from "../db/schema/song-lists.js";
-import { authConfig } from "./config.js";
+import authConfig from "./config.js";
 
 const auth = betterAuth({
   ...authConfig,
@@ -16,4 +16,4 @@ const auth = betterAuth({
   }),
 });
 
-export { auth };
+export default auth;

@@ -8,6 +8,7 @@ describe("auth", () => {
       "postgres://user:pass@localhost:5432/song_lists",
     );
     vi.stubEnv("BETTER_AUTH_SECRET", "test-secret-used-only-in-unit-tests");
+    vi.stubEnv("BETTER_AUTH_URL", "http://localhost:3000");
   });
 
   afterEach(() => {
@@ -15,14 +16,14 @@ describe("auth", () => {
   });
 
   it("should build a Better Auth instance backed by the Drizzle adapter", async () => {
-    const { auth } = await import("../../../src/auth/auth.js");
+    const { default: auth } = await import("../../../src/auth/auth.js");
 
     expect(typeof auth.handler).toBe("function");
     expect(auth.api).toBeDefined();
   });
 
   it("should apply the plural model names auth configuration maps onto our schema", async () => {
-    const { auth } = await import("../../../src/auth/auth.js");
+    const { default: auth } = await import("../../../src/auth/auth.js");
 
     expect(auth.options.user?.modelName).toBe("users");
     expect(auth.options.session?.modelName).toBe("sessions");

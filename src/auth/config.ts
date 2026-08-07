@@ -26,4 +26,4 @@ const authConfig: BetterAuthOptions = {
   },
 };
 
-export { authConfig };
+export default authConfig;

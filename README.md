@@ -5,7 +5,7 @@ Songs and lists
 ## Requirements
 
 - Node.js `>=24 <25`
-- npm `^11.13.0`
+- npm `^12.0.2`
 
 ## Getting started
 

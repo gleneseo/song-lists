@@ -11,6 +11,7 @@ export default defineConfig(
       ".coverage/**",
       ".eslint/**",
       "vitest.config.ts",
+      "vitest.integration.config.ts",
       "commitlint.config.js",
     ],
   },

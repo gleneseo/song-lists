@@ -1,0 +1,193 @@
+import { relations, sql } from "drizzle-orm";
+import {
+  type AnyPgColumn,
+  boolean,
+  index,
+  pgSchema,
+  serial,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
+
+const songListsSchema = pgSchema("song_lists");
+
+const timestampColumns = {
+  createdAt: timestamp().defaultNow().notNull(),
+  updatedAt: timestamp().defaultNow().notNull(),
+};
+
+function uuidV7() {
+  return uuid().default(sql`uuidv7()`);
+}
+
+/**
+ * Column builders are mutable, and .references() is consumed per-table when
+ * Drizzle builds a table's foreign keys. Unlike timestampColumns, whose
+ * columns never call .references(), these must be functions rather than
+ * shared constants so every table that spreads them gets its own builder
+ * instances instead of reusing the same ones across tables.
+ */
+function actorColumns() {
+  return {
+    createdBy: uuid()
+      .notNull()
+      .references(() => users.id),
+    updatedBy: uuid()
+      .notNull()
+      .references(() => users.id),
+  };
+}
+
+function auditColumns() {
+  return {
+    ...timestampColumns,
+    ...actorColumns(),
+  };
+}
+
+const USER_ROLE = {
+  USER: "user",
+  ADMIN: "admin",
+  MANAGER: "manager",
+} as const;
+
+const users = songListsSchema.table("users", {
+  id: uuidV7().primaryKey(),
+  email: text().notNull().unique(),
+  emailVerified: boolean().notNull().default(false),
+  name: text().notNull(),
+  firstName: text(),
+  lastName: text(),
+  role: text().default(USER_ROLE.USER).notNull(),
+  bio: text(),
+  image: text(),
+  ...timestampColumns,
+  createdBy: uuid().references((): AnyPgColumn => users.id),
+  updatedBy: uuid().references((): AnyPgColumn => users.id),
+});
+
+const usersRelations = relations(users, ({ one, many }) => ({
+  createdArtists: many(artists, { relationName: "artistCreator" }),
+  updatedArtists: many(artists, { relationName: "artistUpdater" }),
+  sessions: many(sessions),
+  accounts: many(accounts),
+  creator: one(users, {
+    fields: [users.createdBy],
+    references: [users.id],
+    relationName: "userCreator",
+  }),
+  updater: one(users, {
+    fields: [users.updatedBy],
+    references: [users.id],
+    relationName: "userUpdater",
+  }),
+}));
+
+const artists = songListsSchema.table("artists", {
+  id: serial().primaryKey(),
+  resource_id: uuidV7().notNull().unique(),
+  name: text().notNull(),
+  ...auditColumns(),
+});
+
+const artistsRelations = relations(artists, ({ one }) => ({
+  creator: one(users, {
+    fields: [artists.createdBy],
+    references: [users.id],
+    relationName: "artistCreator",
+  }),
+  updater: one(users, {
+    fields: [artists.updatedBy],
+    references: [users.id],
+    relationName: "artistUpdater",
+  }),
+}));
+
+/**
+ * Fields required by Better Auth for its session, account, and verification
+ * models. `id` uses uuidV7() (not Better Auth's default random string id) to
+ * match the rest of this schema; authConfig sets advanced.database.generateId
+ * to false so Better Auth defers to the database default instead of
+ * generating its own id.
+ */
+const sessions = songListsSchema.table(
+  "sessions",
+  {
+    id: uuidV7().primaryKey(),
+    token: text().notNull().unique(),
+    expiresAt: timestamp().notNull(),
+    ipAddress: text(),
+    userAgent: text(),
+    ...timestampColumns,
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+  },
+  (table) => [index().on(table.userId)],
+);
+
+const sessionsRelations = relations(sessions, ({ one }) => ({
+  user: one(users, {
+    fields: [sessions.userId],
+    references: [users.id],
+  }),
+}));
+
+const accounts = songListsSchema.table(
+  "accounts",
+  {
+    id: uuidV7().primaryKey(),
+    accountId: text().notNull(),
+    providerId: text().notNull(),
+    accessToken: text(),
+    refreshToken: text(),
+    idToken: text(),
+    accessTokenExpiresAt: timestamp(),
+    refreshTokenExpiresAt: timestamp(),
+    scope: text(),
+    password: text(),
+    ...timestampColumns,
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+  },
+  (table) => [index().on(table.userId)],
+);
+
+const accountsRelations = relations(accounts, ({ one }) => ({
+  user: one(users, {
+    fields: [accounts.userId],
+    references: [users.id],
+  }),
+}));
+
+const verifications = songListsSchema.table(
+  "verifications",
+  {
+    id: uuidV7().primaryKey(),
+    identifier: text().notNull(),
+    value: text().notNull(),
+    expiresAt: timestamp().notNull(),
+    ...timestampColumns,
+  },
+  (table) => [index().on(table.identifier)],
+);
+
+export {
+  songListsSchema,
+  actorColumns,
+  auditColumns,
+  timestampColumns,
+  uuidV7,
+  users,
+  USER_ROLE,
+  usersRelations,
+  artists,
+  artistsRelations,
+  sessions,
+  sessionsRelations,
+  accounts,
+  accountsRelations,
+  verifications,
+};

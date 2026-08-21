@@ -1,6 +1,6 @@
     # syntax=docker/dockerfile:1
 
-ARG NODE_VERSION=24-slim
+ARG NODE_VERSION=24.19.0-slim
 
 FROM node:${NODE_VERSION} AS build
 WORKDIR /app

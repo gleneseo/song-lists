@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1
+    # syntax=docker/dockerfile:1
 
 ARG NODE_VERSION=24-slim
 
@@ -23,4 +23,4 @@ COPY package.json ./
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/dist/src ./dist
 USER node
-CMD ["node", "dist/index.js"]
+CMD ["node", "--enable-source-maps", "dist/index.js"]

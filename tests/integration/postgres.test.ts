@@ -31,7 +31,9 @@ const isListening = async (host: string, port: number): Promise<boolean> =>
     socket.once("connect", () => {
       finish(true);
     });
-    socket.once("timeout", () => {});
+    socket.once("timeout", () => {
+      /* empty */
+    });
     socket.once("error", () => {
       finish(false);
     });

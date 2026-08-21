@@ -2,9 +2,23 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    include: ["tests/unit/**/*.test.ts"],
+    projects: [
+      {
+        test: {
+          name: "unit",
+          include: ["tests/unit/**/*.test.ts"],
+        },
+      },
+      {
+        test: {
+          name: "integration",
+          include: ["tests/integration/**/*.test.ts"],
+          globalSetup: ["./tests/integration/setup/postgres.ts"],
+        },
+      },
+    ],
     coverage: {
-      enabled: true,
+      enabled: false,
       provider: "v8",
       thresholds: {
         "100": true,

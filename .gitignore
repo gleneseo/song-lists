@@ -149,3 +149,6 @@ vite.config.ts.timestamp-*
 .idea/
 .coverage
 .eslint
+
+# Local code review notes
+.code-reviews/

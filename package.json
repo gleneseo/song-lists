@@ -5,18 +5,22 @@
   "main": "index.js",
   "scripts": {
     "clean": "rimraf dist .coverage .eslint",
-    "build": "npm-run-all clean prettier:check lint build:tsc test:coverage test:integration proof",
+    "build": "npm-run-all clean prettier:check lint build:tsc test:coverage docker:build proof",
     "build:tsc": "tsc",
     "db:generate": "drizzle-kit generate",
     "db:docs": "drizzle-docs generate ./src/db/schema/song-lists.ts -d postgresql -o ./docs/db/schema.md --single-file --force && printf '%s\\n\\n%s\\n' 'Note: column names shown below are Drizzle property names, not real database column names, since this project only applies snake_case casing at query and migration time. See ./migrations for real column names.' \"$(cat docs/db/schema.md)\" > docs/db/schema.md",
     "test": "vitest --run",
     "test:coverage": "vitest --run --coverage",
-    "test:integration": "vitest --run --config vitest.integration.config.ts",
+    "test:unit": "vitest --run --projet unit",
+    "test:integration": "vitest --run --project integration",
+    "test:integration:delete-me": "vitest --run --config vitest.integration.config.ts",
     "prettier:check": "prettier . --check --no-editorconfig --ignore-unknown",
     "prettier:write": "prettier . --write --no-editorconfig --ignore-unknown",
     "lint": "npm-run-all lint:eslint",
     "lint:eslint": "eslint .",
     "lint:eslint:report": "eslint . --output-file=.eslint/report.html --format=html",
+    "docker:build": " docker build . --tag gleneseo-ts-template:latest",
+    "docker:run": " docker run --rm -it -t gleneseo-ts-template:latest",
     "proof": "git rev-parse HEAD | cowsay -r",
     "prepare": "husky && effect-language-service patch"
   },
@@ -34,6 +38,7 @@
     "@effect/language-service": "^0.87.1",
     "@electric-sql/pglite": "^0.5.4",
     "@eslint/js": "^10.0.1",
+    "@testcontainers/postgresql": "^12.1.0",
     "@tsconfig/node24": "^24.0.4",
     "@tsconfig/strictest": "^2.0.8",
     "@types/node": "^24.13.3",
@@ -60,6 +65,7 @@
     "better-auth": "^1.6.26",
     "drizzle-orm": "^0.45.2",
     "effect": "^4.0.0-beta.102",
-    "pg": "^8.22.0"
+    "pg": "^8.22.0",
+    "testcontainers": "^12.1.0"
   }
 }

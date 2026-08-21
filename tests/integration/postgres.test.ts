@@ -1,35 +1,79 @@
-import { PGlite } from "@electric-sql/pglite";
+import { Socket } from "node:net";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/pglite";
-import { migrate } from "drizzle-orm/pglite/migrator";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { Pool } from "pg";
+import { afterAll, beforeAll, describe, expect, inject, it } from "vitest";
 import authConfig from "../../src/auth/config.js";
 import * as schema from "../../src/db/schema/song-lists.js";
 
-/**
- * These tests run our actual migration files against a real, disposable
- * Postgres engine (PGlite -- Postgres compiled to WASM, no Docker needed)
- * rather than against mocks. This is the only layer that can catch
- * adapter/schema mismatches: unit tests build a Better Auth instance but
- * never issue a real query against it, which is exactly how usePlural:
- * true went unnoticed in src/auth/auth.ts until this suite caught it.
- */
+const CONNECT_TIMEOUT_MS = 5_000;
+
+const isListening = async (host: string, port: number): Promise<boolean> =>
+  new Promise((resolve) => {
+    const socket = new Socket();
+
+    const finish = (reachable: boolean): void => {
+      // Drop the one-shot listeners and keep a no-op error handler attached: a
+      // socket that emits "error" with no listener throws, which would kill the
+      // worker instead of failing this test.
+      socket.removeAllListeners();
+      socket.on("error", () => {
+        // Ignored: the outcome is already decided.
+      });
+      socket.destroy();
+      resolve(reachable);
+    };
+
+    socket.setTimeout(CONNECT_TIMEOUT_MS);
+    socket.once("connect", () => {
+      finish(true);
+    });
+    socket.once("timeout", () => {
+      /* empty */
+    });
+    socket.once("error", () => {
+      finish(false);
+    });
+    socket.connect(port, host);
+  });
+
+describe("postgres testcontainer", () => {
+  const postgres = inject("postgres");
+
+  it("should expose connection details to tests", () => {
+    const actual = postgres;
+
+    expect(actual.connectionUri).toMatch(/^postgres(ql)?:\/\//);
+    expect(actual.port).toBeGreaterThan(0);
+  });
+
+  it("should accept connections on the mapped port", async () => {
+    const { host, port } = postgres;
+
+    const actual = await isListening(host, port);
+
+    expect(actual).toBeTruthy();
+  });
+});
+
 describe("database integration", () => {
-  const pglite = new PGlite();
-  const db = drizzle(pglite, { schema, casing: "snake_case" });
+  const postgres = inject("postgres");
+  const pool = new Pool({ connectionString: postgres.connectionUri });
+  const db = drizzle(pool, { schema, casing: "snake_case" });
 
   beforeAll(async () => {
     await migrate(db, { migrationsFolder: "./migrations" });
   });
 
   afterAll(async () => {
-    await pglite.close();
+    await pool.end();
   });
 
   it("should apply every migration and create the expected tables", async () => {
-    const { rows } = await pglite.query<{ table_name: string }>(
+    const { rows } = await pool.query<{ table_name: string }>(
       `select table_name from information_schema.tables where table_schema = 'song_lists' order by table_name`,
     );
 

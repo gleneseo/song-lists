@@ -16,6 +16,14 @@ Common `type` values: `feat`, `fix`, `chore`, `docs`, `style`, `refactor`, `perf
 
 Use `!` after the type/scope (or a `BREAKING CHANGE:` footer) to indicate a breaking change.
 
+## Branching
+
+Never commit directly to `master`. All changes must go through a pull request from a feature branch.
+
+## Git stash
+
+Any `git stash` operation must include untracked files (i.e. pass `-u`/`--include-untracked`).
+
 ## Test conventions
 
 All tests should be defined in files that have the `.test.ts` extension, and should

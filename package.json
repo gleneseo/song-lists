@@ -64,10 +64,10 @@
     "*": "prettier --write --no-editorconfig --ignore-unknown"
   },
   "dependencies": {
-    "@effect/platform-node": "^4.0.0-beta.107",
+    "@effect/platform-node": "^4.0.0-rc.112",
     "better-auth": "^1.6.26",
     "drizzle-orm": "^0.45.2",
-    "effect": "^4.0.0-beta.107",
+    "effect": "^4.0.0-rc.112",
     "pg": "^8.22.0",
     "testcontainers": "^12.1.0"
   }

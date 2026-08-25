@@ -1,5 +1,10 @@
 # AGENTS.md
 
+## Local Effect Source
+
+The Effect v4 repository is cloned to `~/.local/share/vendors/effect` for reference. Use this to explore APIs,
+find usage examples, and understand implementation details when the documentation isn't enough.
+
 ## Commit messages
 
 All commits must follow the [Conventional Commits](https://www.conventionalcommits.org/) convention:
@@ -34,3 +39,9 @@ follow these conventions:
 2. Test names for `it()` functions need to begin with "should".
 3. Test names should avoid referencing code objects in an effort to be understood
    by the widest audience, that doesn't always include software engineers.
+
+## Code documentation
+
+IMPORTANT: Code documentation must follow [TSDoc](https://tsdoc.org/) conventions.
+
+Documentation strings must never end in a `.`, unless they include multiple phrases (e.g. multiple sentences), in which case every phrase, including the last, ends in a `.`.

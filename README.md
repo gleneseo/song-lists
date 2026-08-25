@@ -6,7 +6,7 @@ Songs and lists
 
 - Node.js `>=24 <25`
 - npm `^12.0.2`
-- A running Docker daemon — required by the integration tests, and therefore by `npm test`, `npm run test:coverage`, and `npm run build`. See [Testing](#testing).
+- A running Docker daemon — required by the integration tests (and therefore by `npm test` and `npm run test:coverage`), and separately by `npm run build`, which also builds the production image. See [Testing](#testing) and [Docker](#docker).
 
 ## Getting started
 
@@ -16,18 +16,20 @@ npm install
 
 ## Scripts
 
-| Script                     | Description                                            |
-| -------------------------- | ------------------------------------------------------ |
-| `npm run build`            | Clean, check formatting, lint, compile, and test.      |
-| `npm run build:tsc`        | Compile TypeScript.                                    |
-| `npm test`                 | Run every test project. Requires Docker.               |
-| `npm run test:coverage`    | Run every test project with coverage. Requires Docker. |
-| `npm run test:unit`        | Run the unit project only. No Docker required.         |
-| `npm run test:integration` | Run the integration project only. Requires Docker.     |
-| `npm run lint`             | Run ESLint.                                            |
-| `npm run prettier:check`   | Check formatting.                                      |
-| `npm run prettier:write`   | Apply formatting.                                      |
-| `npm run clean`            | Remove build and coverage output.                      |
+| Script                     | Description                                                                                |
+| -------------------------- | ------------------------------------------------------------------------------------------ |
+| `npm run build`            | Clean, check formatting, lint, compile, test, and build the Docker image. Requires Docker. |
+| `npm run build:tsc`        | Compile TypeScript.                                                                        |
+| `npm test`                 | Run every test project. Requires Docker.                                                   |
+| `npm run test:coverage`    | Run every test project with coverage. Requires Docker.                                     |
+| `npm run test:unit`        | Run the unit project only. No Docker required.                                             |
+| `npm run test:integration` | Run the integration project only. Requires Docker.                                         |
+| `npm run lint`             | Run ESLint.                                                                                |
+| `npm run prettier:check`   | Check formatting.                                                                          |
+| `npm run prettier:write`   | Apply formatting.                                                                          |
+| `npm run clean`            | Remove build and coverage output.                                                          |
+| `npm run docker:build`     | Build the production Docker image. Requires Docker.                                        |
+| `npm run docker:run`       | Run the production Docker image. Requires Docker.                                          |
 
 ## Testing
 
@@ -72,18 +74,44 @@ Because of that, only `npm run test:coverage` (and `npm run build`, which calls 
 
 ## Docker
 
-The `Dockerfile` builds a production image: it compiles TypeScript in a build stage, installs production-only dependencies in a separate stage, then assembles a minimal runtime image that runs as the non-root `node` user.
+The `Dockerfile` builds a production image: it compiles TypeScript in a build stage, installs production-only dependencies in a separate stage, then assembles a minimal runtime image that runs as the non-root `node` user. `ENTRYPOINT` runs `node dist/index.js`, so any arguments passed to `docker run` after the image name are forwarded to the CLI rather than replacing the entrypoint.
+
+`npm run build` builds this image as one of its steps (via `npm run docker:build`), so a running Docker daemon is required to build the project, not just to test it.
 
 ### Build the image
 
 ```sh
-docker build -t gleneseo-ts-template:latest .
+npm run docker:build
+```
+
+which is equivalent to:
+
+```sh
+docker build . --tag song-lists:latest
 ```
 
 ### Run the container
 
 ```sh
-docker run --rm gleneseo-ts-template:latest
+npm run docker:run
+```
+
+which is equivalent to:
+
+```sh
+docker run --rm -it -t song-lists:latest
+```
+
+Pass CLI arguments after the image name, e.g. to run the `echo` subcommand:
+
+```sh
+docker run --rm song-lists:latest echo foobar
+```
+
+Via `npm run docker:run`, forward arguments after `--`:
+
+```sh
+npm run docker:run -- echo foobar
 ```
 
 ## Docker Compose

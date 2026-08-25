@@ -74,7 +74,7 @@ Because of that, only `npm run test:coverage` (and `npm run build`, which calls 
 
 ## Docker
 
-The `Dockerfile` builds a production image: it compiles TypeScript in a build stage, installs production-only dependencies in a separate stage, then assembles a minimal runtime image that runs as the non-root `node` user.
+The `Dockerfile` builds a production image: it compiles TypeScript in a build stage, installs production-only dependencies in a separate stage, then assembles a minimal runtime image that runs as the non-root `node` user. `ENTRYPOINT` runs `node dist/index.js`, so any arguments passed to `docker run` after the image name are forwarded to the CLI rather than replacing the entrypoint.
 
 `npm run build` builds this image as one of its steps (via `npm run docker:build`), so a running Docker daemon is required to build the project, not just to test it.
 
@@ -100,6 +100,18 @@ which is equivalent to:
 
 ```sh
 docker run --rm -it -t song-lists:latest
+```
+
+Pass CLI arguments after the image name, e.g. to run the `echo` subcommand:
+
+```sh
+docker run --rm song-lists:latest echo foobar
+```
+
+Via `npm run docker:run`, forward arguments after `--`:
+
+```sh
+npm run docker:run -- echo foobar
 ```
 
 ## Docker Compose

@@ -3,10 +3,14 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "bin": {
+    "song-lists": "dist/src/index.js"
+  },
   "scripts": {
     "clean": "rimraf dist .coverage .eslint",
     "build": "npm-run-all clean prettier:check lint build:tsc test:coverage docker:build proof",
     "build:tsc": "tsc",
+    "start": "tsx src/index.ts",
     "db:generate": "drizzle-kit generate",
     "db:docs": "drizzle-docs generate ./src/db/schema/song-lists.ts -d postgresql -o ./docs/db/schema.md --single-file --force && printf '%s\\n\\n%s\\n' 'Note: column names shown below are Drizzle property names, not real database column names, since this project only applies snake_case casing at query and migration time. See ./migrations for real column names.' \"$(cat docs/db/schema.md)\" > docs/db/schema.md",
     "test": "vitest --run",
@@ -19,8 +23,8 @@
     "lint": "npm-run-all lint:eslint",
     "lint:eslint": "eslint .",
     "lint:eslint:report": "eslint . --output-file=.eslint/report.html --format=html",
-    "docker:build": " docker build . --tag gleneseo-ts-template:latest",
-    "docker:run": " docker run --rm -it -t gleneseo-ts-template:latest",
+    "docker:build": " docker build . --tag song-lists:latest",
+    "docker:run": " docker run --rm -it -t song-lists:latest",
     "proof": "git rev-parse HEAD | cowsay -r",
     "prepare": "husky && effect-language-service patch"
   },

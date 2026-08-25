@@ -77,13 +77,13 @@ The `Dockerfile` builds a production image: it compiles TypeScript in a build st
 ### Build the image
 
 ```sh
-docker build -t gleneseo-ts-template:latest .
+docker build -t song-lists:latest .
 ```
 
 ### Run the container
 
 ```sh
-docker run --rm gleneseo-ts-template:latest
+docker run --rm song-lists:latest
 ```
 
 ## Docker Compose

@@ -8,11 +8,12 @@
     "rootDir": ".",
     "types": ["node"],
     "verbatimModuleSyntax": true,
+    "resolveJsonModule": true,
     "plugins": [{ "name": "@effect/language-service" }],
     "incremental": true,
     "composite": true,
     "declarationMap": true,
     "sourceMap": true
   },
-  "include": ["src", "tests"]
+  "include": ["src", "tests", "package.json"]
 }

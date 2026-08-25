@@ -4,6 +4,17 @@ import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import packageJson from "../package.json" with { type: "json" };
 
+const banner = `
+
+███████╗ ██████╗ ███╗   ██╗ ██████╗       ██╗     ██╗███████╗████████╗███████╗
+██╔════╝██╔═══██╗████╗  ██║██╔════╝       ██║     ██║██╔════╝╚══██╔══╝██╔════╝
+███████╗██║   ██║██╔██╗ ██║██║  ███╗█████╗██║     ██║███████╗   ██║   ███████╗
+╚════██║██║   ██║██║╚██╗██║██║   ██║╚════╝██║     ██║╚════██║   ██║   ╚════██║
+███████║╚██████╔╝██║ ╚████║╚██████╔╝      ███████╗██║███████║   ██║   ███████║
+╚══════╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝       ╚══════╝╚═╝╚══════╝   ╚═╝   ╚══════╝
+
+`;
+
 const message = Argument.string("message");
 
 const upper = Flag.boolean("upper").pipe(
@@ -23,7 +34,7 @@ const hello = Command.make("song-lists", { message }, (config) =>
   Command.withSubcommands([echo]),
 );
 
-Command.run(hello, { version: packageJson.version }).pipe(
-  Effect.provide(NodeServices.layer),
-  NodeRuntime.runMain,
-);
+Effect.gen(function* () {
+  yield* Console.log(banner);
+  yield* Command.run(hello, { version: packageJson.version });
+}).pipe(Effect.provide(NodeServices.layer), NodeRuntime.runMain);

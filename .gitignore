@@ -152,3 +152,6 @@ vite.config.ts.timestamp-*
 
 # Local code review notes
 .code-reviews/
+
+# workmux prompt files
+.workmux/

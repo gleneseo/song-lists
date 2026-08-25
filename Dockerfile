@@ -1,9 +1,14 @@
     # syntax=docker/dockerfile:1
 
 ARG NODE_VERSION=24.19.0-slim
+ARG NPM_VERSION=12.0.2
 
-FROM node:${NODE_VERSION} AS build
+FROM node:${NODE_VERSION} AS base
+ARG NPM_VERSION
+RUN npm install -g npm@${NPM_VERSION}
 WORKDIR /app
+
+FROM base AS build
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY tsconfig.json ./
@@ -11,8 +16,7 @@ COPY src ./src
 COPY tests ./tests
 RUN npm run build:tsc
 
-FROM node:${NODE_VERSION} AS prod-deps
-WORKDIR /app
+FROM base AS prod-deps
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts
 

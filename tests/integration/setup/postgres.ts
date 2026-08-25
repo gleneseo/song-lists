@@ -45,15 +45,6 @@ const discardOrphan = async (
   }
 };
 
-export interface PostgresConnection {
-  connectionUri: string;
-  host: string;
-  port: number;
-  database: string;
-  username: string;
-  password: string;
-}
-
 declare module "vitest" {
   interface ProvidedContext {
     postgres: PostgresConnection;
@@ -64,7 +55,7 @@ declare module "vitest" {
 // starts, so every test file shares a single container instead of starting one
 // per suite. Declared on the integration project only, so it never runs for
 // `npm run test:unit`.
-export default async (project: TestProject): Promise<() => Promise<void>> => {
+const setup = async (project: TestProject): Promise<() => Promise<void>> => {
   const factory = new TrackedPostgreSqlContainer(POSTGRES_IMAGE);
 
   let container: StartedPostgreSqlContainer;
@@ -88,3 +79,15 @@ export default async (project: TestProject): Promise<() => Promise<void>> => {
     await container.stop();
   };
 };
+
+interface PostgresConnection {
+  connectionUri: string;
+  host: string;
+  port: number;
+  database: string;
+  username: string;
+  password: string;
+}
+
+export type { PostgresConnection };
+export default setup;

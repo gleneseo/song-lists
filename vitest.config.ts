@@ -25,7 +25,7 @@ export default defineConfig({
       },
       reporter: [["text", { skipFull: true }], "html", "clover", "json"],
       include: ["src"],
-      exclude: ["dist", "src/index.ts"],
+      exclude: ["dist", "src/index.ts", "src/db/generate-docs.ts"],
       reportsDirectory: ".coverage",
     },
   },

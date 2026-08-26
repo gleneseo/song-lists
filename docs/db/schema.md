@@ -1,14 +1,12 @@
-Note: column names shown below are Drizzle property names, not real database column names, since this project only applies snake_case casing at query and migration time. See ./migrations for real column names.
-
 # Tables
 
-| Name | Columns | Comment |
-|------|---------|---------|
-| [accounts](#accounts) | 13 |  |
-| [artists](#artists) | 7 |  |
-| [sessions](#sessions) | 8 |  |
-| [users](#users) | 13 |  |
-| [verifications](#verifications) | 6 |  |
+| Name | Columns |
+|------|---------|
+| [accounts](#accounts) | 13 |
+| [artists](#artists) | 7 |
+| [sessions](#sessions) | 8 |
+| [users](#users) | 13 |
+| [verifications](#verifications) | 6 |
 
 ---
 
@@ -16,39 +14,39 @@ Note: column names shown below are Drizzle property names, not real database col
 
 ### Columns
 
-| Name | Type | Default | Nullable | Children | Parents | Comment |
-|------|------|---------|----------|----------|---------|---------|
-| **id** | uuid | `uuidv7()` | NO | - | - | - |
-| accountId | text | - | NO | - | - | - |
-| providerId | text | - | NO | - | - | - |
-| accessToken | text | - | YES | - | - | - |
-| refreshToken | text | - | YES | - | - | - |
-| idToken | text | - | YES | - | - | - |
-| accessTokenExpiresAt | timestamp | - | YES | - | - | - |
-| refreshTokenExpiresAt | timestamp | - | YES | - | - | - |
-| scope | text | - | YES | - | - | - |
-| password | text | - | YES | - | - | - |
-| createdAt | timestamp | `now()` | NO | - | - | - |
-| updatedAt | timestamp | `now()` | NO | - | - | - |
-| userId | uuid | - | NO | - | [users.id](#users) | - |
+| Name | Type | Default | Nullable | Children | Parents |
+|------|------|---------|----------|----------|---------|
+| **id** | uuid | `uuidv7()` | NO | - | - |
+| account_id | text | - | NO | - | - |
+| provider_id | text | - | NO | - | - |
+| access_token | text | - | YES | - | - |
+| refresh_token | text | - | YES | - | - |
+| id_token | text | - | YES | - | - |
+| access_token_expires_at | timestamp | - | YES | - | - |
+| refresh_token_expires_at | timestamp | - | YES | - | - |
+| scope | text | - | YES | - | - |
+| password | text | - | YES | - | - |
+| created_at | timestamp | `now()` | NO | - | - |
+| updated_at | timestamp | `now()` | NO | - | - |
+| user_id | uuid | - | NO | - | [users.id](#users) |
 
 ### Constraints
 
 | Name | Type | Definition |
 |------|------|------------|
-| fk_userId_users | FOREIGN KEY | (userId) → users(id) |
+| accounts_user_id_users_id_fk | FOREIGN KEY | (user_id) → users(id) |
 
 ### Indexes
 
 | Name | Columns | Unique | Type |
 |------|---------|--------|------|
-| idx_userId | userId | NO | - |
+| accounts_user_id_index | user_id | NO | btree |
 
 ### Relations
 
 | Parent | Child | Type |
 |--------|-------|------|
-| [users.id](#users) | **[accounts.userId](#accounts)** | Many to One |
+| [users.id](#users) | **[accounts.user_id](#accounts)** | Many to One |
 
 ---
 
@@ -56,29 +54,29 @@ Note: column names shown below are Drizzle property names, not real database col
 
 ### Columns
 
-| Name | Type | Default | Nullable | Children | Parents | Comment |
-|------|------|---------|----------|----------|---------|---------|
-| **id** | serial | - | NO | - | - | - |
-| resource_id | uuid | `uuidv7()` | NO | - | - | - |
-| name | text | - | NO | - | - | - |
-| createdAt | timestamp | `now()` | NO | - | - | - |
-| updatedAt | timestamp | `now()` | NO | - | - | - |
-| createdBy | uuid | - | NO | - | [users.id](#users) | - |
-| updatedBy | uuid | - | NO | - | [users.id](#users) | - |
+| Name | Type | Default | Nullable | Children | Parents |
+|------|------|---------|----------|----------|---------|
+| **id** | serial | - | NO | - | - |
+| resource_id | uuid | `uuidv7()` | NO | - | - |
+| name | text | - | NO | - | - |
+| created_at | timestamp | `now()` | NO | - | - |
+| updated_at | timestamp | `now()` | NO | - | - |
+| created_by | uuid | - | NO | - | [users.id](#users) |
+| updated_by | uuid | - | NO | - | [users.id](#users) |
 
 ### Constraints
 
 | Name | Type | Definition |
 |------|------|------------|
-| fk_createdBy_users | FOREIGN KEY | (createdBy) → users(id) |
-| fk_updatedBy_users | FOREIGN KEY | (updatedBy) → users(id) |
+| artists_created_by_users_id_fk | FOREIGN KEY | (created_by) → users(id) |
+| artists_updated_by_users_id_fk | FOREIGN KEY | (updated_by) → users(id) |
 
 ### Relations
 
 | Parent | Child | Type |
 |--------|-------|------|
-| [users.id](#users) | **[artists.createdBy](#artists)** | Many to One |
-| [users.id](#users) | **[artists.updatedBy](#artists)** | Many to One |
+| [users.id](#users) | **[artists.created_by](#artists)** | Many to One |
+| [users.id](#users) | **[artists.updated_by](#artists)** | Many to One |
 
 ---
 
@@ -86,34 +84,34 @@ Note: column names shown below are Drizzle property names, not real database col
 
 ### Columns
 
-| Name | Type | Default | Nullable | Children | Parents | Comment |
-|------|------|---------|----------|----------|---------|---------|
-| **id** | uuid | `uuidv7()` | NO | - | - | - |
-| token | text | - | NO | - | - | - |
-| expiresAt | timestamp | - | NO | - | - | - |
-| ipAddress | text | - | YES | - | - | - |
-| userAgent | text | - | YES | - | - | - |
-| createdAt | timestamp | `now()` | NO | - | - | - |
-| updatedAt | timestamp | `now()` | NO | - | - | - |
-| userId | uuid | - | NO | - | [users.id](#users) | - |
+| Name | Type | Default | Nullable | Children | Parents |
+|------|------|---------|----------|----------|---------|
+| **id** | uuid | `uuidv7()` | NO | - | - |
+| token | text | - | NO | - | - |
+| expires_at | timestamp | - | NO | - | - |
+| ip_address | text | - | YES | - | - |
+| user_agent | text | - | YES | - | - |
+| created_at | timestamp | `now()` | NO | - | - |
+| updated_at | timestamp | `now()` | NO | - | - |
+| user_id | uuid | - | NO | - | [users.id](#users) |
 
 ### Constraints
 
 | Name | Type | Definition |
 |------|------|------------|
-| fk_userId_users | FOREIGN KEY | (userId) → users(id) |
+| sessions_user_id_users_id_fk | FOREIGN KEY | (user_id) → users(id) |
 
 ### Indexes
 
 | Name | Columns | Unique | Type |
 |------|---------|--------|------|
-| idx_userId | userId | NO | - |
+| sessions_user_id_index | user_id | NO | btree |
 
 ### Relations
 
 | Parent | Child | Type |
 |--------|-------|------|
-| [users.id](#users) | **[sessions.userId](#sessions)** | Many to One |
+| [users.id](#users) | **[sessions.user_id](#sessions)** | Many to One |
 
 ---
 
@@ -121,39 +119,41 @@ Note: column names shown below are Drizzle property names, not real database col
 
 ### Columns
 
-| Name | Type | Default | Nullable | Children | Parents | Comment |
-|------|------|---------|----------|----------|---------|---------|
-| **id** | uuid | `uuidv7()` | NO | [users.createdBy](#users), [users.updatedBy](#users), [artists.createdBy](#artists), [artists.updatedBy](#artists), [sessions.userId](#sessions), [accounts.userId](#accounts) | - | - |
-| email | text | - | NO | - | - | - |
-| emailVerified | boolean | `false` | NO | - | - | - |
-| name | text | - | NO | - | - | - |
-| firstName | text | - | YES | - | - | - |
-| lastName | text | - | YES | - | - | - |
-| role | text | `'user'` | NO | - | - | - |
-| bio | text | - | YES | - | - | - |
-| image | text | - | YES | - | - | - |
-| createdAt | timestamp | `now()` | NO | - | - | - |
-| updatedAt | timestamp | `now()` | NO | - | - | - |
-| createdBy | uuid | - | YES | - | [users.id](#users) | - |
-| updatedBy | uuid | - | YES | - | [users.id](#users) | - |
+| Name | Type | Default | Nullable | Children | Parents |
+|------|------|---------|----------|----------|---------|
+| **id** | uuid | `uuidv7()` | NO | [accounts.user_id](#accounts), [artists.created_by](#artists), [artists.updated_by](#artists), [sessions.user_id](#sessions), [users.created_by](#users), [users.updated_by](#users) | - |
+| email | text | - | NO | - | - |
+| email_verified | boolean | `false` | NO | - | - |
+| name | text | - | NO | - | - |
+| first_name | text | - | YES | - | - |
+| last_name | text | - | YES | - | - |
+| role | text | `'user'` | NO | - | - |
+| bio | text | - | YES | - | - |
+| image | text | - | YES | - | - |
+| created_at | timestamp | `now()` | NO | - | - |
+| updated_at | timestamp | `now()` | NO | - | - |
+| created_by | uuid | - | YES | - | [users.id](#users) |
+| updated_by | uuid | - | YES | - | [users.id](#users) |
 
 ### Constraints
 
 | Name | Type | Definition |
 |------|------|------------|
-| fk_createdBy_users | FOREIGN KEY | (createdBy) → users(id) |
-| fk_updatedBy_users | FOREIGN KEY | (updatedBy) → users(id) |
+| users_created_by_users_id_fk | FOREIGN KEY | (created_by) → users(id) |
+| users_updated_by_users_id_fk | FOREIGN KEY | (updated_by) → users(id) |
 
 ### Relations
 
 | Parent | Child | Type |
 |--------|-------|------|
-| **[users.id](#users)** | [users.createdBy](#users) | Many to One |
-| **[users.id](#users)** | [users.updatedBy](#users) | Many to One |
-| **[users.id](#users)** | [artists.createdBy](#artists) | Many to One |
-| **[users.id](#users)** | [artists.updatedBy](#artists) | Many to One |
-| **[users.id](#users)** | [sessions.userId](#sessions) | Many to One |
-| **[users.id](#users)** | [accounts.userId](#accounts) | Many to One |
+| **[users.id](#users)** | [accounts.user_id](#accounts) | Many to One |
+| **[users.id](#users)** | [artists.created_by](#artists) | Many to One |
+| **[users.id](#users)** | [artists.updated_by](#artists) | Many to One |
+| **[users.id](#users)** | [sessions.user_id](#sessions) | Many to One |
+| **[users.id](#users)** | [users.created_by](#users) | Many to One |
+| **[users.id](#users)** | [users.updated_by](#users) | Many to One |
+| [users.id](#users) | **[users.created_by](#users)** | Many to One |
+| [users.id](#users) | **[users.updated_by](#users)** | Many to One |
 
 ---
 
@@ -161,20 +161,20 @@ Note: column names shown below are Drizzle property names, not real database col
 
 ### Columns
 
-| Name | Type | Default | Nullable | Children | Parents | Comment |
-|------|------|---------|----------|----------|---------|---------|
-| **id** | uuid | `uuidv7()` | NO | - | - | - |
-| identifier | text | - | NO | - | - | - |
-| value | text | - | NO | - | - | - |
-| expiresAt | timestamp | - | NO | - | - | - |
-| createdAt | timestamp | `now()` | NO | - | - | - |
-| updatedAt | timestamp | `now()` | NO | - | - | - |
+| Name | Type | Default | Nullable | Children | Parents |
+|------|------|---------|----------|----------|---------|
+| **id** | uuid | `uuidv7()` | NO | - | - |
+| identifier | text | - | NO | - | - |
+| value | text | - | NO | - | - |
+| expires_at | timestamp | - | NO | - | - |
+| created_at | timestamp | `now()` | NO | - | - |
+| updated_at | timestamp | `now()` | NO | - | - |
 
 ### Indexes
 
 | Name | Columns | Unique | Type |
 |------|---------|--------|------|
-| idx_identifier | identifier | NO | - |
+| verifications_identifier_index | identifier | NO | btree |
 
 ---
 
@@ -182,68 +182,68 @@ Note: column names shown below are Drizzle property names, not real database col
 
 ```mermaid
 erDiagram
-    users }o--o| users : "createdBy"
-    users }o--o| users : "updatedBy"
-    artists }o--|| users : "createdBy"
-    artists }o--|| users : "updatedBy"
-    sessions }o--|| users : "userId"
-    accounts }o--|| users : "userId"
+    accounts }o--|| users : "user_id"
+    artists }o--|| users : "created_by"
+    artists }o--|| users : "updated_by"
+    sessions }o--|| users : "user_id"
+    users }o--o| users : "created_by"
+    users }o--o| users : "updated_by"
 
     accounts {
         uuid id PK
-        text accountId
-        text providerId
-        text accessToken
-        text refreshToken
-        text idToken
-        timestamp accessTokenExpiresAt
-        timestamp refreshTokenExpiresAt
+        text account_id
+        text provider_id
+        text access_token
+        text refresh_token
+        text id_token
+        timestamp access_token_expires_at
+        timestamp refresh_token_expires_at
         text scope
         text password
-        timestamp createdAt
-        timestamp updatedAt
-        uuid userId FK
+        timestamp created_at
+        timestamp updated_at
+        uuid user_id FK
     }
     artists {
         serial id PK
         uuid resource_id UK
         text name
-        timestamp createdAt
-        timestamp updatedAt
-        uuid createdBy FK
-        uuid updatedBy FK
+        timestamp created_at
+        timestamp updated_at
+        uuid created_by FK
+        uuid updated_by FK
     }
     sessions {
         uuid id PK
         text token UK
-        timestamp expiresAt
-        text ipAddress
-        text userAgent
-        timestamp createdAt
-        timestamp updatedAt
-        uuid userId FK
+        timestamp expires_at
+        text ip_address
+        text user_agent
+        timestamp created_at
+        timestamp updated_at
+        uuid user_id FK
     }
     users {
         uuid id PK
         text email UK
-        boolean emailVerified
+        boolean email_verified
         text name
-        text firstName
-        text lastName
+        text first_name
+        text last_name
         text role
         text bio
         text image
-        timestamp createdAt
-        timestamp updatedAt
-        uuid createdBy FK
-        uuid updatedBy FK
+        timestamp created_at
+        timestamp updated_at
+        uuid created_by FK
+        uuid updated_by FK
     }
     verifications {
         uuid id PK
         text identifier
         text value
-        timestamp expiresAt
-        timestamp createdAt
-        timestamp updatedAt
+        timestamp expires_at
+        timestamp created_at
+        timestamp updated_at
     }
 ```

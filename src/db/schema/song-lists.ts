@@ -86,6 +86,13 @@ const usersRelations = relations(users, ({ one, many }) => ({
   updatedSongProductions: many(songProductions, {
     relationName: "songProductionUpdater",
   }),
+  advocatedSongs: many(songAdvocates, { relationName: "songAdvocateUser" }),
+  createdSongAdvocates: many(songAdvocates, {
+    relationName: "songAdvocateCreator",
+  }),
+  updatedSongAdvocates: many(songAdvocates, {
+    relationName: "songAdvocateUpdater",
+  }),
   createdProductionTypes: many(productionTypes, {
     relationName: "productionTypeCreator",
   }),
@@ -159,6 +166,7 @@ const songsRelations = relations(songs, ({ one, many }) => ({
   covers: many(songs, { relationName: "songOriginal" }),
   featuredArtists: many(songFeaturedArtists),
   productions: many(songProductions),
+  advocates: many(songAdvocates),
   creator: one(users, {
     fields: [songs.createdBy],
     references: [users.id],
@@ -245,6 +253,44 @@ const songProductionsRelations = relations(songProductions, ({ one }) => ({
     fields: [songProductions.updatedBy],
     references: [users.id],
     relationName: "songProductionUpdater",
+  }),
+}));
+
+const songAdvocates = songListsSchema.table(
+  "song_advocates",
+  {
+    id: serial().primaryKey(),
+    resource_id: uuidV7().notNull().unique(),
+    songId: integer()
+      .notNull()
+      .references(() => songs.id),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id),
+    ...auditColumns(),
+  },
+  (table) => [unique().on(table.songId, table.userId)],
+);
+
+const songAdvocatesRelations = relations(songAdvocates, ({ one }) => ({
+  song: one(songs, {
+    fields: [songAdvocates.songId],
+    references: [songs.id],
+  }),
+  advocate: one(users, {
+    fields: [songAdvocates.userId],
+    references: [users.id],
+    relationName: "songAdvocateUser",
+  }),
+  creator: one(users, {
+    fields: [songAdvocates.createdBy],
+    references: [users.id],
+    relationName: "songAdvocateCreator",
+  }),
+  updater: one(users, {
+    fields: [songAdvocates.updatedBy],
+    references: [users.id],
+    relationName: "songAdvocateUpdater",
   }),
 }));
 
@@ -388,6 +434,8 @@ export {
   songFeaturedArtistsRelations,
   songProductions,
   songProductionsRelations,
+  songAdvocates,
+  songAdvocatesRelations,
   productionTypes,
   productionTypesRelations,
   productions,

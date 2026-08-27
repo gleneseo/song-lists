@@ -71,6 +71,8 @@ const users = songListsSchema.table("users", {
 const usersRelations = relations(users, ({ one, many }) => ({
   createdArtists: many(artists, { relationName: "artistCreator" }),
   updatedArtists: many(artists, { relationName: "artistUpdater" }),
+  createdSongs: many(songs, { relationName: "songCreator" }),
+  updatedSongs: many(songs, { relationName: "songUpdater" }),
   createdProductionTypes: many(productionTypes, {
     relationName: "productionTypeCreator",
   }),
@@ -104,7 +106,8 @@ const artists = songListsSchema.table("artists", {
   ...auditColumns(),
 });
 
-const artistsRelations = relations(artists, ({ one }) => ({
+const artistsRelations = relations(artists, ({ one, many }) => ({
+  songs: many(songs),
   creator: one(users, {
     fields: [artists.createdBy],
     references: [users.id],
@@ -114,6 +117,41 @@ const artistsRelations = relations(artists, ({ one }) => ({
     fields: [artists.updatedBy],
     references: [users.id],
     relationName: "artistUpdater",
+  }),
+}));
+
+const songs = songListsSchema.table("songs", {
+  id: serial().primaryKey(),
+  resource_id: uuidV7().notNull().unique(),
+  title: text().notNull(),
+  artistId: integer()
+    .notNull()
+    .references(() => artists.id),
+  originalSongId: integer().references((): AnyPgColumn => songs.id),
+  bio: text(),
+  ...auditColumns(),
+});
+
+const songsRelations = relations(songs, ({ one, many }) => ({
+  artist: one(artists, {
+    fields: [songs.artistId],
+    references: [artists.id],
+  }),
+  originalSong: one(songs, {
+    fields: [songs.originalSongId],
+    references: [songs.id],
+    relationName: "songOriginal",
+  }),
+  covers: many(songs, { relationName: "songOriginal" }),
+  creator: one(users, {
+    fields: [songs.createdBy],
+    references: [users.id],
+    relationName: "songCreator",
+  }),
+  updater: one(users, {
+    fields: [songs.updatedBy],
+    references: [users.id],
+    relationName: "songUpdater",
   }),
 }));
 
@@ -250,6 +288,8 @@ export {
   usersRelations,
   artists,
   artistsRelations,
+  songs,
+  songsRelations,
   productionTypes,
   productionTypesRelations,
   productions,

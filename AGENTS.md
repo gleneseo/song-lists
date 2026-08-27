@@ -1,9 +1,15 @@
 # AGENTS.md
 
-## Local Effect Source
+## Vendored package sources
 
-The Effect v4 repository is cloned to `~/.local/share/vendors/effect` for reference. Use this to explore APIs,
-find usage examples, and understand implementation details when the documentation isn't enough.
+The following repositories are cloned locally for reference. Use them to explore APIs, find usage examples, and
+understand implementation details when the documentation isn't enough.
+
+| Package                                   | Local path                           |
+| ----------------------------------------- | ------------------------------------ |
+| Effect v4                                 | `~/.local/share/vendors/effect`      |
+| Drizzle ORM (also contains `drizzle-kit`) | `~/.local/share/vendors/drizzle`     |
+| Better Auth                               | `~/.local/share/vendors/better-auth` |
 
 ## Commit messages
 

@@ -8,6 +8,7 @@ import {
   serial,
   text,
   timestamp,
+  unique,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -73,6 +74,12 @@ const usersRelations = relations(users, ({ one, many }) => ({
   updatedArtists: many(artists, { relationName: "artistUpdater" }),
   createdSongs: many(songs, { relationName: "songCreator" }),
   updatedSongs: many(songs, { relationName: "songUpdater" }),
+  createdSongFeaturedArtists: many(songFeaturedArtists, {
+    relationName: "songFeaturedArtistCreator",
+  }),
+  updatedSongFeaturedArtists: many(songFeaturedArtists, {
+    relationName: "songFeaturedArtistUpdater",
+  }),
   createdProductionTypes: many(productionTypes, {
     relationName: "productionTypeCreator",
   }),
@@ -108,6 +115,7 @@ const artists = songListsSchema.table("artists", {
 
 const artistsRelations = relations(artists, ({ one, many }) => ({
   songs: many(songs),
+  featuredOnSongs: many(songFeaturedArtists),
   creator: one(users, {
     fields: [artists.createdBy],
     references: [users.id],
@@ -143,6 +151,7 @@ const songsRelations = relations(songs, ({ one, many }) => ({
     relationName: "songOriginal",
   }),
   covers: many(songs, { relationName: "songOriginal" }),
+  featuredArtists: many(songFeaturedArtists),
   creator: one(users, {
     fields: [songs.createdBy],
     references: [users.id],
@@ -154,6 +163,46 @@ const songsRelations = relations(songs, ({ one, many }) => ({
     relationName: "songUpdater",
   }),
 }));
+
+const songFeaturedArtists = songListsSchema.table(
+  "song_featured_artists",
+  {
+    id: serial().primaryKey(),
+    resource_id: uuidV7().notNull().unique(),
+    songId: integer()
+      .notNull()
+      .references(() => songs.id),
+    artistId: integer()
+      .notNull()
+      .references(() => artists.id),
+    ...auditColumns(),
+  },
+  (table) => [unique().on(table.songId, table.artistId)],
+);
+
+const songFeaturedArtistsRelations = relations(
+  songFeaturedArtists,
+  ({ one }) => ({
+    song: one(songs, {
+      fields: [songFeaturedArtists.songId],
+      references: [songs.id],
+    }),
+    artist: one(artists, {
+      fields: [songFeaturedArtists.artistId],
+      references: [artists.id],
+    }),
+    creator: one(users, {
+      fields: [songFeaturedArtists.createdBy],
+      references: [users.id],
+      relationName: "songFeaturedArtistCreator",
+    }),
+    updater: one(users, {
+      fields: [songFeaturedArtists.updatedBy],
+      references: [users.id],
+      relationName: "songFeaturedArtistUpdater",
+    }),
+  }),
+);
 
 const productionTypes = songListsSchema.table("production_types", {
   id: serial().primaryKey(),
@@ -290,6 +339,8 @@ export {
   artistsRelations,
   songs,
   songsRelations,
+  songFeaturedArtists,
+  songFeaturedArtistsRelations,
   productionTypes,
   productionTypesRelations,
   productions,

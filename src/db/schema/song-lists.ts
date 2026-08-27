@@ -93,6 +93,10 @@ const usersRelations = relations(users, ({ one, many }) => ({
   updatedSongAdvocates: many(songAdvocates, {
     relationName: "songAdvocateUpdater",
   }),
+  createdLists: many(lists, { relationName: "listCreator" }),
+  updatedLists: many(lists, { relationName: "listUpdater" }),
+  createdListSongs: many(listSongs, { relationName: "listSongCreator" }),
+  updatedListSongs: many(listSongs, { relationName: "listSongUpdater" }),
   createdProductionTypes: many(productionTypes, {
     relationName: "productionTypeCreator",
   }),
@@ -167,6 +171,7 @@ const songsRelations = relations(songs, ({ one, many }) => ({
   featuredArtists: many(songFeaturedArtists),
   productions: many(songProductions),
   advocates: many(songAdvocates),
+  lists: many(listSongs),
   creator: one(users, {
     fields: [songs.createdBy],
     references: [users.id],
@@ -291,6 +296,67 @@ const songAdvocatesRelations = relations(songAdvocates, ({ one }) => ({
     fields: [songAdvocates.updatedBy],
     references: [users.id],
     relationName: "songAdvocateUpdater",
+  }),
+}));
+
+const lists = songListsSchema.table("lists", {
+  id: serial().primaryKey(),
+  resource_id: uuidV7().notNull().unique(),
+  name: text().notNull(),
+  ...auditColumns(),
+});
+
+const listsRelations = relations(lists, ({ one, many }) => ({
+  songs: many(listSongs),
+  creator: one(users, {
+    fields: [lists.createdBy],
+    references: [users.id],
+    relationName: "listCreator",
+  }),
+  updater: one(users, {
+    fields: [lists.updatedBy],
+    references: [users.id],
+    relationName: "listUpdater",
+  }),
+}));
+
+/**
+ * createdAt is the default sort order, but Postgres's now() is stable for
+ * the whole transaction, so a bulk insert into the same list can produce
+ * tied timestamps. Sort by (createdAt, id) rather than createdAt alone -
+ * id is a unique, insertion-ordered tiebreaker, so ties never make the
+ * order ambiguous.
+ */
+const listSongs = songListsSchema.table("list_songs", {
+  id: serial().primaryKey(),
+  resource_id: uuidV7().notNull().unique(),
+  listId: integer()
+    .notNull()
+    .references(() => lists.id),
+  songId: integer()
+    .notNull()
+    .references(() => songs.id),
+  ...auditColumns(),
+});
+
+const listSongsRelations = relations(listSongs, ({ one }) => ({
+  list: one(lists, {
+    fields: [listSongs.listId],
+    references: [lists.id],
+  }),
+  song: one(songs, {
+    fields: [listSongs.songId],
+    references: [songs.id],
+  }),
+  creator: one(users, {
+    fields: [listSongs.createdBy],
+    references: [users.id],
+    relationName: "listSongCreator",
+  }),
+  updater: one(users, {
+    fields: [listSongs.updatedBy],
+    references: [users.id],
+    relationName: "listSongUpdater",
   }),
 }));
 
@@ -436,6 +502,10 @@ export {
   songProductionsRelations,
   songAdvocates,
   songAdvocatesRelations,
+  lists,
+  listsRelations,
+  listSongs,
+  listSongsRelations,
   productionTypes,
   productionTypesRelations,
   productions,

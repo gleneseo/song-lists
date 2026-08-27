@@ -4,6 +4,8 @@
 |------|---------|
 | [accounts](#accounts) | 13 |
 | [artists](#artists) | 7 |
+| [list_songs](#list_songs) | 8 |
+| [lists](#lists) | 7 |
 | [production_types](#production_types) | 7 |
 | [productions](#productions) | 9 |
 | [sessions](#sessions) | 8 |
@@ -85,6 +87,72 @@
 | **[artists.id](#artists)** | [songs.artist_id](#songs) | Many to One |
 | [users.id](#users) | **[artists.created_by](#artists)** | Many to One |
 | [users.id](#users) | **[artists.updated_by](#artists)** | Many to One |
+
+---
+
+## list_songs
+
+### Columns
+
+| Name | Type | Default | Nullable | Children | Parents |
+|------|------|---------|----------|----------|---------|
+| **id** | serial | - | NO | - | - |
+| resource_id | uuid | `uuidv7()` | NO | - | - |
+| list_id | integer | - | NO | - | [lists.id](#lists) |
+| song_id | integer | - | NO | - | [songs.id](#songs) |
+| created_at | timestamp | `now()` | NO | - | - |
+| updated_at | timestamp | `now()` | NO | - | - |
+| created_by | uuid | - | NO | - | [users.id](#users) |
+| updated_by | uuid | - | NO | - | [users.id](#users) |
+
+### Constraints
+
+| Name | Type | Definition |
+|------|------|------------|
+| list_songs_list_id_lists_id_fk | FOREIGN KEY | (list_id) → lists(id) |
+| list_songs_song_id_songs_id_fk | FOREIGN KEY | (song_id) → songs(id) |
+| list_songs_created_by_users_id_fk | FOREIGN KEY | (created_by) → users(id) |
+| list_songs_updated_by_users_id_fk | FOREIGN KEY | (updated_by) → users(id) |
+
+### Relations
+
+| Parent | Child | Type |
+|--------|-------|------|
+| [users.id](#users) | **[list_songs.created_by](#list_songs)** | Many to One |
+| [lists.id](#lists) | **[list_songs.list_id](#list_songs)** | Many to One |
+| [songs.id](#songs) | **[list_songs.song_id](#list_songs)** | Many to One |
+| [users.id](#users) | **[list_songs.updated_by](#list_songs)** | Many to One |
+
+---
+
+## lists
+
+### Columns
+
+| Name | Type | Default | Nullable | Children | Parents |
+|------|------|---------|----------|----------|---------|
+| **id** | serial | - | NO | [list_songs.list_id](#list_songs) | - |
+| resource_id | uuid | `uuidv7()` | NO | - | - |
+| name | text | - | NO | - | - |
+| created_at | timestamp | `now()` | NO | - | - |
+| updated_at | timestamp | `now()` | NO | - | - |
+| created_by | uuid | - | NO | - | [users.id](#users) |
+| updated_by | uuid | - | NO | - | [users.id](#users) |
+
+### Constraints
+
+| Name | Type | Definition |
+|------|------|------------|
+| lists_created_by_users_id_fk | FOREIGN KEY | (created_by) → users(id) |
+| lists_updated_by_users_id_fk | FOREIGN KEY | (updated_by) → users(id) |
+
+### Relations
+
+| Parent | Child | Type |
+|--------|-------|------|
+| **[lists.id](#lists)** | [list_songs.list_id](#list_songs) | Many to One |
+| [users.id](#users) | **[lists.created_by](#lists)** | Many to One |
+| [users.id](#users) | **[lists.updated_by](#lists)** | Many to One |
 
 ---
 
@@ -300,7 +368,7 @@
 
 | Name | Type | Default | Nullable | Children | Parents |
 |------|------|---------|----------|----------|---------|
-| **id** | serial | - | NO | [song_advocates.song_id](#song_advocates), [song_featured_artists.song_id](#song_featured_artists), [song_productions.song_id](#song_productions), [songs.original_song_id](#songs) | - |
+| **id** | serial | - | NO | [list_songs.song_id](#list_songs), [song_advocates.song_id](#song_advocates), [song_featured_artists.song_id](#song_featured_artists), [song_productions.song_id](#song_productions), [songs.original_song_id](#songs) | - |
 | resource_id | uuid | `uuidv7()` | NO | - | - |
 | title | text | - | NO | - | - |
 | artist_id | integer | - | NO | - | [artists.id](#artists) |
@@ -324,6 +392,7 @@
 
 | Parent | Child | Type |
 |--------|-------|------|
+| **[songs.id](#songs)** | [list_songs.song_id](#list_songs) | Many to One |
 | **[songs.id](#songs)** | [song_advocates.song_id](#song_advocates) | Many to One |
 | **[songs.id](#songs)** | [song_featured_artists.song_id](#song_featured_artists) | Many to One |
 | **[songs.id](#songs)** | [song_productions.song_id](#song_productions) | Many to One |
@@ -341,7 +410,7 @@
 
 | Name | Type | Default | Nullable | Children | Parents |
 |------|------|---------|----------|----------|---------|
-| **id** | uuid | `uuidv7()` | NO | [accounts.user_id](#accounts), [artists.created_by](#artists), [artists.updated_by](#artists), [production_types.created_by](#production_types), [production_types.updated_by](#production_types), [productions.created_by](#productions), [productions.updated_by](#productions), [sessions.user_id](#sessions), [song_advocates.created_by](#song_advocates), [song_advocates.updated_by](#song_advocates), [song_advocates.user_id](#song_advocates), [song_featured_artists.created_by](#song_featured_artists), [song_featured_artists.updated_by](#song_featured_artists), [song_productions.created_by](#song_productions), [song_productions.updated_by](#song_productions), [songs.created_by](#songs), [songs.updated_by](#songs), [users.created_by](#users), [users.updated_by](#users) | - |
+| **id** | uuid | `uuidv7()` | NO | [accounts.user_id](#accounts), [artists.created_by](#artists), [artists.updated_by](#artists), [list_songs.created_by](#list_songs), [list_songs.updated_by](#list_songs), [lists.created_by](#lists), [lists.updated_by](#lists), [production_types.created_by](#production_types), [production_types.updated_by](#production_types), [productions.created_by](#productions), [productions.updated_by](#productions), [sessions.user_id](#sessions), [song_advocates.created_by](#song_advocates), [song_advocates.updated_by](#song_advocates), [song_advocates.user_id](#song_advocates), [song_featured_artists.created_by](#song_featured_artists), [song_featured_artists.updated_by](#song_featured_artists), [song_productions.created_by](#song_productions), [song_productions.updated_by](#song_productions), [songs.created_by](#songs), [songs.updated_by](#songs), [users.created_by](#users), [users.updated_by](#users) | - |
 | email | text | - | NO | - | - |
 | email_verified | boolean | `false` | NO | - | - |
 | name | text | - | NO | - | - |
@@ -369,6 +438,10 @@
 | **[users.id](#users)** | [accounts.user_id](#accounts) | Many to One |
 | **[users.id](#users)** | [artists.created_by](#artists) | Many to One |
 | **[users.id](#users)** | [artists.updated_by](#artists) | Many to One |
+| **[users.id](#users)** | [list_songs.created_by](#list_songs) | Many to One |
+| **[users.id](#users)** | [list_songs.updated_by](#list_songs) | Many to One |
+| **[users.id](#users)** | [lists.created_by](#lists) | Many to One |
+| **[users.id](#users)** | [lists.updated_by](#lists) | Many to One |
 | **[users.id](#users)** | [production_types.created_by](#production_types) | Many to One |
 | **[users.id](#users)** | [production_types.updated_by](#production_types) | Many to One |
 | **[users.id](#users)** | [productions.created_by](#productions) | Many to One |
@@ -418,6 +491,12 @@ erDiagram
     accounts }o--|| users : "user_id"
     artists }o--|| users : "created_by"
     artists }o--|| users : "updated_by"
+    list_songs }o--|| users : "created_by"
+    list_songs }o--|| lists : "list_id"
+    list_songs }o--|| songs : "song_id"
+    list_songs }o--|| users : "updated_by"
+    lists }o--|| users : "created_by"
+    lists }o--|| users : "updated_by"
     production_types }o--|| users : "created_by"
     production_types }o--|| users : "updated_by"
     productions }o--|| users : "created_by"
@@ -459,6 +538,25 @@ erDiagram
         uuid user_id FK
     }
     artists {
+        serial id PK
+        uuid resource_id UK
+        text name
+        timestamp created_at
+        timestamp updated_at
+        uuid created_by FK
+        uuid updated_by FK
+    }
+    list_songs {
+        serial id PK
+        uuid resource_id UK
+        integer list_id FK
+        integer song_id FK
+        timestamp created_at
+        timestamp updated_at
+        uuid created_by FK
+        uuid updated_by FK
+    }
+    lists {
         serial id PK
         uuid resource_id UK
         text name

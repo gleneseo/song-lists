@@ -80,6 +80,12 @@ const usersRelations = relations(users, ({ one, many }) => ({
   updatedSongFeaturedArtists: many(songFeaturedArtists, {
     relationName: "songFeaturedArtistUpdater",
   }),
+  createdSongProductions: many(songProductions, {
+    relationName: "songProductionCreator",
+  }),
+  updatedSongProductions: many(songProductions, {
+    relationName: "songProductionUpdater",
+  }),
   createdProductionTypes: many(productionTypes, {
     relationName: "productionTypeCreator",
   }),
@@ -152,6 +158,7 @@ const songsRelations = relations(songs, ({ one, many }) => ({
   }),
   covers: many(songs, { relationName: "songOriginal" }),
   featuredArtists: many(songFeaturedArtists),
+  productions: many(songProductions),
   creator: one(users, {
     fields: [songs.createdBy],
     references: [users.id],
@@ -204,6 +211,43 @@ const songFeaturedArtistsRelations = relations(
   }),
 );
 
+const songProductions = songListsSchema.table(
+  "song_productions",
+  {
+    id: serial().primaryKey(),
+    resource_id: uuidV7().notNull().unique(),
+    songId: integer()
+      .notNull()
+      .references(() => songs.id),
+    productionId: integer()
+      .notNull()
+      .references(() => productions.id),
+    ...auditColumns(),
+  },
+  (table) => [unique().on(table.songId, table.productionId)],
+);
+
+const songProductionsRelations = relations(songProductions, ({ one }) => ({
+  song: one(songs, {
+    fields: [songProductions.songId],
+    references: [songs.id],
+  }),
+  production: one(productions, {
+    fields: [songProductions.productionId],
+    references: [productions.id],
+  }),
+  creator: one(users, {
+    fields: [songProductions.createdBy],
+    references: [users.id],
+    relationName: "songProductionCreator",
+  }),
+  updater: one(users, {
+    fields: [songProductions.updatedBy],
+    references: [users.id],
+    relationName: "songProductionUpdater",
+  }),
+}));
+
 const productionTypes = songListsSchema.table("production_types", {
   id: serial().primaryKey(),
   resource_id: uuidV7().notNull().unique(),
@@ -239,11 +283,12 @@ const productions = songListsSchema.table("productions", {
   ...auditColumns(),
 });
 
-const productionsRelations = relations(productions, ({ one }) => ({
+const productionsRelations = relations(productions, ({ one, many }) => ({
   type: one(productionTypes, {
     fields: [productions.typeId],
     references: [productionTypes.id],
   }),
+  songs: many(songProductions),
   creator: one(users, {
     fields: [productions.createdBy],
     references: [users.id],
@@ -341,6 +386,8 @@ export {
   songsRelations,
   songFeaturedArtists,
   songFeaturedArtistsRelations,
+  songProductions,
+  songProductionsRelations,
   productionTypes,
   productionTypesRelations,
   productions,

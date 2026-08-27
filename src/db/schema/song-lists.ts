@@ -197,7 +197,12 @@ const songFeaturedArtists = songListsSchema.table(
       .references(() => artists.id),
     ...auditColumns(),
   },
-  (table) => [unique().on(table.songId, table.artistId)],
+  (table) => [
+    unique("song_featured_artists_song_id_artist_id_unique").on(
+      table.songId,
+      table.artistId,
+    ),
+  ],
 );
 
 const songFeaturedArtistsRelations = relations(
@@ -237,7 +242,12 @@ const songProductions = songListsSchema.table(
       .references(() => productions.id),
     ...auditColumns(),
   },
-  (table) => [unique().on(table.songId, table.productionId)],
+  (table) => [
+    unique("song_productions_song_id_production_id_unique").on(
+      table.songId,
+      table.productionId,
+    ),
+  ],
 );
 
 const songProductionsRelations = relations(songProductions, ({ one }) => ({
@@ -274,7 +284,12 @@ const songAdvocates = songListsSchema.table(
       .references(() => users.id),
     ...auditColumns(),
   },
-  (table) => [unique().on(table.songId, table.userId)],
+  (table) => [
+    unique("song_advocates_song_id_user_id_unique").on(
+      table.songId,
+      table.userId,
+    ),
+  ],
 );
 
 const songAdvocatesRelations = relations(songAdvocates, ({ one }) => ({

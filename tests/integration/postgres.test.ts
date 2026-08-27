@@ -80,7 +80,15 @@ describe("database integration", () => {
     expect(rows.map((row) => row.table_name)).toEqual([
       "accounts",
       "artists",
+      "list_songs",
+      "lists",
+      "production_types",
+      "productions",
       "sessions",
+      "song_advocates",
+      "song_featured_artists",
+      "song_productions",
+      "songs",
       "users",
       "verifications",
     ]);

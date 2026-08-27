@@ -4,6 +4,8 @@
 |------|---------|
 | [accounts](#accounts) | 13 |
 | [artists](#artists) | 7 |
+| [production_types](#production_types) | 7 |
+| [productions](#productions) | 9 |
 | [sessions](#sessions) | 8 |
 | [users](#users) | 13 |
 | [verifications](#verifications) | 6 |
@@ -80,6 +82,71 @@
 
 ---
 
+## production_types
+
+### Columns
+
+| Name | Type | Default | Nullable | Children | Parents |
+|------|------|---------|----------|----------|---------|
+| **id** | serial | - | NO | [productions.type_id](#productions) | - |
+| resource_id | uuid | `uuidv7()` | NO | - | - |
+| name | text | - | NO | - | - |
+| created_at | timestamp | `now()` | NO | - | - |
+| updated_at | timestamp | `now()` | NO | - | - |
+| created_by | uuid | - | NO | - | [users.id](#users) |
+| updated_by | uuid | - | NO | - | [users.id](#users) |
+
+### Constraints
+
+| Name | Type | Definition |
+|------|------|------------|
+| production_types_created_by_users_id_fk | FOREIGN KEY | (created_by) → users(id) |
+| production_types_updated_by_users_id_fk | FOREIGN KEY | (updated_by) → users(id) |
+
+### Relations
+
+| Parent | Child | Type |
+|--------|-------|------|
+| **[production_types.id](#production_types)** | [productions.type_id](#productions) | Many to One |
+| [users.id](#users) | **[production_types.created_by](#production_types)** | Many to One |
+| [users.id](#users) | **[production_types.updated_by](#production_types)** | Many to One |
+
+---
+
+## productions
+
+### Columns
+
+| Name | Type | Default | Nullable | Children | Parents |
+|------|------|---------|----------|----------|---------|
+| **id** | serial | - | NO | - | - |
+| resource_id | uuid | `uuidv7()` | NO | - | - |
+| name | text | - | NO | - | - |
+| release_year | integer | - | NO | - | - |
+| type_id | integer | - | NO | - | [production_types.id](#production_types) |
+| created_at | timestamp | `now()` | NO | - | - |
+| updated_at | timestamp | `now()` | NO | - | - |
+| created_by | uuid | - | NO | - | [users.id](#users) |
+| updated_by | uuid | - | NO | - | [users.id](#users) |
+
+### Constraints
+
+| Name | Type | Definition |
+|------|------|------------|
+| productions_type_id_production_types_id_fk | FOREIGN KEY | (type_id) → production_types(id) |
+| productions_created_by_users_id_fk | FOREIGN KEY | (created_by) → users(id) |
+| productions_updated_by_users_id_fk | FOREIGN KEY | (updated_by) → users(id) |
+
+### Relations
+
+| Parent | Child | Type |
+|--------|-------|------|
+| [users.id](#users) | **[productions.created_by](#productions)** | Many to One |
+| [production_types.id](#production_types) | **[productions.type_id](#productions)** | Many to One |
+| [users.id](#users) | **[productions.updated_by](#productions)** | Many to One |
+
+---
+
 ## sessions
 
 ### Columns
@@ -121,7 +188,7 @@
 
 | Name | Type | Default | Nullable | Children | Parents |
 |------|------|---------|----------|----------|---------|
-| **id** | uuid | `uuidv7()` | NO | [accounts.user_id](#accounts), [artists.created_by](#artists), [artists.updated_by](#artists), [sessions.user_id](#sessions), [users.created_by](#users), [users.updated_by](#users) | - |
+| **id** | uuid | `uuidv7()` | NO | [accounts.user_id](#accounts), [artists.created_by](#artists), [artists.updated_by](#artists), [production_types.created_by](#production_types), [production_types.updated_by](#production_types), [productions.created_by](#productions), [productions.updated_by](#productions), [sessions.user_id](#sessions), [users.created_by](#users), [users.updated_by](#users) | - |
 | email | text | - | NO | - | - |
 | email_verified | boolean | `false` | NO | - | - |
 | name | text | - | NO | - | - |
@@ -149,6 +216,10 @@
 | **[users.id](#users)** | [accounts.user_id](#accounts) | Many to One |
 | **[users.id](#users)** | [artists.created_by](#artists) | Many to One |
 | **[users.id](#users)** | [artists.updated_by](#artists) | Many to One |
+| **[users.id](#users)** | [production_types.created_by](#production_types) | Many to One |
+| **[users.id](#users)** | [production_types.updated_by](#production_types) | Many to One |
+| **[users.id](#users)** | [productions.created_by](#productions) | Many to One |
+| **[users.id](#users)** | [productions.updated_by](#productions) | Many to One |
 | **[users.id](#users)** | [sessions.user_id](#sessions) | Many to One |
 | **[users.id](#users)** | [users.created_by](#users) | Many to One |
 | **[users.id](#users)** | [users.updated_by](#users) | Many to One |
@@ -185,6 +256,11 @@ erDiagram
     accounts }o--|| users : "user_id"
     artists }o--|| users : "created_by"
     artists }o--|| users : "updated_by"
+    production_types }o--|| users : "created_by"
+    production_types }o--|| users : "updated_by"
+    productions }o--|| users : "created_by"
+    productions }o--|| production_types : "type_id"
+    productions }o--|| users : "updated_by"
     sessions }o--|| users : "user_id"
     users }o--o| users : "created_by"
     users }o--o| users : "updated_by"
@@ -208,6 +284,26 @@ erDiagram
         serial id PK
         uuid resource_id UK
         text name
+        timestamp created_at
+        timestamp updated_at
+        uuid created_by FK
+        uuid updated_by FK
+    }
+    production_types {
+        serial id PK
+        uuid resource_id UK
+        text name
+        timestamp created_at
+        timestamp updated_at
+        uuid created_by FK
+        uuid updated_by FK
+    }
+    productions {
+        serial id PK
+        uuid resource_id UK
+        text name
+        integer release_year
+        integer type_id FK
         timestamp created_at
         timestamp updated_at
         uuid created_by FK

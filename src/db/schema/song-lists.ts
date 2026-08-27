@@ -3,6 +3,7 @@ import {
   type AnyPgColumn,
   boolean,
   index,
+  integer,
   pgSchema,
   serial,
   text,
@@ -70,6 +71,18 @@ const users = songListsSchema.table("users", {
 const usersRelations = relations(users, ({ one, many }) => ({
   createdArtists: many(artists, { relationName: "artistCreator" }),
   updatedArtists: many(artists, { relationName: "artistUpdater" }),
+  createdProductionTypes: many(productionTypes, {
+    relationName: "productionTypeCreator",
+  }),
+  updatedProductionTypes: many(productionTypes, {
+    relationName: "productionTypeUpdater",
+  }),
+  createdProductions: many(productions, {
+    relationName: "productionCreator",
+  }),
+  updatedProductions: many(productions, {
+    relationName: "productionUpdater",
+  }),
   sessions: many(sessions),
   accounts: many(accounts),
   creator: one(users, {
@@ -101,6 +114,58 @@ const artistsRelations = relations(artists, ({ one }) => ({
     fields: [artists.updatedBy],
     references: [users.id],
     relationName: "artistUpdater",
+  }),
+}));
+
+const productionTypes = songListsSchema.table("production_types", {
+  id: serial().primaryKey(),
+  resource_id: uuidV7().notNull().unique(),
+  name: text().notNull(),
+  ...auditColumns(),
+});
+
+const productionTypesRelations = relations(
+  productionTypes,
+  ({ one, many }) => ({
+    productions: many(productions),
+    creator: one(users, {
+      fields: [productionTypes.createdBy],
+      references: [users.id],
+      relationName: "productionTypeCreator",
+    }),
+    updater: one(users, {
+      fields: [productionTypes.updatedBy],
+      references: [users.id],
+      relationName: "productionTypeUpdater",
+    }),
+  }),
+);
+
+const productions = songListsSchema.table("productions", {
+  id: serial().primaryKey(),
+  resource_id: uuidV7().notNull().unique(),
+  name: text().notNull(),
+  releaseYear: integer().notNull(),
+  typeId: integer()
+    .notNull()
+    .references(() => productionTypes.id),
+  ...auditColumns(),
+});
+
+const productionsRelations = relations(productions, ({ one }) => ({
+  type: one(productionTypes, {
+    fields: [productions.typeId],
+    references: [productionTypes.id],
+  }),
+  creator: one(users, {
+    fields: [productions.createdBy],
+    references: [users.id],
+    relationName: "productionCreator",
+  }),
+  updater: one(users, {
+    fields: [productions.updatedBy],
+    references: [users.id],
+    relationName: "productionUpdater",
   }),
 }));
 
@@ -185,6 +250,10 @@ export {
   usersRelations,
   artists,
   artistsRelations,
+  productionTypes,
+  productionTypesRelations,
+  productions,
+  productionsRelations,
   sessions,
   sessionsRelations,
   accounts,

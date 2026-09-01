@@ -36,6 +36,13 @@
       "when": 1788249426801,
       "tag": "0004_seed_admin_user",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788252978870,
+      "tag": "0005_seed_songs",
+      "breakpoints": true
     }
   ]
 }

@@ -29,6 +29,13 @@
       "when": 1787833106537,
       "tag": "0003_absent_thunderbolts",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788249426801,
+      "tag": "0004_seed_admin_user",
+      "breakpoints": true
     }
   ]
 }

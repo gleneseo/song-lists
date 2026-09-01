@@ -50,6 +50,13 @@
       "when": 1788293384350,
       "tag": "0006_seed_on_a_boat_list",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1788295783661,
+      "tag": "0007_seed_best_soundtrack_yams_list",
+      "breakpoints": true
     }
   ]
 }

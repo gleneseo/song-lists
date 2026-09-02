@@ -1,5 +1,23 @@
 # AGENTS.md
 
+## Workspace layout
+
+This repository is an npm-workspaces monorepo.
+
+| Path              | Package              | Role                                                        |
+| ----------------- | -------------------- | ----------------------------------------------------------- |
+| `packages/domain` | `@song-lists/domain` | Shared types and Effect Schema validation. No internal deps |
+| `packages/db`     | `@song-lists/db`     | Drizzle schema, `createDb` factory, and the `migrations/`   |
+| `packages/auth`   | `@song-lists/auth`   | Better Auth `createAuth` factory over `@song-lists/db`      |
+| `apps/cli`        | `@song-lists/cli`    | The Effect CLI and its Docker image                         |
+
+Internal packages resolve to their TypeScript source (`exports` points at
+`src/index.ts`); `tsc -b` from the root type-checks the whole graph. Run a
+single workspace's scripts with `npm run <script> -w @song-lists/<name>`.
+
+Schema migrations live in `packages/db/migrations`; generate them with
+`npm run db:generate` (needs `DATABASE_URL`).
+
 ## Vendored package sources
 
 The following repositories are cloned locally for reference. Use them to explore APIs, find usage examples, and

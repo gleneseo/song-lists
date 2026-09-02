@@ -6,7 +6,7 @@ Songs and lists
 
 - Node.js `>=24 <25`
 - npm `^12.0.2`
-- A running Docker daemon — required by the integration tests (and therefore by `npm test` and `npm run test:coverage`), and separately by `npm run build`, which also builds the production image. See [Testing](#testing) and [Docker](#docker).
+- A running Docker daemon — required by the integration tests, and therefore by `npm test`, `npm run test:coverage`, and `npm run build`. See [Testing](#testing). Building an app's Docker image (e.g. `npm run docker:build -w @song-lists/cli`) also needs one.
 
 ## Getting started
 
@@ -14,29 +14,45 @@ Songs and lists
 npm install
 ```
 
+## Workspace layout
+
+This repository is an [npm workspaces](https://docs.npmjs.com/cli/using-npm/workspaces) monorepo. Shared libraries live in `packages/*`; deployable applications live in `apps/*`.
+
+| Path              | Package              | Role                                                                |
+| ----------------- | -------------------- | ------------------------------------------------------------------- |
+| `packages/domain` | `@song-lists/domain` | Shared types and [Effect Schema](https://effect.website) validation |
+| `packages/db`     | `@song-lists/db`     | Drizzle schema, the `createDb` factory, and `migrations/`           |
+| `packages/auth`   | `@song-lists/auth`   | Better Auth's `createAuth` factory over `@song-lists/db`            |
+| `apps/cli`        | `@song-lists/cli`    | The Effect CLI and its Docker image                                 |
+
+Internal packages point their `exports` at TypeScript source, so nothing needs a build step before tests or `tsx` can run. `npm run build:tsc` runs `tsc -b` over the whole project graph for type-checking. Target one workspace with `-w`, e.g. `npm run test:unit -w @song-lists/db`.
+
 ## Scripts
 
-| Script                     | Description                                                                                |
-| -------------------------- | ------------------------------------------------------------------------------------------ |
-| `npm run build`            | Clean, check formatting, lint, compile, test, and build the Docker image. Requires Docker. |
-| `npm run build:tsc`        | Compile TypeScript.                                                                        |
-| `npm test`                 | Run every test project. Requires Docker.                                                   |
-| `npm run test:coverage`    | Run every test project with coverage. Requires Docker.                                     |
-| `npm run test:unit`        | Run the unit project only. No Docker required.                                             |
-| `npm run test:integration` | Run the integration project only. Requires Docker.                                         |
-| `npm run lint`             | Run ESLint.                                                                                |
-| `npm run prettier:check`   | Check formatting.                                                                          |
-| `npm run prettier:write`   | Apply formatting.                                                                          |
-| `npm run clean`            | Remove build and coverage output.                                                          |
-| `npm run docker:build`     | Build the production Docker image. Requires Docker.                                        |
-| `npm run docker:run`       | Run the production Docker image. Requires Docker.                                          |
+Run these from the repository root.
+
+| Script                     | Description                                                                                       |
+| -------------------------- | ------------------------------------------------------------------------------------------------- |
+| `npm run build`            | Clean, check formatting, lint, type-check (`tsc -b`), test with coverage, proof. Requires Docker. |
+| `npm run build:tsc`        | Type-check every package and app (`tsc -b`).                                                      |
+| `npm test`                 | Run every test project. Requires Docker.                                                          |
+| `npm run test:coverage`    | Run every test project with coverage. Requires Docker.                                            |
+| `npm run test:unit`        | Run the per-package `unit-*` projects only. No Docker required.                                   |
+| `npm run test:integration` | Run the `integration` project only. Requires Docker.                                              |
+| `npm run lint`             | Run ESLint across the workspace.                                                                  |
+| `npm run prettier:check`   | Check formatting.                                                                                 |
+| `npm run prettier:write`   | Apply formatting.                                                                                 |
+| `npm run clean`            | Remove build and coverage output from every workspace.                                            |
+| `npm run db:generate`      | Generate migrations from the schema (delegates to `@song-lists/db`; needs `DATABASE_URL`).        |
+| `npm run db:docs`          | Regenerate `packages/db/docs/schema.md` from the schema.                                          |
+
+Each app owns its own Docker scripts, e.g. `npm run docker:build -w @song-lists/cli`.
 
 ## Testing
 
-The suite is split into two [vitest projects](https://vitest.dev/guide/projects):
+Every package and app has its own **`unit-<name>`** vitest project (`<workspace>/tests/unit/**/*.test.ts`) — pure, fast, no external dependencies. A single root **`integration`** project (`tests/integration/**/*.test.ts`) starts real services in throwaway containers via [Testcontainers](https://node.testcontainers.org/) and drives them through the workspace packages.
 
-- **unit** (`tests/unit/**/*.test.ts`) — pure, fast, no external dependencies.
-- **integration** (`tests/integration/**/*.test.ts`) — starts real services in throwaway containers via [Testcontainers](https://node.testcontainers.org/).
+`npm run test:unit` runs every `unit-*` project (the `unit-*` glob excludes `integration`), so it needs no Docker.
 
 ### Docker requirement
 
@@ -44,7 +60,7 @@ The integration project talks to a Docker daemon over its socket to pull images,
 
 `npm test`, `npm run test:coverage`, and `npm run build` all run **every** project, so all three require a running daemon. Any Docker-compatible runtime works — Docker Desktop, Colima, Podman exposing a Docker socket, or a remote host via `DOCKER_HOST`. CI needs a Docker-capable runner.
 
-Use `npm run test:unit` to run the unit project without Docker.
+Use `npm run test:unit` to run the `unit-*` projects without Docker.
 
 The first run on a machine pays the container image pull, so expect the first integration run to be slower than later ones.
 
@@ -68,50 +84,38 @@ This is separate from [Docker Compose](#docker-compose) below — the integratio
 
 ### Coverage
 
-Coverage is configured once at the root of `vitest.config.ts` and is measured **across all projects**, not per project. The 100% threshold is evaluated against the union of what every project exercises in `src`, so a line covered only by an integration test counts the same as one covered only by a unit test.
+Coverage is configured once at the root of `vitest.config.ts` and is measured **across all projects**, not per project. The 100% threshold is evaluated against the union of what every project exercises in `packages/*/src` and `apps/*/src`, so a line covered only by an integration test counts the same as one covered only by a unit test.
 
 Because of that, only `npm run test:coverage` (and `npm run build`, which calls it) produces meaningful numbers. Running a single project does not collect coverage, since one project's figures would be checked against a threshold that assumes all of them. Note that plain `npm test` does not enforce the threshold either — a green `npm test` is not a guarantee that `npm run build` will pass.
 
 ## Docker
 
-The `Dockerfile` builds a production image: it compiles TypeScript in a build stage, installs production-only dependencies in a separate stage, then assembles a minimal runtime image that runs as the non-root `node` user. `ENTRYPOINT` runs `node dist/index.js`, so any arguments passed to `docker run` after the image name are forwarded to the CLI rather than replacing the entrypoint.
+Each app carries its own `Dockerfile`. The build context is the repository root so the workspace install resolves, and `npm run build` does **not** build any image — that is a per-app step.
 
-`npm run build` builds this image as one of its steps (via `npm run docker:build`), so a running Docker daemon is required to build the project, not just to test it.
+### `@song-lists/cli`
 
-### Build the image
+`apps/cli/Dockerfile` compiles TypeScript in a build stage, installs production-only dependencies in a separate stage, then assembles a minimal runtime image that runs as the non-root `node` user. `ENTRYPOINT` runs `node dist/index.js`, so any arguments passed to `docker run` after the image name are forwarded to the CLI rather than replacing the entrypoint.
 
 ```sh
-npm run docker:build
+npm run docker:build -w @song-lists/cli
 ```
 
 which is equivalent to:
 
 ```sh
-docker build . --tag song-lists:latest
+docker build . --file apps/cli/Dockerfile --tag song-lists:latest
 ```
 
-### Run the container
+Run it:
 
 ```sh
-npm run docker:run
-```
-
-which is equivalent to:
-
-```sh
-docker run --rm -it -t song-lists:latest
+npm run docker:run -w @song-lists/cli
 ```
 
 Pass CLI arguments after the image name, e.g. to run the `echo` subcommand:
 
 ```sh
 docker run --rm song-lists:latest echo foobar
-```
-
-Via `npm run docker:run`, forward arguments after `--`:
-
-```sh
-npm run docker:run -- echo foobar
 ```
 
 ## Docker Compose

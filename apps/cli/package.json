@@ -1,0 +1,24 @@
+{
+  "name": "@song-lists/cli",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "song-lists": "./dist/src/index.js"
+  },
+  "scripts": {
+    "clean": "rimraf dist",
+    "start": "tsx src/index.ts",
+    "build": "npm-run-all clean build:tsc docker:build",
+    "build:tsc": "tsc -b",
+    "docker:build": "docker build ../.. --file Dockerfile --tag song-lists:latest",
+    "docker:run": "docker run --rm -it -t song-lists:latest"
+  },
+  "dependencies": {
+    "@effect/platform-node": "^4.0.0-rc.112",
+    "effect": "^4.0.0-rc.112"
+  },
+  "devDependencies": {
+    "@effect/vitest": "^4.0.0-rc.112"
+  }
+}

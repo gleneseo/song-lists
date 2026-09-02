@@ -1,4 +1,7 @@
-    # syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1
+
+# Build context is the repository root (see the docker:build script), so this
+# image is built with `docker build <repo-root> --file apps/cli/Dockerfile`.
 
 ARG NODE_VERSION=24.19.0-slim
 ARG NPM_VERSION=12.0.2
@@ -9,22 +12,19 @@ RUN npm install -g npm@${NPM_VERSION}
 WORKDIR /app
 
 FROM base AS build
-COPY package.json package-lock.json ./
+COPY . .
 RUN npm ci
-COPY tsconfig.json ./
-COPY src ./src
-COPY tests ./tests
-RUN npm run build:tsc
+RUN npm run build:tsc --workspace @song-lists/cli
 
 FROM base AS prod-deps
-COPY package.json package-lock.json ./
+COPY . .
 RUN npm ci --omit=dev --ignore-scripts
 
 FROM node:${NODE_VERSION} AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
-COPY package.json ./
+COPY apps/cli/package.json ./package.json
 COPY --from=prod-deps /app/node_modules ./node_modules
-COPY --from=build /app/dist/src ./dist
+COPY --from=build /app/apps/cli/dist/src ./dist
 USER node
 ENTRYPOINT ["node", "--enable-source-maps", "dist/index.js"]

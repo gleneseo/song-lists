@@ -2,7 +2,7 @@
 
 | Name | Columns |
 |------|---------|
-| [accounts](#accounts) | 13 |
+| [accounts](#accounts) | 14 |
 | [artists](#artists) | 7 |
 | [list_songs](#list_songs) | 8 |
 | [lists](#lists) | 7 |
@@ -28,6 +28,7 @@
 | **id** | uuid | `uuidv7()` | NO | - | - |
 | account_id | text | - | NO | - | - |
 | provider_id | text | - | NO | - | - |
+| issuer | text | - | NO | - | - |
 | access_token | text | - | YES | - | - |
 | refresh_token | text | - | YES | - | - |
 | id_token | text | - | YES | - | - |
@@ -563,8 +564,9 @@ erDiagram
 
     accounts {
         uuid id PK
-        text account_id
+        text account_id UK
         text provider_id
+        text issuer UK
         text access_token
         text refresh_token
         text id_token

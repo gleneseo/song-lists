@@ -2,6 +2,7 @@ CREATE TABLE "song_lists"."accounts" (
 	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
 	"account_id" text NOT NULL,
 	"provider_id" text NOT NULL,
+	"issuer" text NOT NULL,
 	"access_token" text,
 	"refresh_token" text,
 	"id_token" text,
@@ -11,7 +12,8 @@ CREATE TABLE "song_lists"."accounts" (
 	"password" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
-	"user_id" uuid NOT NULL
+	"user_id" uuid NOT NULL,
+	CONSTRAINT "accounts_issuer_account_id_unique" UNIQUE("issuer","account_id")
 );
 --> statement-breakpoint
 CREATE TABLE "song_lists"."sessions" (

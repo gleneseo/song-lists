@@ -1,0 +1,22 @@
+{
+  "extends": [
+    "@tsconfig/node24/tsconfig.json",
+    "@tsconfig/strictest/tsconfig.json"
+  ],
+  "compilerOptions": {
+    "types": ["node"],
+    "verbatimModuleSyntax": true,
+    "resolveJsonModule": true,
+    "plugins": [{ "name": "@effect/language-service" }],
+    "incremental": true,
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "paths": {
+      "@song-lists/domain": ["./packages/domain/src/index.ts"],
+      "@song-lists/db": ["./packages/db/src/index.ts"],
+      "@song-lists/auth": ["./packages/auth/src/index.ts"]
+    }
+  }
+}

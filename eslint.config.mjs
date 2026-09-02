@@ -8,12 +8,11 @@ import tseslint from "typescript-eslint";
 export default defineConfig(
   {
     ignores: [
-      "dist/**",
+      "**/dist/**",
       ".coverage/**",
       ".eslint/**",
       ".workmux/**",
-      "vitest.config.ts",
-      "vitest.integration.config.ts",
+      "**/vitest.config.ts",
       "commitlint.config.js",
     ],
   },
@@ -30,7 +29,7 @@ export default defineConfig(
     languageOptions: {
       parserOptions: {
         projectService: {
-          allowDefaultProject: ["drizzle.config.ts"],
+          allowDefaultProject: ["packages/db/drizzle.config.ts"],
         },
       },
     },

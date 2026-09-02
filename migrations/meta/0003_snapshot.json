@@ -1,5 +1,5 @@
 {
-  "id": "7695e7db-c52f-4bae-a455-4c0772de0187",
+  "id": "21873956-95c6-41ac-8b1f-6a75f4df3ac2",
   "prevId": "b2a9728c-ace0-4fbc-93ef-de21a91fd3d7",
   "version": "7",
   "dialect": "postgresql",
@@ -811,6 +811,122 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "song_lists.song_covers": {
+      "name": "song_covers",
+      "schema": "song_lists",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "resource_id": {
+          "name": "resource_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "song_id": {
+          "name": "song_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "original_song_id": {
+          "name": "original_song_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "song_covers_song_id_songs_id_fk": {
+          "name": "song_covers_song_id_songs_id_fk",
+          "tableFrom": "song_covers",
+          "tableTo": "songs",
+          "schemaTo": "song_lists",
+          "columnsFrom": ["song_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "song_covers_original_song_id_songs_id_fk": {
+          "name": "song_covers_original_song_id_songs_id_fk",
+          "tableFrom": "song_covers",
+          "tableTo": "songs",
+          "schemaTo": "song_lists",
+          "columnsFrom": ["original_song_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "song_covers_created_by_users_id_fk": {
+          "name": "song_covers_created_by_users_id_fk",
+          "tableFrom": "song_covers",
+          "tableTo": "users",
+          "schemaTo": "song_lists",
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "song_covers_updated_by_users_id_fk": {
+          "name": "song_covers_updated_by_users_id_fk",
+          "tableFrom": "song_covers",
+          "tableTo": "users",
+          "schemaTo": "song_lists",
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "song_covers_resource_id_unique": {
+          "name": "song_covers_resource_id_unique",
+          "nullsNotDistinct": false,
+          "columns": ["resource_id"]
+        },
+        "song_covers_song_id_original_song_id_unique": {
+          "name": "song_covers_song_id_original_song_id_unique",
+          "nullsNotDistinct": false,
+          "columns": ["song_id", "original_song_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "song_lists.song_featured_artists": {
       "name": "song_featured_artists",
       "schema": "song_lists",
@@ -1072,12 +1188,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "original_song_id": {
-          "name": "original_song_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
         "bio": {
           "name": "bio",
           "type": "text",
@@ -1119,16 +1229,6 @@
           "tableTo": "artists",
           "schemaTo": "song_lists",
           "columnsFrom": ["artist_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "songs_original_song_id_songs_id_fk": {
-          "name": "songs_original_song_id_songs_id_fk",
-          "tableFrom": "songs",
-          "tableTo": "songs",
-          "schemaTo": "song_lists",
-          "columnsFrom": ["original_song_id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"

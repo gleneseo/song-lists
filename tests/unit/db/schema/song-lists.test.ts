@@ -16,6 +16,7 @@ import {
   productions,
   sessions,
   songAdvocates,
+  songCovers,
   songFeaturedArtists,
   songProductions,
   songs,
@@ -210,14 +211,14 @@ describe("songs", () => {
     });
   });
 
-  it("should resolve back to the song it is a cover of, and list the songs that cover it", () => {
-    expect(resolveRelation("songs", "originalSong")).toEqual({
-      fields: [songs.originalSongId],
-      references: [songs.id],
-    });
-    expect(resolveRelation("songs", "covers")).toEqual({
+  it("should list the songs it covers, and the songs that cover it", () => {
+    expect(resolveRelation("songs", "coverOf")).toEqual({
       fields: [songs.id],
-      references: [songs.originalSongId],
+      references: [songCovers.songId],
+    });
+    expect(resolveRelation("songs", "coveredBy")).toEqual({
+      fields: [songs.id],
+      references: [songCovers.originalSongId],
     });
   });
 
@@ -353,6 +354,30 @@ describe("songFeaturedArtists", () => {
   });
 });
 
+describe("songCovers", () => {
+  it("should resolve back to the covering song and the original it covers", () => {
+    expect(resolveRelation("songCovers", "song")).toEqual({
+      fields: [songCovers.songId],
+      references: [songs.id],
+    });
+    expect(resolveRelation("songCovers", "original")).toEqual({
+      fields: [songCovers.originalSongId],
+      references: [songs.id],
+    });
+  });
+
+  it("should distinguish who created it from who last updated it", () => {
+    expect(resolveRelation("songCovers", "creator")).toEqual({
+      fields: [songCovers.createdBy],
+      references: [users.id],
+    });
+    expect(resolveRelation("songCovers", "updater")).toEqual({
+      fields: [songCovers.updatedBy],
+      references: [users.id],
+    });
+  });
+});
+
 describe("productionTypes", () => {
   it("should list the productions that carry it", () => {
     expect(resolveRelation("productionTypes", "productions")).toEqual({
@@ -453,6 +478,8 @@ describe("foreign key wiring", () => {
       { table: songs, column: songs.updatedBy },
       { table: songFeaturedArtists, column: songFeaturedArtists.createdBy },
       { table: songFeaturedArtists, column: songFeaturedArtists.updatedBy },
+      { table: songCovers, column: songCovers.createdBy },
+      { table: songCovers, column: songCovers.updatedBy },
       { table: songProductions, column: songProductions.createdBy },
       { table: songProductions, column: songProductions.updatedBy },
       { table: songAdvocates, column: songAdvocates.userId },
@@ -491,14 +518,20 @@ describe("foreign key wiring", () => {
     expect(foreignKey?.reference().foreignColumns).toEqual([artists.id]);
   });
 
-  it("should point a song's original song reference at the real song id column", () => {
-    const { foreignKeys } = getTableConfig(songs);
-    const foreignKey = foreignKeys.find(
-      (candidate) => candidate.reference().columns[0] === songs.originalSongId,
+  it("should point a song cover's song and original at the real song id column", () => {
+    const { foreignKeys } = getTableConfig(songCovers);
+    const songForeignKey = foreignKeys.find(
+      (candidate) => candidate.reference().columns[0] === songCovers.songId,
+    );
+    const originalForeignKey = foreignKeys.find(
+      (candidate) =>
+        candidate.reference().columns[0] === songCovers.originalSongId,
     );
 
-    expect(foreignKey?.reference().foreignTable).toBe(songs);
-    expect(foreignKey?.reference().foreignColumns).toEqual([songs.id]);
+    expect(songForeignKey?.reference().foreignTable).toBe(songs);
+    expect(songForeignKey?.reference().foreignColumns).toEqual([songs.id]);
+    expect(originalForeignKey?.reference().foreignTable).toBe(songs);
+    expect(originalForeignKey?.reference().foreignColumns).toEqual([songs.id]);
   });
 
   it("should point a featured-artist credit's song and artist at their real id columns", () => {

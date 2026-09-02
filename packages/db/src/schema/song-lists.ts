@@ -11,6 +11,7 @@ import {
   unique,
   uuid,
 } from "drizzle-orm/pg-core";
+import { USER_ROLE } from "@song-lists/domain";
 
 const songListsSchema = pgSchema("song_lists");
 
@@ -47,12 +48,6 @@ function auditColumns() {
     ...actorColumns(),
   };
 }
-
-const USER_ROLE = {
-  USER: "user",
-  ADMIN: "admin",
-  MANAGER: "manager",
-} as const;
 
 const users = songListsSchema.table("users", {
   id: uuidV7().primaryKey(),
@@ -557,7 +552,6 @@ export {
   timestampColumns,
   uuidV7,
   users,
-  USER_ROLE,
   usersRelations,
   artists,
   artistsRelations,

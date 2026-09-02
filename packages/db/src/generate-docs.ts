@@ -20,9 +20,9 @@ import type { PgColumn } from "drizzle-orm/pg-core";
 const CASING = "snake_case";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.join(here, "..", "..");
+const packageRoot = path.join(here, "..");
 const schemaDir = path.join(here, "schema");
-const outputPath = path.join(repoRoot, "docs", "db", "schema.md");
+const outputPath = path.join(packageRoot, "docs", "schema.md");
 
 const dialect = new PgDialect({ casing: CASING });
 
@@ -359,7 +359,7 @@ async function main() {
 
   mkdirSync(path.dirname(outputPath), { recursive: true });
   writeFileSync(outputPath, `${doc}\n`);
-  console.log(`Wrote ${path.relative(repoRoot, outputPath)}`);
+  console.log(`Wrote ${path.relative(packageRoot, outputPath)}`);
 }
 
 await main();

@@ -5,7 +5,7 @@ import {
 } from "drizzle-orm";
 import { getTableConfig, pgTable, serial } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
-import * as schema from "../../../../src/db/schema/song-lists.js";
+import * as schema from "../../../src/schema/song-lists.js";
 import {
   accounts,
   actorColumns,
@@ -21,7 +21,7 @@ import {
   songProductions,
   songs,
   users,
-} from "../../../../src/db/schema/song-lists.js";
+} from "../../../src/schema/song-lists.js";
 
 /**
  * Mirrors exactly what `drizzle(pool, { schema })` does with this schema

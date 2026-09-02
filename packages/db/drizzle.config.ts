@@ -7,7 +7,7 @@ if (!DATABASE_URL) {
 }
 
 const config = defineConfig({
-  schema: "./src/db/schema/", // Picks up every schema file in the directory
+  schema: "./src/schema/", // Picks up every schema file in the directory
   out: "./migrations",
   dialect: "postgresql",
   casing: "snake_case",

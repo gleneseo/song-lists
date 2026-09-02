@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import authConfig from "../../../src/auth/config.js";
+import authConfig from "../../src/config.js";
 
 describe("authConfig", () => {
   it("should identify the app to Better Auth", () => {

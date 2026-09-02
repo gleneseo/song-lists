@@ -2,9 +2,9 @@
 
 -- Seeds tab 4 ("Best Cover Songs") and backfills the original songs each
 -- cover is of, using the song_covers join table added in
--- 0008_add_song_covers_join_table.sql. A cover can point at more than one
--- original (e.g. a medley), which is exactly why that table exists instead
--- of a single nullable column.
+-- 0003_absent_thunderbolts.sql. A cover can point at more than one original
+-- (e.g. a medley), which is exactly why that table exists instead of a
+-- single nullable column.
 
 INSERT INTO "song_lists"."artists" ("resource_id", "name", "created_at", "updated_at", "created_by", "updated_by")
 VALUES

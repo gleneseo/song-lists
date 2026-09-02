@@ -67,17 +67,39 @@ Run these in order, stopping at the first failure:
 
 - `npm run build:tsc` (typecheck)
 - `npm run lint`
-- `npm run test:unit`
+- `npm run test` (the full suite — the integration project needs Docker for
+  testcontainers; if Docker isn't running, fall back to `npm run test:unit`
+  and say integration coverage was skipped)
+
+A dependency bump can break something that only the integration tests
+exercise — a library changing its expected database schema, for example — so
+the unit suite alone is not enough to call a bump safe.
 
 If a step fails: stop, report exactly what failed with the relevant output,
 and leave the working tree as-is — don't guess at fixes for errors caused by
 the bump, and don't auto-revert. Backing out is
 `git checkout -- package.json package-lock.json && npm install`.
 
-## Step 6 — report
+## Step 6 — sync vendored reference clones
+
+[AGENTS.md](../../../AGENTS.md) lists local clones of some dependencies' source
+(Effect, Drizzle, Better Auth) kept for reference. For each bumped package
+that has a clone listed there, compare the clone's checked-out version
+(`git -C <path> describe --tags --always`) against the newly installed
+version.
+
+If a clone lags, **do not modify it** — matching
+[`/check-effect-update`](../check-effect-update/SKILL.md), the skill never
+runs `git` operations inside a vendor checkout (they are often shallow,
+shared across projects, or carry local state). Instead, include in the
+report the command the user can run themselves, e.g.
+`git -C <path> fetch --tags && git -C <path> checkout v<version>`.
+
+## Step 7 — report
 
 On success, summarize: each package that moved and its old → new
-`package.json` spec, anything held back for `/check-effect-update`, and any
-out-of-range major upgrades still available. Note that the changes are
-uncommitted and unstaged — the user can review the diff and use `/open-pr`
-when ready.
+`package.json` spec, anything held back for `/check-effect-update`, any
+out-of-range major upgrades still available, and any vendored clone that now
+lags its package (with the sync command from Step 6). Note that the changes
+are uncommitted and unstaged — the user can review the diff and use
+`/open-pr` when ready.

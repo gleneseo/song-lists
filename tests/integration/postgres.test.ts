@@ -86,6 +86,7 @@ describe("database integration", () => {
       "productions",
       "sessions",
       "song_advocates",
+      "song_covers",
       "song_featured_artists",
       "song_productions",
       "songs",

@@ -80,6 +80,12 @@ const usersRelations = relations(users, ({ one, many }) => ({
   updatedSongFeaturedArtists: many(songFeaturedArtists, {
     relationName: "songFeaturedArtistUpdater",
   }),
+  createdSongCovers: many(songCovers, {
+    relationName: "songCoverCreator",
+  }),
+  updatedSongCovers: many(songCovers, {
+    relationName: "songCoverUpdater",
+  }),
   createdSongProductions: many(songProductions, {
     relationName: "songProductionCreator",
   }),
@@ -152,7 +158,6 @@ const songs = songListsSchema.table("songs", {
   artistId: integer()
     .notNull()
     .references(() => artists.id),
-  originalSongId: integer().references((): AnyPgColumn => songs.id),
   bio: text(),
   ...auditColumns(),
 });
@@ -162,12 +167,8 @@ const songsRelations = relations(songs, ({ one, many }) => ({
     fields: [songs.artistId],
     references: [artists.id],
   }),
-  originalSong: one(songs, {
-    fields: [songs.originalSongId],
-    references: [songs.id],
-    relationName: "songOriginal",
-  }),
-  covers: many(songs, { relationName: "songOriginal" }),
+  coverOf: many(songCovers, { relationName: "songCoverSong" }),
+  coveredBy: many(songCovers, { relationName: "songCoverOriginal" }),
   featuredArtists: many(songFeaturedArtists),
   productions: many(songProductions),
   advocates: many(songAdvocates),
@@ -228,6 +229,50 @@ const songFeaturedArtistsRelations = relations(
     }),
   }),
 );
+
+const songCovers = songListsSchema.table(
+  "song_covers",
+  {
+    id: serial().primaryKey(),
+    resource_id: uuidV7().notNull().unique(),
+    songId: integer()
+      .notNull()
+      .references(() => songs.id),
+    originalSongId: integer()
+      .notNull()
+      .references((): AnyPgColumn => songs.id),
+    ...auditColumns(),
+  },
+  (table) => [
+    unique("song_covers_song_id_original_song_id_unique").on(
+      table.songId,
+      table.originalSongId,
+    ),
+  ],
+);
+
+const songCoversRelations = relations(songCovers, ({ one }) => ({
+  song: one(songs, {
+    fields: [songCovers.songId],
+    references: [songs.id],
+    relationName: "songCoverSong",
+  }),
+  original: one(songs, {
+    fields: [songCovers.originalSongId],
+    references: [songs.id],
+    relationName: "songCoverOriginal",
+  }),
+  creator: one(users, {
+    fields: [songCovers.createdBy],
+    references: [users.id],
+    relationName: "songCoverCreator",
+  }),
+  updater: one(users, {
+    fields: [songCovers.updatedBy],
+    references: [users.id],
+    relationName: "songCoverUpdater",
+  }),
+}));
 
 const songProductions = songListsSchema.table(
   "song_productions",
@@ -513,6 +558,8 @@ export {
   songsRelations,
   songFeaturedArtists,
   songFeaturedArtistsRelations,
+  songCovers,
+  songCoversRelations,
   songProductions,
   songProductionsRelations,
   songAdvocates,

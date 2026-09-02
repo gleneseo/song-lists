@@ -26,36 +26,57 @@
     {
       "idx": 3,
       "version": "7",
-      "when": 1787833106537,
+      "when": 1788308329991,
       "tag": "0003_absent_thunderbolts",
       "breakpoints": true
     },
     {
       "idx": 4,
       "version": "7",
-      "when": 1788249426801,
+      "when": 1788308379158,
       "tag": "0004_seed_admin_user",
       "breakpoints": true
     },
     {
       "idx": 5,
       "version": "7",
-      "when": 1788252978870,
+      "when": 1788308379671,
       "tag": "0005_seed_songs",
       "breakpoints": true
     },
     {
       "idx": 6,
       "version": "7",
-      "when": 1788293384350,
-      "tag": "0006_seed_on_a_boat_list",
+      "when": 1788309260744,
+      "tag": "0006_seed_the_master_list",
       "breakpoints": true
     },
     {
       "idx": 7,
       "version": "7",
-      "when": 1788295783661,
-      "tag": "0007_seed_best_soundtrack_yams_list",
+      "when": 1788309269419,
+      "tag": "0007_seed_on_a_boat_list",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1788309269940,
+      "tag": "0008_seed_best_soundtrack_yams_list",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1788309270462,
+      "tag": "0009_seed_best_cover_songs_list",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1788309607625,
+      "tag": "0010_populate_the_master_list",
       "breakpoints": true
     }
   ]

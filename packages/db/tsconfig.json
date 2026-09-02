@@ -5,6 +5,6 @@
     "rootDir": ".",
     "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo"
   },
-  "include": ["src", "tests", "package.json"],
+  "include": ["src", "tests", "drizzle.config.ts", "package.json"],
   "references": [{ "path": "../domain" }]
 }

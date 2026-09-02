@@ -28,9 +28,7 @@ export default defineConfig(
     },
     languageOptions: {
       parserOptions: {
-        projectService: {
-          allowDefaultProject: ["packages/db/drizzle.config.ts"],
-        },
+        projectService: true,
       },
     },
     rules: {

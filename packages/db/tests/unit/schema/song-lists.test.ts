@@ -465,6 +465,23 @@ describe("accounts", () => {
       references: [users.id],
     });
   });
+
+  /**
+   * Better Auth 1.7 keys account identity by (issuer, accountId) rather than
+   * (providerId, accountId); without this constraint the Drizzle adapter
+   * cannot enforce that a sign-up is unique per issuer
+   */
+  it("should require a unique combination of issuer and account id", () => {
+    const { uniqueConstraints } = getTableConfig(accounts);
+    const constraint = uniqueConstraints.find(
+      (candidate) => candidate.name === "accounts_issuer_account_id_unique",
+    );
+
+    expect(constraint?.columns.map((column) => column.name)).toEqual([
+      "issuer",
+      "accountId",
+    ]);
+  });
 });
 
 describe("foreign key wiring", () => {

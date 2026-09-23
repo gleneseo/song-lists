@@ -137,5 +137,12 @@ describe("database integration", () => {
       .where(eq(schema.users.email, "new-user@example.com"));
 
     expect(row?.id).toBe(result.user.id);
+
+    const [account] = await db
+      .select()
+      .from(schema.accounts)
+      .where(eq(schema.accounts.userId, result.user.id));
+
+    expect(account?.issuer).toBe("local:credential");
   });
 });

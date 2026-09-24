@@ -9,8 +9,9 @@
   ],
   "scripts": {
     "clean": "npm run clean --workspaces --if-present && rimraf .coverage .eslint",
-    "build": "npm-run-all clean prettier:check lint build:tsc test:coverage proof",
+    "build": "npm-run-all clean prettier:check lint build:tsc typecheck:web-next test:coverage proof",
     "build:tsc": "tsc -b",
+    "typecheck:web-next": "npm run typecheck -w @song-lists/web-next",
     "start": "npm run start -w @song-lists/cli",
     "db:generate": "npm run db:generate -w @song-lists/db",
     "db:migrate": "npm run db:migrate -w @song-lists/db",
@@ -21,8 +22,9 @@
     "test:integration": "vitest --run --project integration",
     "prettier:check": "prettier . --check --no-editorconfig --ignore-unknown",
     "prettier:write": "prettier . --write --no-editorconfig --ignore-unknown",
-    "lint": "npm-run-all lint:eslint",
+    "lint": "npm-run-all lint:eslint lint:eslint:web-next",
     "lint:eslint": "eslint .",
+    "lint:eslint:web-next": "npm run lint -w @song-lists/web-next",
     "lint:eslint:report": "eslint . --output-file=.eslint/report.html --format=html",
     "proof": "git rev-parse HEAD | cowsay -r",
     "prepare": "husky && effect-language-service patch"

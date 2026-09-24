@@ -14,6 +14,10 @@ export default defineConfig(
       ".workmux/**",
       "**/vitest.config.ts",
       "commitlint.config.js",
+      // Next.js apps own their own eslint config (see the Why note in
+      // AGENTS.md's workspace layout) -- its React/JSX conventions and
+      // default-export requirements conflict with the rules below.
+      "apps/web-next/**",
     ],
   },
   {

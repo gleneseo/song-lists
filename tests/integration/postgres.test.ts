@@ -1,6 +1,7 @@
 import { Socket } from "node:net";
 import { createAuth } from "@song-lists/auth";
-import { createDb, runMigrations, schema } from "@song-lists/db";
+import { createDb, schema } from "@song-lists/db";
+import { runMigrations } from "@song-lists/db/migrate";
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, inject, it } from "vitest";
 

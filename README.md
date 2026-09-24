@@ -18,33 +18,50 @@ npm install
 
 This repository is an [npm workspaces](https://docs.npmjs.com/cli/using-npm/workspaces) monorepo. Shared libraries live in `packages/*`; deployable applications live in `apps/*`.
 
-| Path              | Package              | Role                                                                |
-| ----------------- | -------------------- | ------------------------------------------------------------------- |
-| `packages/domain` | `@song-lists/domain` | Shared types and [Effect Schema](https://effect.website) validation |
-| `packages/db`     | `@song-lists/db`     | Drizzle schema, the `createDb` factory, and `migrations/`           |
-| `packages/auth`   | `@song-lists/auth`   | Better Auth's `createAuth` factory over `@song-lists/db`            |
-| `apps/cli`        | `@song-lists/cli`    | The Effect CLI and its Docker image                                 |
+| Path              | Package                | Role                                                                |
+| ----------------- | ---------------------- | ------------------------------------------------------------------- |
+| `packages/domain` | `@song-lists/domain`   | Shared types and [Effect Schema](https://effect.website) validation |
+| `packages/db`     | `@song-lists/db`       | Drizzle schema, the `createDb` factory, and `migrations/`           |
+| `packages/auth`   | `@song-lists/auth`     | Better Auth's `createAuth` factory over `@song-lists/db`            |
+| `apps/cli`        | `@song-lists/cli`      | The Effect CLI and its Docker image                                 |
+| `apps/web-next`   | `@song-lists/web-next` | The Next.js frontend                                                |
 
 Internal packages point their `exports` at TypeScript source, so nothing needs a build step before tests or `tsx` can run. `npm run build:tsc` runs `tsc -b` over the whole project graph for type-checking. Target one workspace with `-w`, e.g. `npm run test:unit -w @song-lists/db`.
+
+Web frontends are named `apps/web-<stack>` (e.g. `apps/web-next`, with `apps/web-htmx` planned) rather than a single `apps/web`, since more than one is expected to exist side by side. Each keeps its own `tsconfig.json` and `eslint.config.mjs` instead of the shared ones — see [AGENTS.md](./AGENTS.md#why-nextjs-apps-opt-out-of-the-shared-tsconfigeslint-config) for why.
+
+### `@song-lists/web-next`
+
+A single page that lists every song in the catalog and lets you narrow it by typing — no auth, no other routes yet. Next.js 16 (App Router), Tailwind v4, and shadcn's "base-nova" style.
+
+```sh
+docker compose up -d               # if it isn't already running
+cp apps/web-next/.env.example apps/web-next/.env.local
+DATABASE_URL="postgres://postgres:postgres@localhost:5432/default" npm run db:migrate
+npm run dev -w @song-lists/web-next
+```
+
+Open [http://localhost:3000](http://localhost:3000). `npm run build -w @song-lists/web-next` / `npm run start -w @song-lists/web-next` build and run it for production; neither is part of the root `npm run build`, which stays independent of a live database.
 
 ## Scripts
 
 Run these from the repository root.
 
-| Script                     | Description                                                                                       |
-| -------------------------- | ------------------------------------------------------------------------------------------------- |
-| `npm run build`            | Clean, check formatting, lint, type-check (`tsc -b`), test with coverage, proof. Requires Docker. |
-| `npm run build:tsc`        | Type-check every package and app (`tsc -b`).                                                      |
-| `npm test`                 | Run every test project. Requires Docker.                                                          |
-| `npm run test:coverage`    | Run every test project with coverage. Requires Docker.                                            |
-| `npm run test:unit`        | Run the per-package `unit-*` projects only. No Docker required.                                   |
-| `npm run test:integration` | Run the `integration` project only. Requires Docker.                                              |
-| `npm run lint`             | Run ESLint across the workspace.                                                                  |
-| `npm run prettier:check`   | Check formatting.                                                                                 |
-| `npm run prettier:write`   | Apply formatting.                                                                                 |
-| `npm run clean`            | Remove build and coverage output from every workspace.                                            |
-| `npm run db:generate`      | Generate migrations from the schema (delegates to `@song-lists/db`; needs `DATABASE_URL`).        |
-| `npm run db:docs`          | Regenerate `packages/db/docs/schema.md` from the schema.                                          |
+| Script                     | Description                                                                                                      |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `npm run build`            | Clean, check formatting, lint, type-check (`tsc -b`), test with coverage, proof. Requires Docker.                |
+| `npm run build:tsc`        | Type-check every package and app (`tsc -b`).                                                                     |
+| `npm test`                 | Run every test project. Requires Docker.                                                                         |
+| `npm run test:coverage`    | Run every test project with coverage. Requires Docker.                                                           |
+| `npm run test:unit`        | Run the per-package `unit-*` projects only. No Docker required.                                                  |
+| `npm run test:integration` | Run the `integration` project only. Requires Docker.                                                             |
+| `npm run lint`             | Run ESLint across the workspace.                                                                                 |
+| `npm run prettier:check`   | Check formatting.                                                                                                |
+| `npm run prettier:write`   | Apply formatting.                                                                                                |
+| `npm run clean`            | Remove build and coverage output from every workspace.                                                           |
+| `npm run db:generate`      | Generate migrations from the schema (delegates to `@song-lists/db`; needs `DATABASE_URL`).                       |
+| `npm run db:migrate`       | Apply pending migrations to the database at `DATABASE_URL`. Idempotent — already-applied migrations are skipped. |
+| `npm run db:docs`          | Regenerate `packages/db/docs/schema.md` from the schema.                                                         |
 
 Each app owns its own Docker scripts, e.g. `npm run docker:build -w @song-lists/cli`.
 
@@ -148,6 +165,10 @@ docker compose down
 Override any of these by setting environment variables in your shell or in a `.env` file next to `docker-compose.yml`.
 
 Data is persisted to `.data/postgres` and `.data/redis` on the host, so it survives container restarts. Delete those directories to reset a service to a clean state.
+
+Once Postgres is up, apply the schema (and its seed data) with `npm run db:migrate`. Drizzle tracks each applied migration's hash in a `drizzle.__drizzle_migrations` table, making it idempotent — re-running it once everything is applied is a no-op, so it's safe to run any time, not just on a fresh database.
+
+This is entirely separate from the integration tests: they start their own throwaway Postgres via Testcontainers on a random port (see [Testing](#testing)), migrate it from scratch, and tear it down afterward. Running the test suite never touches — and never refreshes — the docker-compose database that `@song-lists/web-next` and local tooling read from.
 
 ## Commit messages
 

@@ -13,6 +13,7 @@
     "build:tsc": "tsc -b",
     "start": "npm run start -w @song-lists/cli",
     "db:generate": "npm run db:generate -w @song-lists/db",
+    "db:migrate": "npm run db:migrate -w @song-lists/db",
     "db:docs": "npm run db:docs -w @song-lists/db",
     "test": "vitest --run",
     "test:coverage": "vitest --run --coverage",

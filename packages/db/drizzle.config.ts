@@ -1,35 +1,7 @@
-import { existsSync } from "node:fs";
-import { dirname, join } from "node:path";
 import { defineConfig } from "drizzle-kit";
+import { loadNearestEnv } from "./src/load-env.js";
 
-/**
- * Load the nearest `.env` on the way up from the current directory.
- *
- * drizzle-kit only auto-loads a `.env` from its own working directory, which
- * is `packages/db` when this runs via `npm run db:generate -w @song-lists/db`.
- * Walking up lets the single repo-root `.env` keep working, as it did before
- * this package moved out of the root. A `DATABASE_URL` already exported in the
- * environment wins, and `process.loadEnvFile` never overwrites it.
- */
-function loadNearestEnv(): void {
-  let directory = process.cwd();
-  for (;;) {
-    const candidate = join(directory, ".env");
-    if (existsSync(candidate)) {
-      process.loadEnvFile(candidate);
-      return;
-    }
-    const parent = dirname(directory);
-    if (parent === directory) {
-      return;
-    }
-    directory = parent;
-  }
-}
-
-if (!process.env["DATABASE_URL"]) {
-  loadNearestEnv();
-}
+loadNearestEnv(process.cwd());
 
 const { DATABASE_URL } = process.env;
 

@@ -25,6 +25,7 @@ export default defineConfig({
         "**/dist/**",
         "**/src/index.ts",
         "packages/db/src/generate-docs.ts",
+        "packages/db/src/run-migrations.ts",
         "apps/cli/src/index.ts",
       ],
       reportsDirectory: ".coverage",

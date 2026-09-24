@@ -1,19 +1,14 @@
 {
-  "extends": [
-    "@tsconfig/node24/tsconfig.json",
-    "@tsconfig/strictest/tsconfig.json"
-  ],
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "rootDir": ".",
-    "types": ["node"],
-    "verbatimModuleSyntax": true,
-    "resolveJsonModule": true,
-    "plugins": [{ "name": "@effect/language-service" }],
-    "incremental": true,
-    "composite": true,
-    "declarationMap": true,
-    "sourceMap": true
+    "noEmit": true,
+    "composite": false
   },
-  "include": ["src", "tests", "package.json"]
+  "include": ["tests"],
+  "references": [
+    { "path": "./packages/domain" },
+    { "path": "./packages/db" },
+    { "path": "./packages/auth" },
+    { "path": "./apps/cli" }
+  ]
 }

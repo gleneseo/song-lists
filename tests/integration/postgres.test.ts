@@ -1,13 +1,9 @@
 import { Socket } from "node:net";
-import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { createAuth } from "@song-lists/auth";
+import { createDb, schema } from "@song-lists/db";
+import { runMigrations } from "@song-lists/db/migrate";
 import { eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/node-postgres";
-import { migrate } from "drizzle-orm/node-postgres/migrator";
-import { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, inject, it } from "vitest";
-import authConfig from "../../src/auth/config.js";
-import * as schema from "../../src/db/schema/song-lists.js";
 
 const CONNECT_TIMEOUT_MS = 5_000;
 
@@ -61,11 +57,10 @@ describe("postgres testcontainer", () => {
 
 describe("database integration", () => {
   const postgres = inject("postgres");
-  const pool = new Pool({ connectionString: postgres.connectionUri });
-  const db = drizzle(pool, { schema, casing: "snake_case" });
+  const { db, pool } = createDb({ connectionString: postgres.connectionUri });
 
   beforeAll(async () => {
-    await migrate(db, { migrationsFolder: "./migrations" });
+    await runMigrations(db);
   });
 
   afterAll(async () => {
@@ -125,11 +120,7 @@ describe("database integration", () => {
   });
 
   it("should let Better Auth sign a user up through the real adapter and schema", async () => {
-    const auth = betterAuth({
-      ...authConfig,
-      baseURL: "http://localhost:3000",
-      database: drizzleAdapter(db, { schema, provider: "pg" }),
-    });
+    const auth = createAuth(db, { baseURL: "http://localhost:3000" });
 
     const result = await auth.api.signUpEmail({
       body: {
@@ -147,5 +138,12 @@ describe("database integration", () => {
       .where(eq(schema.users.email, "new-user@example.com"));
 
     expect(row?.id).toBe(result.user.id);
+
+    const [account] = await db
+      .select()
+      .from(schema.accounts)
+      .where(eq(schema.accounts.userId, result.user.id));
+
+    expect(account?.issuer).toBe("local:credential");
   });
 });

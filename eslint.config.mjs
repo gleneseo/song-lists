@@ -8,13 +8,16 @@ import tseslint from "typescript-eslint";
 export default defineConfig(
   {
     ignores: [
-      "dist/**",
+      "**/dist/**",
       ".coverage/**",
       ".eslint/**",
       ".workmux/**",
-      "vitest.config.ts",
-      "vitest.integration.config.ts",
+      "**/vitest.config.ts",
       "commitlint.config.js",
+      // Next.js apps own their own eslint config (see the Why note in
+      // AGENTS.md's workspace layout) -- its React/JSX conventions and
+      // default-export requirements conflict with the rules below.
+      "apps/web-next/**",
     ],
   },
   {
@@ -29,9 +32,7 @@ export default defineConfig(
     },
     languageOptions: {
       parserOptions: {
-        projectService: {
-          allowDefaultProject: ["drizzle.config.ts"],
-        },
+        projectService: true,
       },
     },
     rules: {

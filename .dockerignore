@@ -1,11 +1,11 @@
-node_modules
-dist
-.coverage
-.eslint
+**/node_modules
+**/dist
+**/.coverage
+**/.eslint
 .data
 .git
 .husky
 .workmux
 .env
 .env.*
-*.md
+**/*.md

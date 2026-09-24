@@ -3,12 +3,8 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     projects: [
-      {
-        test: {
-          name: "unit",
-          include: ["tests/unit/**/*.test.ts"],
-        },
-      },
+      "packages/*/vitest.config.ts",
+      "apps/*/vitest.config.ts",
       {
         test: {
           name: "integration",
@@ -24,8 +20,14 @@ export default defineConfig({
         "100": true,
       },
       reporter: [["text", { skipFull: true }], "html", "clover", "json"],
-      include: ["src"],
-      exclude: ["dist", "src/index.ts", "src/db/generate-docs.ts"],
+      include: ["packages/*/src/**", "apps/*/src/**"],
+      exclude: [
+        "**/dist/**",
+        "**/src/index.ts",
+        "packages/db/src/generate-docs.ts",
+        "packages/db/src/run-migrations.ts",
+        "apps/cli/src/index.ts",
+      ],
       reportsDirectory: ".coverage",
     },
   },

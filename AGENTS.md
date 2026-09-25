@@ -22,21 +22,28 @@ one is expected to exist side by side.
 Schema migrations live in `packages/db/migrations`; generate them with
 `npm run db:generate` (needs `DATABASE_URL`).
 
-### Why Next.js apps opt out of the shared tsconfig/eslint config
+### Why apps/web-next opts out of the shared tsconfig/eslint config
 
 `tsconfig.base.json` targets Node (no DOM lib) and is `composite` for the
 `tsc -b` graph; a Next.js app needs the DOM lib, `jsx: "react-jsx"`,
 `moduleResolution: "bundler"`, and Next's own `plugins`/`.next/types`
-includes, and type-checks itself rather than building via `tsc -b`. The root
-`eslint.config.mjs` also bans inline default exports, which conflicts with
-Next's `export default function Page() {...}` convention for every
-page/layout. So each `apps/web-*` app keeps its own standalone
-`tsconfig.json` and `eslint.config.mjs` (via `eslint-config-next` or the
-equivalent), is excluded from the root eslint config's `ignores` and from
-the root `tsconfig.json`'s project references, and gets its own
-`typecheck`/`lint` scripts wired into the root `build`/`lint` chains instead
-(see `apps/web-next/package.json` and the root `package.json`'s
-`typecheck:web-next`/`lint:eslint:web-next` scripts).
+includes, and type-checks itself rather than building via `tsc -b`. So
+`apps/web-next` keeps its own standalone `tsconfig.json`, excluded
+from the root `tsconfig.json`'s project references, with its own
+`typecheck` script wired into the root `build` chain instead (see
+`apps/web-next/package.json` and the root `package.json`'s
+`typecheck:web-next`).
+
+`apps/web-next` also keeps its own `eslint.config.mjs` (via
+`eslint-config-next`), for React/JSX-aware linting the
+root config was never designed to give `.tsx` files. ESLint 10+ resolves
+the _nearest_ config file per linted file, so that nested config already
+applies to `apps/web-next`'s files regardless of what the root does --
+but the root config still adds `apps/web-next/**` to its `ignores`, to
+stop root's `eslint .` (running on the root's hoisted ESLint 10 engine)
+from also attempting those files via the nested config and crashing (see
+the `eslint@^9` pin below), and to avoid double-linting files that
+`lint:eslint:web-next` already covers.
 
 `apps/web-next` also pins its own `eslint` devDependency (currently `^9`)
 rather than using the root's hoisted version: `eslint-config-next`'s bundled
@@ -67,6 +74,29 @@ harmless for Node-only consumers (tests, tooling), but it would break any
 bundler-based consumer that merely imports the main barrel, whether or not
 it ever calls `runMigrations`. Keeping it off the main entry point also
 means a web app can't accidentally ship the ability to run migrations.
+
+### How `lib/` is organized in apps/web-next
+
+`lib` isn't a Next.js convention -- Next only cares about `app/` (or
+`pages/`), `public/`, and optionally `src/`. It's a shadcn/ui convention:
+`components.json`'s `aliases` hardcodes `"lib": "@/lib"` and
+`"utils": "@/lib/utils"`, so renaming it fights the `shadcn` CLI. Left
+alone, though, `lib` is just "everything that isn't a component," which is
+exactly ambiguous enough to become a junk drawer.
+
+The dividing lines that actually hold up: `app/` is route entry points
+Next's router recognizes (`page.tsx`, `layout.tsx`, ...); `components/` is
+anything that returns JSX (`components/ui/` for vendored shadcn
+primitives, everything else for this app's own composed components);
+`hooks/` (a separate top-level alias in `components.json`, sibling to
+`lib/`, not nested inside it) is for custom React hooks. `lib/` is what's
+left: data access, domain logic, config, clients -- and it should never
+hold a flat file directly, only purpose-named subfolders, so that purpose
+stays legible instead of implicit. `apps/web-next/lib` currently has
+`queries/` (talks to a live database; excluded from the coverage
+`include` in the root `vitest.config.ts`) and `search/` (pure app logic;
+covered). New code goes into an existing subfolder if it fits, or a new
+purpose-named one -- never loose in `lib/` itself.
 
 ## Vendored package sources
 
@@ -103,6 +133,25 @@ Never commit directly to `master`. All changes must go through a pull request fr
 ## Git stash
 
 Any `git stash` operation must include untracked files (i.e. pass `-u`/`--include-untracked`).
+
+## Exports
+
+A file with exactly one export -- which will be often -- should always
+prefer exporting it inline (`export default function Page() {...}`,
+`export function filterSongs() {...}`). A file with more than one
+export instead defines each one first and groups them together in a
+single `export { ... }` (and `export default name;`) block at the
+bottom, rather than scattering them across several export sites.
+
+`packages/*` and `apps/cli` enforce the always-grouped form via the root
+`eslint.config.mjs`'s `no-restricted-syntax` rule, with no single-export
+exception. `apps/web-next` can't use that shared config (see above) and
+follows the same convention by hand instead, with the single-export
+preference applied. The one exception regardless of export count is
+vendored or CLI-generated code -- currently `components/ui/*` in
+`apps/web-next`, generated by the `shadcn` CLI -- which keeps whatever
+shape the tool itself produces, so future `npx shadcn add <component>`
+output doesn't look inconsistent with what's already there.
 
 ## Test conventions
 

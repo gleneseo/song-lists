@@ -11,7 +11,7 @@ import {
   unique,
   uuid,
 } from "drizzle-orm/pg-core";
-import { USER_ROLE } from "@song-lists/domain";
+import { USER_ROLE } from "../user-role.js";
 
 const songListsSchema = pgSchema("song_lists");
 

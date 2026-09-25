@@ -6,5 +6,5 @@
     "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo"
   },
   "include": ["src", "tests", "package.json"],
-  "references": [{ "path": "../db" }, { "path": "../domain" }]
+  "references": [{ "path": "../db" }]
 }

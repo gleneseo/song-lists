@@ -4,13 +4,12 @@
 
 This repository is an npm-workspaces monorepo.
 
-| Path              | Package                | Role                                                        |
-| ----------------- | ---------------------- | ----------------------------------------------------------- |
-| `packages/domain` | `@song-lists/domain`   | Shared types and Effect Schema validation. No internal deps |
-| `packages/db`     | `@song-lists/db`       | Drizzle schema, `createDb` factory, and the `migrations/`   |
-| `packages/auth`   | `@song-lists/auth`     | Better Auth `createAuth` factory over `@song-lists/db`      |
-| `apps/cli`        | `@song-lists/cli`      | The Effect CLI and its Docker image                         |
-| `apps/web-next`   | `@song-lists/web-next` | The Next.js frontend                                        |
+| Path            | Package                | Role                                                      |
+| --------------- | ---------------------- | --------------------------------------------------------- |
+| `packages/db`   | `@song-lists/db`       | Drizzle schema, `createDb` factory, and the `migrations/` |
+| `packages/auth` | `@song-lists/auth`     | Better Auth `createAuth` factory over `@song-lists/db`    |
+| `apps/cli`      | `@song-lists/cli`      | The Effect CLI and its Docker image                       |
+| `apps/web-next` | `@song-lists/web-next` | The Next.js frontend                                      |
 
 Internal packages resolve to their TypeScript source (`exports` points at
 `src/index.ts`); `tsc -b` from the root type-checks the whole graph. Run a

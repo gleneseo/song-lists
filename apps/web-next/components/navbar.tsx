@@ -33,9 +33,9 @@ function Navbar() {
               <Button
                 variant="ghost"
                 nativeButton={false}
-                render={<Link href="/dashboard" />}
+                render={<Link href="/songs" />}
               >
-                Dashboard
+                Songs
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger

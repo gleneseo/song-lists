@@ -1,10 +1,10 @@
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
-import { USER_ROLE, UserRole } from "../../src/user.js";
+import { USER_ROLE, UserRole } from "../../src/user-role.js";
 
 const decode = Schema.decodeUnknownSync(UserRole);
 
-describe("user", () => {
+describe("user role", () => {
   it("should accept every role it defines", () => {
     expect(Object.values(USER_ROLE).map((role) => decode(role))).toEqual([
       "user",

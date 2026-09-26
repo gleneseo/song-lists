@@ -2,22 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
-import type { Song } from "@/lib/songs";
+import { filterSongs } from "@/lib/search/filter-songs";
+import type { Song } from "@/lib/queries/songs";
 
-function matches(song: Song, needle: string): boolean {
-  return (
-    song.title.toLowerCase().includes(needle) ||
-    song.artist.name.toLowerCase().includes(needle)
-  );
-}
-
-function SongSearch({ songs }: { songs: Song[] }) {
+export function SongSearch({ songs }: { songs: Song[] }) {
   const [query, setQuery] = useState("");
 
-  const filtered = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-    return needle ? songs.filter((song) => matches(song, needle)) : songs;
-  }, [query, songs]);
+  const filtered = useMemo(() => filterSongs(songs, query), [query, songs]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -54,5 +45,3 @@ function SongSearch({ songs }: { songs: Song[] }) {
     </div>
   );
 }
-
-export { SongSearch };

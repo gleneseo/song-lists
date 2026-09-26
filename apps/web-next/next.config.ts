@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
-  transpilePackages: ["@song-lists/db", "@song-lists/domain"],
+  transpilePackages: ["@song-lists/db"],
   // @song-lists/* packages are consumed as raw TypeScript (their `exports`
   // point at src/index.ts) and, like the rest of the monorepo, write
   // relative imports with an explicit ".js" extension resolving to a

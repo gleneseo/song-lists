@@ -1,6 +1,6 @@
 import { asc } from "drizzle-orm";
 import { schema } from "@song-lists/db";
-import { db } from "./db";
+import { db } from "./client";
 
 interface Song {
   id: number;

@@ -12,8 +12,6 @@ declare global {
 
 // Next.js dev re-evaluates this module on every HMR reload; caching the
 // client on `global` reuses the same pool instead of leaking a new one.
-const db =
+export const db =
   global.songListsDb ?? createDb({ connectionString: DATABASE_URL }).db;
 global.songListsDb = db;
-
-export { db };

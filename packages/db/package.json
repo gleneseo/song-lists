@@ -23,8 +23,8 @@
     "db:docs": "tsx src/generate-docs.ts"
   },
   "dependencies": {
-    "@song-lists/domain": "1.0.0",
     "drizzle-orm": "^0.45.2",
+    "effect": "^4.0.0-rc.112",
     "pg": "^8.23.0"
   },
   "devDependencies": {

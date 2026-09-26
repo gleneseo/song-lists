@@ -80,26 +80,33 @@ and leave the working tree as-is — don't guess at fixes for errors caused by
 the bump, and don't auto-revert. Backing out is
 `git checkout -- package.json package-lock.json && npm install`.
 
-## Step 6 — sync vendored reference clones
+## Step 6 — check vendored reference clones for drift
 
 [AGENTS.md](../../../AGENTS.md) lists local clones of some dependencies' source
-(Effect, Drizzle, Better Auth) kept for reference. For each bumped package
-that has a clone listed there, compare the clone's checked-out version
-(`git -C <path> describe --tags --always`) against the newly installed
-version.
+(Effect, Drizzle, Better Auth, Next.js) kept for reference. For each bumped
+package that has a clone listed there, compare the clone's checked-out
+version (`git -C <path> describe --tags --always`) against the newly
+installed version, and note any mismatch for the report.
 
-If a clone lags, **do not modify it** — matching
-[`/check-effect-update`](../check-effect-update/SKILL.md), the skill never
-runs `git` operations inside a vendor checkout (they are often shallow,
-shared across projects, or carry local state). Instead, include in the
-report the command the user can run themselves, e.g.
-`git -C <path> fetch --tags && git -C <path> checkout v<version>`.
+**Never modify a vendor checkout, and never suggest a command to sync
+one** — matching [`/check-effect-update`](../check-effect-update/SKILL.md),
+this skill doesn't run `git` operations inside a vendor checkout. These
+clones live outside the repo at `~/.local/share/vendors/`, shared across
+every project on the machine that references that dependency — not owned
+by this one. A clone lagging this project's newly installed version isn't
+necessarily something to fix: another project may be deliberately pinned
+to what the clone currently shows, or mid-investigation against it, and
+moving it forward here could yank that out from under them without their
+knowledge. Report the mismatch as information only — current clone
+version vs. this project's new version — and leave whether and when to
+move the shared clone entirely to the user, who can see what else on
+their machine depends on it and this skill can't.
 
 ## Step 7 — report
 
 On success, summarize: each package that moved and its old → new
 `package.json` spec, anything held back for `/check-effect-update`, any
-out-of-range major upgrades still available, and any vendored clone that now
-lags its package (with the sync command from Step 6). Note that the changes
-are uncommitted and unstaged — the user can review the diff and use
-`/open-pr` when ready.
+out-of-range major upgrades still available, and any vendored clone whose
+checked-out version now differs from this project's (as information, not
+a recommendation — see Step 6). Note that the changes are uncommitted and
+unstaged — the user can review the diff and use `/open-pr` when ready.

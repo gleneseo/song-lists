@@ -18,13 +18,12 @@ npm install
 
 This repository is an [npm workspaces](https://docs.npmjs.com/cli/using-npm/workspaces) monorepo. Shared libraries live in `packages/*`; deployable applications live in `apps/*`.
 
-| Path              | Package                | Role                                                                |
-| ----------------- | ---------------------- | ------------------------------------------------------------------- |
-| `packages/domain` | `@song-lists/domain`   | Shared types and [Effect Schema](https://effect.website) validation |
-| `packages/db`     | `@song-lists/db`       | Drizzle schema, the `createDb` factory, and `migrations/`           |
-| `packages/auth`   | `@song-lists/auth`     | Better Auth's `createAuth` factory over `@song-lists/db`            |
-| `apps/cli`        | `@song-lists/cli`      | The Effect CLI and its Docker image                                 |
-| `apps/web-next`   | `@song-lists/web-next` | The Next.js frontend                                                |
+| Path            | Package                | Role                                                      |
+| --------------- | ---------------------- | --------------------------------------------------------- |
+| `packages/db`   | `@song-lists/db`       | Drizzle schema, the `createDb` factory, and `migrations/` |
+| `packages/auth` | `@song-lists/auth`     | Better Auth's `createAuth` factory over `@song-lists/db`  |
+| `apps/cli`      | `@song-lists/cli`      | The Effect CLI and its Docker image                       |
+| `apps/web-next` | `@song-lists/web-next` | The Next.js frontend                                      |
 
 Internal packages point their `exports` at TypeScript source, so nothing needs a build step before tests or `tsx` can run. `npm run build:tsc` runs `tsc -b` over the whole project graph for type-checking. Target one workspace with `-w`, e.g. `npm run test:unit -w @song-lists/db`.
 

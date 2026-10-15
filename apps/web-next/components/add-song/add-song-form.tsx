@@ -317,6 +317,7 @@ function AddSongForm({
           <Button
             variant="outline"
             onClick={() => {
+              setSummary(null);
               router.push("/songs");
               router.refresh();
             }}

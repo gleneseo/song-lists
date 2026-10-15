@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Repeat2 } from "lucide-react";
+import { Disc3 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { filterSongs } from "@/lib/search/filter-songs";
 import type { Song } from "@/lib/queries/songs";
@@ -42,12 +42,13 @@ export function SongSearch({ songs }: { songs: Song[] }) {
             <span className="flex items-center gap-1.5">
               <span className="font-medium">{song.title}</span>
               {song.coverOf.length > 0 && (
-                <span title={`Cover of ${coverOfLabel(song)}`}>
-                  <Repeat2
-                    className="size-3.5 shrink-0 text-muted-foreground"
-                    role="img"
-                    aria-label={`Cover of ${coverOfLabel(song)}`}
-                  />
+                <span
+                  role="img"
+                  aria-label={`Cover of ${coverOfLabel(song)}`}
+                  title={`Cover of ${coverOfLabel(song)}`}
+                  className="flex size-4 shrink-0 items-center justify-center rounded-full bg-blue-500"
+                >
+                  <Disc3 className="size-2.5 text-white" aria-hidden="true" />
                 </span>
               )}
             </span>

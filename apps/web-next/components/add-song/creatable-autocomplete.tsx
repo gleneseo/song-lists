@@ -56,6 +56,20 @@ function CreatableAutocomplete<T extends CreatableOption>({
   const [results, setResults] = useState<T[]>([]);
   const debouncedInput = useDebouncedValue(inputValue);
 
+  // Keeps the displayed text in sync when `value` changes for a reason
+  // other than the user picking an item here -- e.g. a parent resetting the
+  // whole form after a successful submit. The component instance can
+  // outlive that reset (Next.js may reuse it across navigations rather than
+  // remounting), so `inputValue`'s own mount-time initializer alone isn't
+  // enough to keep this in sync. Adjusting state during render (rather than
+  // in an effect) avoids an extra render pass -- see
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes.
+  const [prevValue, setPrevValue] = useState(value);
+  if (value !== prevValue) {
+    setPrevValue(value);
+    setInputValue(value ? selectionLabel(value) : "");
+  }
+
   useEffect(() => {
     let cancelled = false;
 

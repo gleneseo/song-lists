@@ -193,6 +193,19 @@ function AddSongForm({
       const result = await createSong(input);
 
       if (result.status === "created") {
+        setArtist(null);
+        setTitle("");
+        setBio("");
+        setFeaturedArtists([]);
+        setProductionChoice(null);
+        setReleaseYear("");
+        setTypeId(productionTypes[0]?.id ?? null);
+        setCoverChoice(null);
+        setCoverNewArtist(null);
+        setCoverNewTitle("");
+        setListIds(lists[0] ? [lists[0].id] : []);
+        setAdvocateIds([]);
+        setDuplicateCheck(null);
         router.push("/songs");
         router.refresh();
         return;

@@ -143,5 +143,5 @@ function CreatableAutocomplete<T extends CreatableOption>({
   );
 }
 
-export { CreatableAutocomplete };
+export { CreatableAutocomplete, selectionLabel };
 export type { CreatableOption, CreatableSelection };

@@ -14,18 +14,11 @@ import {
 } from "@/components/ui/combobox";
 import { Label } from "@/components/ui/label";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
-import type {
-  CreatableOption,
-  CreatableSelection,
+import {
+  selectionLabel,
+  type CreatableOption,
+  type CreatableSelection,
 } from "./creatable-autocomplete";
-
-function selectionLabel<T extends CreatableOption>(
-  selection: CreatableSelection<T>,
-): string {
-  return selection.kind === "existing"
-    ? selection.option.label
-    : selection.name;
-}
 
 function selectionKey<T extends CreatableOption>(
   selection: CreatableSelection<T>,

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type SubmitEvent } from "react";
 import { useRouter } from "next/navigation";
+import { CheckCircle2 } from "lucide-react";
 import {
   checkDuplicateSong,
   createSong,
@@ -23,6 +24,7 @@ import { CheckboxList } from "./checkbox-list";
 import { CoverField } from "./cover-field";
 import {
   CreatableAutocomplete,
+  selectionLabel,
   type CreatableOption,
   type CreatableSelection,
 } from "./creatable-autocomplete";
@@ -84,6 +86,16 @@ function toCoverSelection(
   };
 }
 
+interface AddedSongSummary {
+  title: string;
+  artistLabel: string;
+  featuredArtistLabels: string[];
+  productionLabel: string | null;
+  coverLabel: string | null;
+  listNames: string[];
+  advocateNames: string[];
+}
+
 interface AddSongFormProps {
   lists: ListOption[];
   productionTypes: ProductionTypeOption[];
@@ -127,6 +139,7 @@ function AddSongForm({
     useState<DuplicateCheckResult | null>(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [summary, setSummary] = useState<AddedSongSummary | null>(null);
 
   const debouncedTitle = useDebouncedValue(title, 400);
 
@@ -193,6 +206,35 @@ function AddSongForm({
       const result = await createSong(input);
 
       if (result.status === "created") {
+        const productionLabel = !productionChoice
+          ? null
+          : productionChoice.kind === "existing"
+            ? productionChoice.option.label
+            : `${productionChoice.name} (${releaseYear}, ${productionTypes.find((type) => type.id === typeId)?.name ?? ""})`;
+
+        const coverLabel = !coverChoice
+          ? null
+          : coverChoice.kind === "existing"
+            ? coverChoice.option.label
+            : `${coverNewTitle} by ${coverNewArtist ? selectionLabel(coverNewArtist) : ""}`;
+
+        setSummary({
+          title,
+          artistLabel: selectionLabel(artist),
+          featuredArtistLabels: featuredArtists.map(selectionLabel),
+          productionLabel,
+          coverLabel,
+          listNames: lists
+            .filter((list) => listIds.includes(list.id))
+            .map((list) => list.name),
+          advocateNames: [
+            "You",
+            ...advocateCandidates
+              .filter((candidate) => advocateIds.includes(candidate.id))
+              .map((candidate) => candidate.name),
+          ],
+        });
+
         setArtist(null);
         setTitle("");
         setBio("");
@@ -206,8 +248,6 @@ function AddSongForm({
         setListIds(lists[0] ? [lists[0].id] : []);
         setAdvocateIds([]);
         setDuplicateCheck(null);
-        router.push("/songs");
-        router.refresh();
         return;
       }
 
@@ -226,6 +266,66 @@ function AddSongForm({
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (summary) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex items-start gap-3 rounded-md border border-border bg-muted/50 p-4">
+          <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-primary" />
+          <div className="flex flex-col gap-2 text-sm">
+            <p className="font-medium">
+              &ldquo;{summary.title}&rdquo; by {summary.artistLabel} was added
+              successfully.
+            </p>
+            <div className="flex flex-col gap-1 text-muted-foreground">
+              <p>
+                <span className="font-medium text-foreground">
+                  Featured artists:{" "}
+                </span>
+                {summary.featuredArtistLabels.length > 0
+                  ? summary.featuredArtistLabels.join(", ")
+                  : "None"}
+              </p>
+              <p>
+                <span className="font-medium text-foreground">
+                  Production:{" "}
+                </span>
+                {summary.productionLabel ?? "None"}
+              </p>
+              <p>
+                <span className="font-medium text-foreground">Cover of: </span>
+                {summary.coverLabel ?? "Not a cover"}
+              </p>
+              <p>
+                <span className="font-medium text-foreground">
+                  Added to lists:{" "}
+                </span>
+                {summary.listNames.length > 0
+                  ? summary.listNames.join(", ")
+                  : "None"}
+              </p>
+              <p>
+                <span className="font-medium text-foreground">Advocates: </span>
+                {summary.advocateNames.join(", ")}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <Button onClick={() => setSummary(null)}>Add another song</Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              router.push("/songs");
+              router.refresh();
+            }}
+          >
+            View in Songs
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -8,6 +8,10 @@ interface Song {
   artist: { name: string };
 }
 
+interface SongListItem extends Song {
+  featuredArtists: { artist: { name: string } }[];
+}
+
 interface ExistingSongMatch {
   id: number;
   resourceId: string;
@@ -26,10 +30,16 @@ interface DuplicateCheckResult {
 /** Below this, two titles are treated as coincidentally similar, not the same song. */
 const NEAR_DUPLICATE_SIMILARITY_THRESHOLD = 0.5;
 
-async function getSongs(): Promise<Song[]> {
+async function getSongs(): Promise<SongListItem[]> {
   return db.query.songs.findMany({
     columns: { id: true, title: true },
-    with: { artist: { columns: { name: true } } },
+    with: {
+      artist: { columns: { name: true } },
+      featuredArtists: {
+        columns: { id: true },
+        with: { artist: { columns: { name: true } } },
+      },
+    },
     orderBy: [asc(schema.songs.title)],
   });
 }
@@ -99,4 +109,4 @@ async function findExistingSong(
 }
 
 export { getSongs, searchSongs, findExistingSong };
-export type { Song, ExistingSongMatch, DuplicateCheckResult };
+export type { Song, SongListItem, ExistingSongMatch, DuplicateCheckResult };

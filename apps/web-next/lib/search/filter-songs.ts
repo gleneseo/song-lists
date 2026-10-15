@@ -7,7 +7,7 @@ function matchesQuery(song: Song, needle: string): boolean {
   );
 }
 
-export function filterSongs(songs: Song[], query: string): Song[] {
+export function filterSongs<T extends Song>(songs: T[], query: string): T[] {
   const needle = query.trim().toLowerCase();
 
   return needle ? songs.filter((song) => matchesQuery(song, needle)) : songs;

@@ -3,9 +3,9 @@
 import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { filterSongs } from "@/lib/search/filter-songs";
-import type { Song } from "@/lib/queries/songs";
+import type { SongListItem } from "@/lib/queries/songs";
 
-export function SongSearch({ songs }: { songs: Song[] }) {
+export function SongSearch({ songs }: { songs: SongListItem[] }) {
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => filterSongs(songs, query), [query, songs]);
@@ -31,9 +31,19 @@ export function SongSearch({ songs }: { songs: Song[] }) {
             className="flex items-baseline justify-between gap-4 py-2"
           >
             <span className="font-medium">{song.title}</span>
-            <span className="text-sm text-muted-foreground">
-              {song.artist.name}
-            </span>
+            <div className="flex flex-col items-end">
+              <span className="text-sm text-muted-foreground">
+                {song.artist.name}
+              </span>
+              {song.featuredArtists.length > 0 && (
+                <span className="text-xs text-muted-foreground/70">
+                  feat.{" "}
+                  {song.featuredArtists
+                    .map((featured) => featured.artist.name)
+                    .join(", ")}
+                </span>
+              )}
+            </div>
           </li>
         ))}
       </ul>

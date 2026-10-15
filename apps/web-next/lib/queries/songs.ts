@@ -6,11 +6,30 @@ interface Song {
   id: number;
   title: string;
   artist: { name: string };
+  featuredArtists: { artist: { name: string } }[];
+  coverOf: { original: { title: string; artist: { name: string } } }[];
 }
 
-interface SongListItem extends Song {
-  featuredArtists: { artist: { name: string } }[];
-}
+/**
+ * Shared `with` shape for every query that returns a full {@link Song} --
+ * kept as one constant so the two queries below can't drift apart.
+ */
+const songWith = {
+  artist: { columns: { name: true } },
+  featuredArtists: {
+    columns: { id: true },
+    with: { artist: { columns: { name: true } } },
+  },
+  coverOf: {
+    columns: { id: true },
+    with: {
+      original: {
+        columns: { title: true },
+        with: { artist: { columns: { name: true } } },
+      },
+    },
+  },
+} as const;
 
 interface ExistingSongMatch {
   id: number;
@@ -30,16 +49,10 @@ interface DuplicateCheckResult {
 /** Below this, two titles are treated as coincidentally similar, not the same song. */
 const NEAR_DUPLICATE_SIMILARITY_THRESHOLD = 0.5;
 
-async function getSongs(): Promise<SongListItem[]> {
+async function getSongs(): Promise<Song[]> {
   return db.query.songs.findMany({
     columns: { id: true, title: true },
-    with: {
-      artist: { columns: { name: true } },
-      featuredArtists: {
-        columns: { id: true },
-        with: { artist: { columns: { name: true } } },
-      },
-    },
+    with: songWith,
     orderBy: [asc(schema.songs.title)],
   });
 }
@@ -57,7 +70,7 @@ async function searchSongs(query: string, limit = 8): Promise<Song[]> {
 
   return db.query.songs.findMany({
     columns: { id: true, title: true },
-    with: { artist: { columns: { name: true } } },
+    with: songWith,
     where: sql`(${schema.songs.title} % ${trimmed} OR ${schema.songs.title} ILIKE ${`%${trimmed}%`})`,
     orderBy: [sql`similarity(${schema.songs.title}, ${trimmed}) DESC`],
     limit,
@@ -109,4 +122,4 @@ async function findExistingSong(
 }
 
 export { getSongs, searchSongs, findExistingSong };
-export type { Song, SongListItem, ExistingSongMatch, DuplicateCheckResult };
+export type { Song, ExistingSongMatch, DuplicateCheckResult };

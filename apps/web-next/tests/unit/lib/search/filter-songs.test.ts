@@ -6,16 +6,22 @@ const paintItBlack: Song = {
   id: 1,
   title: "Paint It, Black",
   artist: { name: "The Rolling Stones" },
+  featuredArtists: [],
+  coverOf: [],
 };
 const satisfaction: Song = {
   id: 2,
   title: "Satisfaction",
   artist: { name: "Devo" },
+  featuredArtists: [],
+  coverOf: [],
 };
 const angie: Song = {
   id: 3,
   title: "Angie",
   artist: { name: "The Rolling Stones" },
+  featuredArtists: [],
+  coverOf: [],
 };
 const songs: Song[] = [paintItBlack, satisfaction, angie];
 

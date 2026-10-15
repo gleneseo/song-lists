@@ -1,11 +1,20 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Repeat2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { filterSongs } from "@/lib/search/filter-songs";
-import type { SongListItem } from "@/lib/queries/songs";
+import type { Song } from "@/lib/queries/songs";
 
-export function SongSearch({ songs }: { songs: SongListItem[] }) {
+function coverOfLabel(song: Song): string {
+  return song.coverOf
+    .map(
+      (cover) => `"${cover.original.title}" by ${cover.original.artist.name}`,
+    )
+    .join(", ");
+}
+
+export function SongSearch({ songs }: { songs: Song[] }) {
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => filterSongs(songs, query), [query, songs]);
@@ -30,7 +39,18 @@ export function SongSearch({ songs }: { songs: SongListItem[] }) {
             key={song.id}
             className="flex items-baseline justify-between gap-4 py-2"
           >
-            <span className="font-medium">{song.title}</span>
+            <span className="flex items-center gap-1.5">
+              <span className="font-medium">{song.title}</span>
+              {song.coverOf.length > 0 && (
+                <span title={`Cover of ${coverOfLabel(song)}`}>
+                  <Repeat2
+                    className="size-3.5 shrink-0 text-muted-foreground"
+                    role="img"
+                    aria-label={`Cover of ${coverOfLabel(song)}`}
+                  />
+                </span>
+              )}
+            </span>
             <div className="flex flex-col items-end">
               <span className="text-sm text-muted-foreground">
                 {song.artist.name}

@@ -41,6 +41,10 @@ export default function SignUpPage() {
       return;
     }
 
+    setName("");
+    setEmail("");
+    setPassword("");
+    setLoading(false);
     router.push("/songs");
     router.refresh();
   }
@@ -54,7 +58,7 @@ export default function SignUpPage() {
             Create an account to start building song lists
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <CardContent className="flex flex-col gap-4">
             {error && (
               <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">

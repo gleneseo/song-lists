@@ -36,6 +36,9 @@ export default function SignInPage() {
       return;
     }
 
+    setEmail("");
+    setPassword("");
+    setLoading(false);
     router.push("/songs");
     router.refresh();
   }
@@ -49,7 +52,7 @@ export default function SignInPage() {
             Enter your credentials to access your account
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <CardContent className="flex flex-col gap-4">
             {error && (
               <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">

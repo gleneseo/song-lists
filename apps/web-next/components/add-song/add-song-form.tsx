@@ -6,15 +6,17 @@ import { CheckCircle2 } from "lucide-react";
 import {
   checkDuplicateSong,
   createSong,
-  type ArtistSelection,
-  type CoverSelection,
   type CreateSongInput,
-  type ProductionSelection,
 } from "@/lib/actions/add-song";
 import type { ListOption } from "@/lib/queries/lists";
 import type { ProductionTypeOption } from "@/lib/queries/productions";
 import type { DuplicateCheckResult } from "@/lib/queries/songs";
 import type { UserOption } from "@/lib/queries/users";
+import {
+  toArtistSelection,
+  toCoverSelection,
+  toProductionSelection,
+} from "@/lib/songs/build-create-song-selections";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,60 +33,6 @@ import {
 import { CreatableCombobox } from "./creatable-combobox";
 import { ProductionField } from "./production-field";
 import { searchArtistOptions } from "@/lib/actions/search-adapters";
-
-function toArtistSelection(
-  selection: CreatableSelection<CreatableOption>,
-): ArtistSelection {
-  return selection.kind === "existing"
-    ? { kind: "existing", id: selection.option.id }
-    : { kind: "new", name: selection.name };
-}
-
-function toProductionSelection(
-  choice: CreatableSelection<CreatableOption> | null,
-  releaseYear: string,
-  typeId: number | null,
-): ProductionSelection {
-  if (!choice) {
-    return null;
-  }
-
-  if (choice.kind === "existing") {
-    return { kind: "existing", id: choice.option.id };
-  }
-
-  const parsedYear = Number(releaseYear);
-
-  if (typeId === null || !Number.isFinite(parsedYear)) {
-    throw new Error("Release year and type are required for a new production.");
-  }
-
-  return { kind: "new", name: choice.name, releaseYear: parsedYear, typeId };
-}
-
-function toCoverSelection(
-  choice: CreatableSelection<CreatableOption> | null,
-  newArtist: CreatableSelection<CreatableOption> | null,
-  newTitle: string,
-): CoverSelection {
-  if (!choice) {
-    return null;
-  }
-
-  if (choice.kind === "existing") {
-    return { kind: "existing", songId: choice.option.id };
-  }
-
-  if (!newArtist) {
-    throw new Error("An artist is required for the new original song.");
-  }
-
-  return {
-    kind: "new",
-    title: newTitle,
-    artist: toArtistSelection(newArtist),
-  };
-}
 
 interface AddedSongSummary {
   title: string;

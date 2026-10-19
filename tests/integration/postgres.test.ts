@@ -146,4 +146,41 @@ describe("database integration", () => {
 
     expect(account?.issuer).toBe("local:credential");
   });
+
+  it("should let every seeded sample user sign in with the shared sample password", async () => {
+    const auth = createAuth(db, { baseURL: "http://localhost:3000" });
+    const seeded = await db
+      .select({ email: schema.users.email })
+      .from(schema.users)
+      .innerJoin(schema.accounts, eq(schema.accounts.userId, schema.users.id))
+      .where(eq(schema.accounts.providerId, "credential"))
+      .then((rows) =>
+        rows
+          .map((row) => row.email)
+          .filter((email) => email.endsWith("@seed.gleneseo.com")),
+      );
+
+    const actual = await Promise.all(
+      seeded.map(async (email) => {
+        const result = await auth.api.signInEmail({
+          body: { email, password: "sample-password" },
+        });
+
+        return result.user.email;
+      }),
+    );
+
+    expect(seeded).toHaveLength(9);
+    expect(actual.toSorted()).toEqual(seeded.toSorted());
+  });
+
+  it("should not let the system user sign in", async () => {
+    const auth = createAuth(db, { baseURL: "http://localhost:3000" });
+
+    const actual = auth.api.signInEmail({
+      body: { email: "system@gleneseo.com", password: "sample-password" },
+    });
+
+    await expect(actual).rejects.toThrow();
+  });
 });

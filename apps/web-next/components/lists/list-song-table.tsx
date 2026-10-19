@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { ClampedText } from "@/components/clamped-text";
+import { SongTitleLink } from "@/components/songs/song-title-link";
 import {
   listHref,
   sortedBy,
@@ -120,10 +121,7 @@ function ListSongTable({
                   {(firstPosition + index).toLocaleString("en-US")}
                 </td>
                 <td className="px-2 py-2.5">
-                  <ClampedText
-                    text={entry.song.title}
-                    className="font-medium"
-                  />
+                  <SongTitleLink id={entry.song.id} title={entry.song.title} />
                   {cover && (
                     <ClampedText
                       lines={1}

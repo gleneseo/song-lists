@@ -1,4 +1,5 @@
 import { ClampedText } from "@/components/clamped-text";
+import { SongTitleLink } from "@/components/songs/song-title-link";
 import type { Song } from "@/lib/queries/songs";
 import { coverOfLabel, featuredArtistsLabel } from "@/lib/text/song-labels";
 
@@ -12,7 +13,7 @@ function SongSummary({ song }: { song: Song }) {
 
   return (
     <div className="min-w-0">
-      <ClampedText lines={1} text={song.title} className="font-medium" />
+      <SongTitleLink id={song.id} title={song.title} />
       <ClampedText
         lines={1}
         text={

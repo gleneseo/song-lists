@@ -24,6 +24,13 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  function resetForm() {
+    setName("");
+    setEmail("");
+    setPassword("");
+    setLoading(false);
+  }
+
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
@@ -41,6 +48,7 @@ export default function SignUpPage() {
       return;
     }
 
+    resetForm();
     router.push("/songs");
     router.refresh();
   }
@@ -54,7 +62,7 @@ export default function SignUpPage() {
             Create an account to start building song lists
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <CardContent className="flex flex-col gap-4">
             {error && (
               <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">

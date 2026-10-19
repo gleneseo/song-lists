@@ -1,21 +1,27 @@
 import { describe, expect, it } from "vitest";
-import { filterSongs } from "../../../../lib/search/filter-songs";
-import type { Song } from "../../../../lib/queries/songs";
+import { filterSongs } from "@/lib/search/filter-songs";
+import type { Song } from "@/lib/queries/songs";
 
 const paintItBlack: Song = {
   id: 1,
   title: "Paint It, Black",
   artist: { name: "The Rolling Stones" },
+  featuredArtists: [],
+  coverOf: [],
 };
 const satisfaction: Song = {
   id: 2,
   title: "Satisfaction",
   artist: { name: "Devo" },
+  featuredArtists: [],
+  coverOf: [],
 };
 const angie: Song = {
   id: 3,
   title: "Angie",
   artist: { name: "The Rolling Stones" },
+  featuredArtists: [],
+  coverOf: [],
 };
 const songs: Song[] = [paintItBlack, satisfaction, angie];
 

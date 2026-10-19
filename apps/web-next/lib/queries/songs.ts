@@ -1,20 +1,126 @@
-import { asc } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { schema } from "@song-lists/db";
+import { selectDuplicateMatches } from "@/lib/search/select-duplicate-matches";
 import { db } from "./client";
+
+interface FeaturedArtist {
+  artist: { name: string };
+}
 
 interface Song {
   id: number;
   title: string;
   artist: { name: string };
+  featuredArtists: FeaturedArtist[];
+  coverOf: {
+    original: {
+      title: string;
+      artist: { name: string };
+      featuredArtists: FeaturedArtist[];
+    };
+  }[];
+}
+
+/** Shared by every song and original song fetched below. */
+const featuredArtistsWith = {
+  columns: { id: true },
+  with: { artist: { columns: { name: true } } },
+} as const;
+
+/**
+ * Shared `with` shape for every query that returns a full {@link Song} --
+ * kept as one constant so the two queries below can't drift apart.
+ */
+const songWith = {
+  artist: { columns: { name: true } },
+  featuredArtists: featuredArtistsWith,
+  coverOf: {
+    columns: { id: true },
+    with: {
+      original: {
+        columns: { title: true },
+        with: {
+          artist: { columns: { name: true } },
+          featuredArtists: featuredArtistsWith,
+        },
+      },
+    },
+  },
+} as const;
+
+interface ExistingSongMatch {
+  id: number;
+  resourceId: string;
+  title: string;
+  artistName: string;
+  similarity: number;
+}
+
+interface DuplicateCheckResult {
+  /** Same artist, same title once cleaned up and lowercased -- a hard match. */
+  exact: ExistingSongMatch | null;
+  /** Close but not exact -- worth a "did you mean" prompt, not a hard block. */
+  near: ExistingSongMatch | null;
 }
 
 async function getSongs(): Promise<Song[]> {
   return db.query.songs.findMany({
     columns: { id: true, title: true },
-    with: { artist: { columns: { name: true } } },
+    with: songWith,
     orderBy: [asc(schema.songs.title)],
   });
 }
 
-export { getSongs };
-export type { Song };
+/**
+ * Finds existing songs whose title is a close (trigram) or substring match
+ * for `query`, ordered by closeness -- used by the "cover of" picker.
+ */
+async function searchSongs(query: string, limit = 8): Promise<Song[]> {
+  const trimmed = query.trim();
+
+  if (!trimmed) {
+    return [];
+  }
+
+  return db.query.songs.findMany({
+    columns: { id: true, title: true },
+    with: songWith,
+    where: sql`(${schema.songs.title} % ${trimmed} OR ${schema.songs.title} ILIKE ${`%${trimmed}%`})`,
+    orderBy: [sql`similarity(${schema.songs.title}, ${trimmed}) DESC`],
+    limit,
+  });
+}
+
+/**
+ * Checks whether a song by the given artist already exists under a title
+ * the same as, or suspiciously close to, `normalizedTitle` (already cleaned
+ * up by {@link normalizeText}).
+ */
+async function findExistingSong(
+  artistId: number,
+  normalizedTitle: string,
+): Promise<DuplicateCheckResult> {
+  const candidates = await db
+    .select({
+      id: schema.songs.id,
+      resourceId: schema.songs.resource_id,
+      title: schema.songs.title,
+      artistName: schema.artists.name,
+      similarity: sql<number>`similarity(${schema.songs.title}, ${normalizedTitle})`,
+    })
+    .from(schema.songs)
+    .innerJoin(schema.artists, eq(schema.songs.artistId, schema.artists.id))
+    .where(
+      and(
+        eq(schema.songs.artistId, artistId),
+        sql`(${schema.songs.title} % ${normalizedTitle} OR lower(${schema.songs.title}) = lower(${normalizedTitle}))`,
+      ),
+    )
+    .orderBy(sql`similarity(${schema.songs.title}, ${normalizedTitle}) DESC`)
+    .limit(5);
+
+  return selectDuplicateMatches(candidates, normalizedTitle);
+}
+
+export { getSongs, searchSongs, findExistingSong };
+export type { Song, FeaturedArtist, ExistingSongMatch, DuplicateCheckResult };

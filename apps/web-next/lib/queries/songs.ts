@@ -2,13 +2,29 @@ import { and, asc, eq, sql } from "drizzle-orm";
 import { schema } from "@song-lists/db";
 import { db } from "./client";
 
+interface FeaturedArtist {
+  artist: { name: string };
+}
+
 interface Song {
   id: number;
   title: string;
   artist: { name: string };
-  featuredArtists: { artist: { name: string } }[];
-  coverOf: { original: { title: string; artist: { name: string } } }[];
+  featuredArtists: FeaturedArtist[];
+  coverOf: {
+    original: {
+      title: string;
+      artist: { name: string };
+      featuredArtists: FeaturedArtist[];
+    };
+  }[];
 }
+
+/** Shared by every song and original song fetched below. */
+const featuredArtistsWith = {
+  columns: { id: true },
+  with: { artist: { columns: { name: true } } },
+} as const;
 
 /**
  * Shared `with` shape for every query that returns a full {@link Song} --
@@ -16,16 +32,16 @@ interface Song {
  */
 const songWith = {
   artist: { columns: { name: true } },
-  featuredArtists: {
-    columns: { id: true },
-    with: { artist: { columns: { name: true } } },
-  },
+  featuredArtists: featuredArtistsWith,
   coverOf: {
     columns: { id: true },
     with: {
       original: {
         columns: { title: true },
-        with: { artist: { columns: { name: true } } },
+        with: {
+          artist: { columns: { name: true } },
+          featuredArtists: featuredArtistsWith,
+        },
       },
     },
   },
@@ -122,4 +138,4 @@ async function findExistingSong(
 }
 
 export { getSongs, searchSongs, findExistingSong };
-export type { Song, ExistingSongMatch, DuplicateCheckResult };
+export type { Song, FeaturedArtist, ExistingSongMatch, DuplicateCheckResult };

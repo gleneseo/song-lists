@@ -66,7 +66,7 @@ describe("coverOfLabel", () => {
           ],
         }),
       ),
-    ).toBe('"Hound Dog" by Big Mama Thornton (feat. Kansas City Bill)');
+    ).toBe('"Hound Dog" by Big Mama Thornton feat. Kansas City Bill');
   });
 
   it("should join multiple originals with a comma when a song covers more than one", () => {

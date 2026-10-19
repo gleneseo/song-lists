@@ -9,7 +9,7 @@ function coverOfLabel(song: Song): string {
   return song.coverOf
     .map((cover) => {
       const featured = featuredArtistsLabel(cover.original.featuredArtists);
-      const featuredSuffix = featured ? ` (feat. ${featured})` : "";
+      const featuredSuffix = featured ? ` feat. ${featured}` : "";
       return `"${cover.original.title}" by ${cover.original.artist.name}${featuredSuffix}`;
     })
     .join(", ");

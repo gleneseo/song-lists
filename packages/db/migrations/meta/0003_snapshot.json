@@ -1,6 +1,6 @@
 {
-  "id": "21873956-95c6-41ac-8b1f-6a75f4df3ac2",
-  "prevId": "b2a9728c-ace0-4fbc-93ef-de21a91fd3d7",
+  "id": "57d58baf-2c8e-41b8-9e3c-b305c773ac46",
+  "prevId": "bac72154-ec0a-4513-ae63-3f52bc196114",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -108,29 +108,29 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "accounts_user_id_users_id_fk": {
           "name": "accounts_user_id_users_id_fk",
           "tableFrom": "accounts",
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
           "schemaTo": "song_lists",
-          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "accounts_issuer_account_id_unique": {
           "name": "accounts_issuer_account_id_unique",
-          "nullsNotDistinct": false,
-          "columns": ["issuer", "account_id"]
+          "columns": ["issuer", "account_id"],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -192,30 +192,30 @@
         "artists_created_by_users_id_fk": {
           "name": "artists_created_by_users_id_fk",
           "tableFrom": "artists",
+          "columnsFrom": ["created_by"],
           "tableTo": "users",
           "schemaTo": "song_lists",
-          "columnsFrom": ["created_by"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "artists_updated_by_users_id_fk": {
           "name": "artists_updated_by_users_id_fk",
           "tableFrom": "artists",
+          "columnsFrom": ["updated_by"],
           "tableTo": "users",
           "schemaTo": "song_lists",
-          "columnsFrom": ["updated_by"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "artists_resource_id_unique": {
           "name": "artists_resource_id_unique",
-          "nullsNotDistinct": false,
-          "columns": ["resource_id"]
+          "columns": ["resource_id"],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -283,50 +283,50 @@
         "list_songs_list_id_lists_id_fk": {
           "name": "list_songs_list_id_lists_id_fk",
           "tableFrom": "list_songs",
+          "columnsFrom": ["list_id"],
           "tableTo": "lists",
           "schemaTo": "song_lists",
-          "columnsFrom": ["list_id"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "list_songs_song_id_songs_id_fk": {
           "name": "list_songs_song_id_songs_id_fk",
           "tableFrom": "list_songs",
+          "columnsFrom": ["song_id"],
           "tableTo": "songs",
           "schemaTo": "song_lists",
-          "columnsFrom": ["song_id"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "list_songs_created_by_users_id_fk": {
           "name": "list_songs_created_by_users_id_fk",
           "tableFrom": "list_songs",
+          "columnsFrom": ["created_by"],
           "tableTo": "users",
           "schemaTo": "song_lists",
-          "columnsFrom": ["created_by"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "list_songs_updated_by_users_id_fk": {
           "name": "list_songs_updated_by_users_id_fk",
           "tableFrom": "list_songs",
+          "columnsFrom": ["updated_by"],
           "tableTo": "users",
           "schemaTo": "song_lists",
-          "columnsFrom": ["updated_by"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "list_songs_resource_id_unique": {
           "name": "list_songs_resource_id_unique",
-          "nullsNotDistinct": false,
-          "columns": ["resource_id"]
+          "columns": ["resource_id"],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -388,30 +388,30 @@
         "lists_created_by_users_id_fk": {
           "name": "lists_created_by_users_id_fk",
           "tableFrom": "lists",
+          "columnsFrom": ["created_by"],
           "tableTo": "users",
           "schemaTo": "song_lists",
-          "columnsFrom": ["created_by"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "lists_updated_by_users_id_fk": {
           "name": "lists_updated_by_users_id_fk",
           "tableFrom": "lists",
+          "columnsFrom": ["updated_by"],
           "tableTo": "users",
           "schemaTo": "song_lists",
-          "columnsFrom": ["updated_by"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "lists_resource_id_unique": {
           "name": "lists_resource_id_unique",
-          "nullsNotDistinct": false,
-          "columns": ["resource_id"]
+          "columns": ["resource_id"],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -473,30 +473,30 @@
         "production_types_created_by_users_id_fk": {
           "name": "production_types_created_by_users_id_fk",
           "tableFrom": "production_types",
+          "columnsFrom": ["created_by"],
           "tableTo": "users",
           "schemaTo": "song_lists",
-          "columnsFrom": ["created_by"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "production_types_updated_by_users_id_fk": {
           "name": "production_types_updated_by_users_id_fk",
           "tableFrom": "production_types",
+          "columnsFrom": ["updated_by"],
           "tableTo": "users",
           "schemaTo": "song_lists",
-          "columnsFrom": ["updated_by"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "production_types_resource_id_unique": {
           "name": "production_types_resource_id_unique",
-          "nullsNotDistinct": false,
-          "columns": ["resource_id"]
+          "columns": ["resource_id"],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -570,40 +570,40 @@
         "productions_type_id_production_types_id_fk": {
           "name": "productions_type_id_production_types_id_fk",
           "tableFrom": "productions",
+          "columnsFrom": ["type_id"],
           "tableTo": "production_types",
           "schemaTo": "song_lists",
-          "columnsFrom": ["type_id"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "productions_created_by_users_id_fk": {
           "name": "productions_created_by_users_id_fk",
           "tableFrom": "productions",
+          "columnsFrom": ["created_by"],
           "tableTo": "users",
           "schemaTo": "song_lists",
-          "columnsFrom": ["created_by"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "productions_updated_by_users_id_fk": {
           "name": "productions_updated_by_users_id_fk",
           "tableFrom": "productions",
+          "columnsFrom": ["updated_by"],
           "tableTo": "users",
           "schemaTo": "song_lists",
-          "columnsFrom": ["updated_by"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "productions_resource_id_unique": {
           "name": "productions_resource_id_unique",
-          "nullsNotDistinct": false,
-          "columns": ["resource_id"]
+          "columns": ["resource_id"],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -678,29 +678,29 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "sessions_user_id_users_id_fk": {
           "name": "sessions_user_id_users_id_fk",
           "tableFrom": "sessions",
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
           "schemaTo": "song_lists",
-          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "sessions_token_unique": {
           "name": "sessions_token_unique",
-          "nullsNotDistinct": false,
-          "columns": ["token"]
+          "columns": ["token"],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -768,55 +768,55 @@
         "song_advocates_song_id_songs_id_fk": {
           "name": "song_advocates_song_id_songs_id_fk",
           "tableFrom": "song_advocates",
+          "columnsFrom": ["song_id"],
           "tableTo": "songs",
           "schemaTo": "song_lists",
-          "columnsFrom": ["song_id"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "song_advocates_user_id_users_id_fk": {
           "name": "song_advocates_user_id_users_id_fk",
           "tableFrom": "song_advocates",
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
           "schemaTo": "song_lists",
-          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "song_advocates_created_by_users_id_fk": {
           "name": "song_advocates_created_by_users_id_fk",
           "tableFrom": "song_advocates",
+          "columnsFrom": ["created_by"],
           "tableTo": "users",
           "schemaTo": "song_lists",
-          "columnsFrom": ["created_by"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "song_advocates_updated_by_users_id_fk": {
           "name": "song_advocates_updated_by_users_id_fk",
           "tableFrom": "song_advocates",
+          "columnsFrom": ["updated_by"],
           "tableTo": "users",
           "schemaTo": "song_lists",
-          "columnsFrom": ["updated_by"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "song_advocates_resource_id_unique": {
           "name": "song_advocates_resource_id_unique",
-          "nullsNotDistinct": false,
-          "columns": ["resource_id"]
+          "columns": ["resource_id"],
+          "nullsNotDistinct": false
         },
         "song_advocates_song_id_user_id_unique": {
           "name": "song_advocates_song_id_user_id_unique",
-          "nullsNotDistinct": false,
-          "columns": ["song_id", "user_id"]
+          "columns": ["song_id", "user_id"],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -884,55 +884,55 @@
         "song_covers_song_id_songs_id_fk": {
           "name": "song_covers_song_id_songs_id_fk",
           "tableFrom": "song_covers",
+          "columnsFrom": ["song_id"],
           "tableTo": "songs",
           "schemaTo": "song_lists",
-          "columnsFrom": ["song_id"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "song_covers_original_song_id_songs_id_fk": {
           "name": "song_covers_original_song_id_songs_id_fk",
           "tableFrom": "song_covers",
+          "columnsFrom": ["original_song_id"],
           "tableTo": "songs",
           "schemaTo": "song_lists",
-          "columnsFrom": ["original_song_id"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "song_covers_created_by_users_id_fk": {
           "name": "song_covers_created_by_users_id_fk",
           "tableFrom": "song_covers",
+          "columnsFrom": ["created_by"],
           "tableTo": "users",
           "schemaTo": "song_lists",
-          "columnsFrom": ["created_by"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "song_covers_updated_by_users_id_fk": {
           "name": "song_covers_updated_by_users_id_fk",
           "tableFrom": "song_covers",
+          "columnsFrom": ["updated_by"],
           "tableTo": "users",
           "schemaTo": "song_lists",
-          "columnsFrom": ["updated_by"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "song_covers_resource_id_unique": {
           "name": "song_covers_resource_id_unique",
-          "nullsNotDistinct": false,
-          "columns": ["resource_id"]
+          "columns": ["resource_id"],
+          "nullsNotDistinct": false
         },
         "song_covers_song_id_original_song_id_unique": {
           "name": "song_covers_song_id_original_song_id_unique",
-          "nullsNotDistinct": false,
-          "columns": ["song_id", "original_song_id"]
+          "columns": ["song_id", "original_song_id"],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -1000,55 +1000,55 @@
         "song_featured_artists_song_id_songs_id_fk": {
           "name": "song_featured_artists_song_id_songs_id_fk",
           "tableFrom": "song_featured_artists",
+          "columnsFrom": ["song_id"],
           "tableTo": "songs",
           "schemaTo": "song_lists",
-          "columnsFrom": ["song_id"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "song_featured_artists_artist_id_artists_id_fk": {
           "name": "song_featured_artists_artist_id_artists_id_fk",
           "tableFrom": "song_featured_artists",
+          "columnsFrom": ["artist_id"],
           "tableTo": "artists",
           "schemaTo": "song_lists",
-          "columnsFrom": ["artist_id"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "song_featured_artists_created_by_users_id_fk": {
           "name": "song_featured_artists_created_by_users_id_fk",
           "tableFrom": "song_featured_artists",
+          "columnsFrom": ["created_by"],
           "tableTo": "users",
           "schemaTo": "song_lists",
-          "columnsFrom": ["created_by"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "song_featured_artists_updated_by_users_id_fk": {
           "name": "song_featured_artists_updated_by_users_id_fk",
           "tableFrom": "song_featured_artists",
+          "columnsFrom": ["updated_by"],
           "tableTo": "users",
           "schemaTo": "song_lists",
-          "columnsFrom": ["updated_by"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "song_featured_artists_resource_id_unique": {
           "name": "song_featured_artists_resource_id_unique",
-          "nullsNotDistinct": false,
-          "columns": ["resource_id"]
+          "columns": ["resource_id"],
+          "nullsNotDistinct": false
         },
         "song_featured_artists_song_id_artist_id_unique": {
           "name": "song_featured_artists_song_id_artist_id_unique",
-          "nullsNotDistinct": false,
-          "columns": ["song_id", "artist_id"]
+          "columns": ["song_id", "artist_id"],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -1116,55 +1116,55 @@
         "song_productions_song_id_songs_id_fk": {
           "name": "song_productions_song_id_songs_id_fk",
           "tableFrom": "song_productions",
+          "columnsFrom": ["song_id"],
           "tableTo": "songs",
           "schemaTo": "song_lists",
-          "columnsFrom": ["song_id"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "song_productions_production_id_productions_id_fk": {
           "name": "song_productions_production_id_productions_id_fk",
           "tableFrom": "song_productions",
+          "columnsFrom": ["production_id"],
           "tableTo": "productions",
           "schemaTo": "song_lists",
-          "columnsFrom": ["production_id"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "song_productions_created_by_users_id_fk": {
           "name": "song_productions_created_by_users_id_fk",
           "tableFrom": "song_productions",
+          "columnsFrom": ["created_by"],
           "tableTo": "users",
           "schemaTo": "song_lists",
-          "columnsFrom": ["created_by"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "song_productions_updated_by_users_id_fk": {
           "name": "song_productions_updated_by_users_id_fk",
           "tableFrom": "song_productions",
+          "columnsFrom": ["updated_by"],
           "tableTo": "users",
           "schemaTo": "song_lists",
-          "columnsFrom": ["updated_by"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "song_productions_resource_id_unique": {
           "name": "song_productions_resource_id_unique",
-          "nullsNotDistinct": false,
-          "columns": ["resource_id"]
+          "columns": ["resource_id"],
+          "nullsNotDistinct": false
         },
         "song_productions_song_id_production_id_unique": {
           "name": "song_productions_song_id_production_id_unique",
-          "nullsNotDistinct": false,
-          "columns": ["song_id", "production_id"]
+          "columns": ["song_id", "production_id"],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -1238,40 +1238,40 @@
         "songs_artist_id_artists_id_fk": {
           "name": "songs_artist_id_artists_id_fk",
           "tableFrom": "songs",
+          "columnsFrom": ["artist_id"],
           "tableTo": "artists",
           "schemaTo": "song_lists",
-          "columnsFrom": ["artist_id"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "songs_created_by_users_id_fk": {
           "name": "songs_created_by_users_id_fk",
           "tableFrom": "songs",
+          "columnsFrom": ["created_by"],
           "tableTo": "users",
           "schemaTo": "song_lists",
-          "columnsFrom": ["created_by"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "songs_updated_by_users_id_fk": {
           "name": "songs_updated_by_users_id_fk",
           "tableFrom": "songs",
+          "columnsFrom": ["updated_by"],
           "tableTo": "users",
           "schemaTo": "song_lists",
-          "columnsFrom": ["updated_by"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "songs_resource_id_unique": {
           "name": "songs_resource_id_unique",
-          "nullsNotDistinct": false,
-          "columns": ["resource_id"]
+          "columns": ["resource_id"],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -1371,30 +1371,30 @@
         "users_created_by_users_id_fk": {
           "name": "users_created_by_users_id_fk",
           "tableFrom": "users",
+          "columnsFrom": ["created_by"],
           "tableTo": "users",
           "schemaTo": "song_lists",
-          "columnsFrom": ["created_by"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "users_updated_by_users_id_fk": {
           "name": "users_updated_by_users_id_fk",
           "tableFrom": "users",
+          "columnsFrom": ["updated_by"],
           "tableTo": "users",
           "schemaTo": "song_lists",
-          "columnsFrom": ["updated_by"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "users_email_unique": {
           "name": "users_email_unique",
-          "nullsNotDistinct": false,
-          "columns": ["email"]
+          "columns": ["email"],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -1457,9 +1457,9 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {},
@@ -1474,10 +1474,10 @@
   "schemas": {
     "song_lists": "song_lists"
   },
+  "views": {},
   "sequences": {},
   "roles": {},
   "policies": {},
-  "views": {},
   "_meta": {
     "columns": {},
     "schemas": {},

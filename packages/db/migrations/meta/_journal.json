@@ -5,120 +5,50 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1785882580309,
-      "tag": "0000_grey_alice",
+      "when": 1792404146630,
+      "tag": "0000_initial_schema",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1786077771862,
-      "tag": "0001_brown_vindicator",
+      "when": 1792413991386,
+      "tag": "0001_add_trigram_search",
       "breakpoints": true
     },
     {
       "idx": 2,
       "version": "7",
-      "when": 1786082007637,
-      "tag": "0002_organic_azazel",
+      "when": 1792413992121,
+      "tag": "0002_seed_users",
       "breakpoints": true
     },
     {
       "idx": 3,
       "version": "7",
-      "when": 1788308329991,
-      "tag": "0003_absent_thunderbolts",
+      "when": 1792413992854,
+      "tag": "0003_seed_artists_and_songs",
       "breakpoints": true
     },
     {
       "idx": 4,
       "version": "7",
-      "when": 1788308379158,
-      "tag": "0004_seed_admin_user",
+      "when": 1792413993589,
+      "tag": "0004_seed_song_details",
       "breakpoints": true
     },
     {
       "idx": 5,
       "version": "7",
-      "when": 1788308379671,
-      "tag": "0005_seed_songs",
+      "when": 1792413994326,
+      "tag": "0005_seed_song_advocates",
       "breakpoints": true
     },
     {
       "idx": 6,
       "version": "7",
-      "when": 1788309260744,
-      "tag": "0006_seed_the_master_list",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1788309269419,
-      "tag": "0007_seed_on_a_boat_list",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1788309269940,
-      "tag": "0008_seed_best_soundtrack_yams_list",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "7",
-      "when": 1788309270462,
-      "tag": "0009_seed_best_cover_songs_list",
-      "breakpoints": true
-    },
-    {
-      "idx": 10,
-      "version": "7",
-      "when": 1788309607625,
-      "tag": "0010_populate_the_master_list",
-      "breakpoints": true
-    },
-    {
-      "idx": 11,
-      "version": "7",
-      "when": 1788310442835,
-      "tag": "0011_seed_best_workout_yams_list",
-      "breakpoints": true
-    },
-    {
-      "idx": 12,
-      "version": "7",
-      "when": 1788312327301,
-      "tag": "0012_seed_best_love_ballads_list",
-      "breakpoints": true
-    },
-    {
-      "idx": 13,
-      "version": "7",
-      "when": 1788312816759,
-      "tag": "0013_seed_best_songs_about_doing_it_list",
-      "breakpoints": true
-    },
-    {
-      "idx": 14,
-      "version": "7",
-      "when": 1788313366010,
-      "tag": "0014_seed_getting_lit_list",
-      "breakpoints": true
-    },
-    {
-      "idx": 15,
-      "version": "7",
-      "when": 1788317332274,
-      "tag": "0015_backfill_song_featured_artists",
-      "breakpoints": true
-    },
-    {
-      "idx": 16,
-      "version": "7",
-      "when": 1792059201182,
-      "tag": "0016_add_trigram_search",
+      "when": 1792413995069,
+      "tag": "0006_seed_lists",
       "breakpoints": true
     }
   ]

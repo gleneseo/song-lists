@@ -1,6 +1,6 @@
 {
-  "id": "30b8c01c-0f33-49ee-a586-2c6e56b62be8",
-  "prevId": "21873956-95c6-41ac-8b1f-6a75f4df3ac2",
+  "id": "464e1a0a-343c-49ce-89a3-3344cecb5057",
+  "prevId": "57d58baf-2c8e-41b8-9e3c-b305c773ac46",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -129,8 +129,8 @@
       "uniqueConstraints": {
         "accounts_issuer_account_id_unique": {
           "name": "accounts_issuer_account_id_unique",
-          "nullsNotDistinct": false,
-          "columns": ["issuer", "account_id"]
+          "columns": ["issuer", "account_id"],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},

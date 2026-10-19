@@ -4,19 +4,22 @@
 -- Each list_songs row is attributed to the person who added the song to that
 -- list. The Master List is the full catalog, created and populated here in one
 -- pass.
+--
+-- extra_columns turns on optional columns for a list's page. Every list shows
+-- the standard columns; Best Soundtrack Yams also shows Productions.
 
-INSERT INTO "song_lists"."lists" ("resource_id", "name", "created_at", "updated_at", "created_by", "updated_by")
-SELECT v.resource_id::uuid, v.name, v.created_at::timestamp, v.updated_at::timestamp, v.created_by::uuid, v.updated_by::uuid
+INSERT INTO "song_lists"."lists" ("resource_id", "name", "extra_columns", "created_at", "updated_at", "created_by", "updated_by")
+SELECT v.resource_id::uuid, v.name, v.extra_columns::text[], v.created_at::timestamp, v.updated_at::timestamp, v.created_by::uuid, v.updated_by::uuid
 FROM (VALUES
-	(0, '01a1539d-20d9-78e5-9e4f-69c3a2661113', 'The Master List', '2019-08-16', '2019-08-16', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'),
-	(1, '43e9a898-c40f-4069-8528-990377eba64c', 'On A Boat!', '2021-01-22', '2021-01-22', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'),
-	(2, '399b220d-611f-4438-829a-26e8dd212a37', 'Best Soundtrack Yams', '2019-08-20', '2019-08-20', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'),
-	(3, '00682e8b-0940-4afa-aafb-ef5aab0a336f', 'Best Cover Songs', '2020-09-01', '2020-09-01', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'),
-	(4, '01a1539d-242d-72b9-a28d-76ff349684d7', 'Best Workout Yams', '2021-01-22', '2021-01-22', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'),
-	(5, '01a1539d-2465-75b5-9ef5-8784e8669937', 'Best Love Ballads', '2021-01-23', '2021-01-23', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'),
-	(6, '01a1539d-249a-7258-8c81-490d6851ebff', 'Best Songs About Doing It, Uh Huh-Huh', '2021-01-08', '2021-01-08', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'),
-	(7, '01a1539d-24d1-7397-a13f-779211150061', 'Getting Lit', '2020-04-20', '2020-04-20', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000')
-) AS v(ord, resource_id, name, created_at, updated_at, created_by, updated_by)
+	(0, '01a1539d-20d9-78e5-9e4f-69c3a2661113', 'The Master List', '{}', '2019-08-16', '2019-08-16', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'),
+	(1, '43e9a898-c40f-4069-8528-990377eba64c', 'On A Boat!', '{}', '2021-01-22', '2021-01-22', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'),
+	(2, '399b220d-611f-4438-829a-26e8dd212a37', 'Best Soundtrack Yams', '{productions}', '2019-08-20', '2019-08-20', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'),
+	(3, '00682e8b-0940-4afa-aafb-ef5aab0a336f', 'Best Cover Songs', '{}', '2020-09-01', '2020-09-01', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'),
+	(4, '01a1539d-242d-72b9-a28d-76ff349684d7', 'Best Workout Yams', '{}', '2021-01-22', '2021-01-22', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'),
+	(5, '01a1539d-2465-75b5-9ef5-8784e8669937', 'Best Love Ballads', '{}', '2021-01-23', '2021-01-23', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'),
+	(6, '01a1539d-249a-7258-8c81-490d6851ebff', 'Best Songs About Doing It, Uh Huh-Huh', '{}', '2021-01-08', '2021-01-08', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'),
+	(7, '01a1539d-24d1-7397-a13f-779211150061', 'Getting Lit', '{}', '2020-04-20', '2020-04-20', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000')
+) AS v(ord, resource_id, name, extra_columns, created_at, updated_at, created_by, updated_by)
 ORDER BY v.ord;
 
 INSERT INTO "song_lists"."list_songs" ("resource_id", "created_at", "updated_at", "created_by", "updated_by", "list_id", "song_id")

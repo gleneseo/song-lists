@@ -263,6 +263,19 @@ describe("songs", () => {
 });
 
 describe("lists", () => {
+  it("should start with no optional columns switched on", () => {
+    const column = getTableConfig(lists).columns.find(
+      (candidate) => candidate.name === "extraColumns",
+    );
+
+    expect(column).toMatchObject({
+      dataType: "array",
+      notNull: true,
+      hasDefault: true,
+      default: [],
+    });
+  });
+
   it("should list the songs on it", () => {
     expect(resolveRelation("lists", "songs")).toEqual({
       fields: [lists.id],

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
 import { Navbar } from "@/components/navbar";
 import "./globals.css";
 
@@ -18,7 +19,7 @@ const metadata: Metadata = {
   description: "Browse and search the song catalog",
 };
 
-function RootLayout({ children }: LayoutProps<"/">) {
+function RootLayout({ children, modal }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
@@ -27,6 +28,10 @@ function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         <Navbar />
         {children}
+        {/* Held back until the song has loaded, so the modal opens at its real
+            size and fades in once -- rather than opening on a small loading
+            state and then jumping to full size when the content arrives. */}
+        <Suspense fallback={null}>{modal}</Suspense>
       </body>
     </html>
   );

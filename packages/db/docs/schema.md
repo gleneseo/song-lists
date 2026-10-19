@@ -5,7 +5,7 @@
 | [accounts](#accounts) | 14 |
 | [artists](#artists) | 7 |
 | [list_songs](#list_songs) | 8 |
-| [lists](#lists) | 7 |
+| [lists](#lists) | 8 |
 | [production_types](#production_types) | 7 |
 | [productions](#productions) | 9 |
 | [sessions](#sessions) | 8 |
@@ -136,6 +136,7 @@
 | **id** | serial | - | NO | [list_songs.list_id](#list_songs) | - |
 | resource_id | uuid | `uuidv7()` | NO | - | - |
 | name | text | - | NO | - | - |
+| extra_columns | text[] | `[]` | NO | - | - |
 | created_at | timestamp | `now()` | NO | - | - |
 | updated_at | timestamp | `now()` | NO | - | - |
 | created_by | uuid | - | NO | - | [users.id](#users) |
@@ -601,6 +602,7 @@ erDiagram
         serial id PK
         uuid resource_id UK
         text name
+        text[] extra_columns
         timestamp created_at
         timestamp updated_at
         uuid created_by FK

@@ -42,7 +42,7 @@ export default function SignInPage() {
       return;
     }
     resetForm();
-    router.push("/songs");
+    router.push("/dashboard");
     router.refresh();
   }
 

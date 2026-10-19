@@ -1,5 +1,5 @@
 {
-  "id": "cf2e709e-66bf-480a-83da-602a66e02b05",
+  "id": "0fd434f2-acbd-4f37-8c89-844105325312",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -355,6 +355,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "extra_columns": {
+          "name": "extra_columns",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
         },
         "created_at": {
           "name": "created_at",

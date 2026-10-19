@@ -358,6 +358,12 @@ const lists = songListsSchema.table("lists", {
   id: serial().primaryKey(),
   resource_id: uuidV7().notNull().unique(),
   name: text().notNull(),
+  /**
+   * Optional columns this list's page shows beyond the standard ones, as
+   * names from LIST_EXTRA_COLUMN. Stored as free text and validated by the
+   * apps, like `users.role`, so a new optional column needs no migration.
+   */
+  extraColumns: text().array().notNull().default([]),
   ...auditColumns(),
 });
 

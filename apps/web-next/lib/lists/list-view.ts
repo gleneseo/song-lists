@@ -1,6 +1,6 @@
 import { parsePage } from "@/lib/dashboard/pagination";
 
-type SortColumn = "added" | "title" | "artist";
+type SortColumn = "added" | "title" | "artist" | "production";
 type SortDirection = "asc" | "desc";
 
 /** The sort a list shows in until someone picks another. */
@@ -24,8 +24,6 @@ interface ListView {
 
 type RawParams = Record<string, string | string[] | undefined>;
 
-const SORT_COLUMNS: readonly SortColumn[] = ["added", "title", "artist"];
-
 const MASTER_LIST_NAME = "The Master List";
 
 /**
@@ -47,15 +45,24 @@ const FIRST_CLICK_DIRECTION: Record<SortColumn, SortDirection> = {
   added: "desc",
   title: "asc",
   artist: "asc",
+  production: "asc",
 };
 
 function firstValue(raw: string | string[] | undefined): string | undefined {
   return Array.isArray(raw) ? raw[0] : raw;
 }
 
-/** Reads a list page's search params, falling back to `defaults` for any sort that's missing or unrecognised. */
-function parseListView(params: RawParams, defaults: ListDefaults): ListView {
-  const sort = SORT_COLUMNS.find(
+/**
+ * Reads a list page's search params, falling back to `defaults` for any sort
+ * that's missing, unrecognised, or not one of the `allowedSorts` this list
+ * offers (a list without a Productions column ignores `?sort=production`).
+ */
+function parseListView(
+  params: RawParams,
+  defaults: ListDefaults,
+  allowedSorts: readonly SortColumn[],
+): ListView {
+  const sort = allowedSorts.find(
     (column) => column === firstValue(params.sort),
   );
   const direction = firstValue(params.dir);

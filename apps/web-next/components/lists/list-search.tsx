@@ -11,7 +11,15 @@ import { listHref, searchedFor, type ListView } from "@/lib/lists/list-view";
  * short pause, then writes the search into the URL so the server filters the
  * whole list (not just the visible page) and the result is shareable.
  */
-function ListSearch({ basePath, view }: { basePath: string; view: ListView }) {
+function ListSearch({
+  basePath,
+  view,
+  placeholder,
+}: {
+  basePath: string;
+  view: ListView;
+  placeholder: string;
+}) {
   const router = useRouter();
   const [value, setValue] = useState(view.query);
   const debounced = useDebouncedValue(value);
@@ -34,7 +42,7 @@ function ListSearch({ basePath, view }: { basePath: string; view: ListView }) {
   return (
     <Input
       type="search"
-      placeholder="Search this list by title or artist…"
+      placeholder={placeholder}
       aria-label="Search this list"
       aria-busy={isPending}
       value={value}

@@ -45,6 +45,7 @@ CREATE TABLE "song_lists"."lists" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"resource_id" uuid DEFAULT uuidv7() NOT NULL,
 	"name" text NOT NULL,
+	"extra_columns" text[] DEFAULT '{}' NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	"created_by" uuid NOT NULL,

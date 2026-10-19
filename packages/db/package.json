@@ -12,6 +12,10 @@
       "types": "./src/migrate.ts",
       "default": "./src/migrate.ts"
     },
+    "./list-extra-column": {
+      "types": "./src/list-extra-column.ts",
+      "default": "./src/list-extra-column.ts"
+    },
     "./migrations": "./migrations"
   },
   "main": "./src/index.ts",

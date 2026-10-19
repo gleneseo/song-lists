@@ -5,49 +5,49 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1792404146630,
+      "when": 1792420886414,
       "tag": "0000_initial_schema",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1792413991386,
+      "when": 1792420887227,
       "tag": "0001_add_trigram_search",
       "breakpoints": true
     },
     {
       "idx": 2,
       "version": "7",
-      "when": 1792413992121,
+      "when": 1792420887982,
       "tag": "0002_seed_users",
       "breakpoints": true
     },
     {
       "idx": 3,
       "version": "7",
-      "when": 1792413992854,
+      "when": 1792420888731,
       "tag": "0003_seed_artists_and_songs",
       "breakpoints": true
     },
     {
       "idx": 4,
       "version": "7",
-      "when": 1792413993589,
+      "when": 1792420889463,
       "tag": "0004_seed_song_details",
       "breakpoints": true
     },
     {
       "idx": 5,
       "version": "7",
-      "when": 1792413994326,
+      "when": 1792420890190,
       "tag": "0005_seed_song_advocates",
       "breakpoints": true
     },
     {
       "idx": 6,
       "version": "7",
-      "when": 1792413995069,
+      "when": 1792420890922,
       "tag": "0006_seed_lists",
       "breakpoints": true
     }

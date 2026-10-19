@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { BASE_SORTS } from "@/lib/lists/extra-columns";
 import {
   defaultsFor,
   listHref,
@@ -8,6 +9,12 @@ import {
   sortedBy,
   type ListView,
 } from "@/lib/lists/list-view";
+
+/** Parses as a list with no optional columns would. */
+const parse = (
+  params: Parameters<typeof parseListView>[0],
+  defaults: Parameters<typeof parseListView>[1],
+) => parseListView(params, defaults, BASE_SORTS);
 
 const listDefaults = defaultsFor("On A Boat!");
 const masterDefaults = defaultsFor(MASTER_LIST_NAME);
@@ -43,8 +50,8 @@ describe("defaultsFor", () => {
 
 describe("parseListView", () => {
   it("should fall back to the list's own defaults when there are no params", () => {
-    expect(parseListView({}, listDefaults)).toEqual(defaultView);
-    expect(parseListView({}, masterDefaults)).toMatchObject({
+    expect(parse({}, listDefaults)).toEqual(defaultView);
+    expect(parse({}, masterDefaults)).toMatchObject({
       sort: "artist",
       direction: "asc",
     });
@@ -52,7 +59,7 @@ describe("parseListView", () => {
 
   it("should read every param", () => {
     expect(
-      parseListView(
+      parse(
         { q: "prince", sort: "added", dir: "desc", page: "3" },
         listDefaults,
       ),
@@ -66,19 +73,15 @@ describe("parseListView", () => {
   });
 
   it("should trim the search", () => {
-    expect(parseListView({ q: "  prince  " }, listDefaults).query).toBe(
-      "prince",
-    );
+    expect(parse({ q: "  prince  " }, listDefaults).query).toBe("prince");
   });
 
   it("should cap an overlong search", () => {
-    expect(
-      parseListView({ q: "a".repeat(500) }, listDefaults).query,
-    ).toHaveLength(100);
+    expect(parse({ q: "a".repeat(500) }, listDefaults).query).toHaveLength(100);
   });
 
   it("should fall back to the defaults for an unknown sort column or direction", () => {
-    const actual = parseListView(
+    const actual = parse(
       { sort: "popularity", dir: "sideways" },
       masterDefaults,
     );
@@ -88,7 +91,7 @@ describe("parseListView", () => {
   });
 
   it("should use the first value when a param is repeated", () => {
-    const actual = parseListView(
+    const actual = parse(
       { q: ["a", "b"], sort: ["title", "artist"] },
       listDefaults,
     );
@@ -97,8 +100,18 @@ describe("parseListView", () => {
     expect(actual.sort).toBe("title");
   });
 
+  it("should accept a production sort only on a list that offers it", () => {
+    const params = { sort: "production" };
+    const withProductions = [...BASE_SORTS, "production" as const];
+
+    expect(parseListView(params, listDefaults, withProductions).sort).toBe(
+      "production",
+    );
+    expect(parseListView(params, listDefaults, BASE_SORTS).sort).toBe("title");
+  });
+
   it("should fall back to page 1 for a bad page", () => {
-    expect(parseListView({ page: "banana" }, listDefaults).page).toBe(1);
+    expect(parse({ page: "banana" }, listDefaults).page).toBe(1);
   });
 });
 
@@ -121,6 +134,13 @@ describe("sortedBy", () => {
   it("should start the other text column A to Z when first chosen", () => {
     expect(sortedBy(view, "artist")).toMatchObject({
       sort: "artist",
+      direction: "asc",
+    });
+  });
+
+  it("should start the production column A to Z when first chosen", () => {
+    expect(sortedBy(view, "production")).toMatchObject({
+      sort: "production",
       direction: "asc",
     });
   });
@@ -219,6 +239,6 @@ describe("listHref", () => {
       new URLSearchParams(listHref("/x", view).split("?")[1]),
     );
 
-    expect(parseListView(search, defaults)).toEqual(view);
+    expect(parse(search, defaults)).toEqual(view);
   });
 });

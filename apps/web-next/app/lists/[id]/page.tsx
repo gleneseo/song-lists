@@ -8,6 +8,7 @@ import { ListSongTable } from "@/components/lists/list-song-table";
 import { PaginationNav } from "@/components/pagination-nav";
 import { getSession } from "@/lib/auth/auth";
 import { paginate } from "@/lib/dashboard/pagination";
+import { showsProductions, sortsFor } from "@/lib/lists/extra-columns";
 import { defaultsFor, listHref, parseListView } from "@/lib/lists/list-view";
 import {
   countListEntries,
@@ -36,11 +37,17 @@ async function List({ params, searchParams }: PageProps<"/lists/[id]">) {
     notFound();
   }
 
+  const { extraColumns } = summary;
   const requested = parseListView(
     await searchParams,
     defaultsFor(summary.name),
+    sortsFor(extraColumns),
   );
-  const matching = await countListEntries(summary.id, requested.query);
+  const matching = await countListEntries(
+    summary.id,
+    requested.query,
+    extraColumns,
+  );
   const pagination = paginate(matching, requested.page, PAGE_SIZE);
   // A page past the end is clamped, so every link below uses the real page.
   const view = { ...requested, page: pagination.page };
@@ -49,6 +56,7 @@ async function List({ params, searchParams }: PageProps<"/lists/[id]">) {
   const entries = await getListEntries(
     summary.id,
     view,
+    extraColumns,
     pagination.offset,
     pagination.limit,
   );
@@ -61,7 +69,15 @@ async function List({ params, searchParams }: PageProps<"/lists/[id]">) {
         {formatDate(summary.createdAt)}
       </p>
       <div className="mb-4 flex flex-col gap-2">
-        <ListSearch basePath={basePath} view={view} />
+        <ListSearch
+          basePath={basePath}
+          view={view}
+          placeholder={
+            showsProductions(extraColumns)
+              ? "Search this list by title, artist, or production…"
+              : "Search this list by title or artist…"
+          }
+        />
         {view.query && (
           <p
             className="text-sm wrap-anywhere text-muted-foreground"
@@ -96,6 +112,7 @@ async function List({ params, searchParams }: PageProps<"/lists/[id]">) {
           firstPosition={pagination.from}
           view={view}
           basePath={basePath}
+          extraColumns={extraColumns}
         />
       )}
       <div className="mt-6">

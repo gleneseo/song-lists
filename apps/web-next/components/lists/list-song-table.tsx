@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import type { ListExtraColumn } from "@song-lists/db/list-extra-column";
 import { ClampedText } from "@/components/clamped-text";
 import { SongTitleLink } from "@/components/songs/song-title-link";
 import {
@@ -8,6 +9,7 @@ import {
   type ListView,
   type SortColumn,
 } from "@/lib/lists/list-view";
+import { showsProductions } from "@/lib/lists/extra-columns";
 import type { ListEntry } from "@/lib/queries/lists";
 import { formatDate } from "@/lib/text/format-date";
 import { coverOfLabel, featuredArtistsLabel } from "@/lib/text/song-labels";
@@ -59,19 +61,26 @@ function SortHeader({
   );
 }
 
-/** One page of a list's songs, with sortable Title, Artist, and Added columns. */
+/**
+ * One page of a list's songs, with sortable Title, Artist, and Added columns
+ * -- plus whichever optional columns the list has turned on.
+ */
 function ListSongTable({
   entries,
   firstPosition,
   view,
   basePath,
+  extraColumns,
 }: {
   entries: ListEntry[];
   /** The 1-based position, within the filtered and sorted list, of the first row. */
   firstPosition: number;
   view: ListView;
   basePath: string;
+  extraColumns: ListExtraColumn[];
 }) {
+  const withProductions = showsProductions(extraColumns);
+
   return (
     <div className="overflow-x-auto rounded-xl bg-card ring-1 ring-foreground/10">
       <table className="w-full text-left text-sm">
@@ -95,6 +104,15 @@ function ListSongTable({
               basePath={basePath}
               className="min-w-36"
             />
+            {withProductions && (
+              <SortHeader
+                column="production"
+                label="Production"
+                view={view}
+                basePath={basePath}
+                className="min-w-36"
+              />
+            )}
             <th
               scope="col"
               className="hidden px-2 py-2 font-medium whitespace-nowrap md:table-cell"
@@ -116,7 +134,7 @@ function ListSongTable({
             const cover = coverOfLabel(entry.song);
 
             return (
-              <tr key={entry.id} className="align-top">
+              <tr key={entry.id} className="align-middle">
                 <td className="px-2 py-2.5 text-right text-muted-foreground tabular-nums">
                   {(firstPosition + index).toLocaleString("en-US")}
                 </td>
@@ -140,6 +158,21 @@ function ListSongTable({
                     />
                   )}
                 </td>
+                {withProductions && (
+                  <td className="px-2 py-2.5">
+                    {entry.productions.length === 0 ? (
+                      <span className="text-muted-foreground">–</span>
+                    ) : (
+                      entry.productions.map((production) => (
+                        <ClampedText
+                          key={`${production.name}-${production.releaseYear}`}
+                          lines={1}
+                          text={`${production.name} (${production.releaseYear})`}
+                        />
+                      ))
+                    )}
+                  </td>
+                )}
                 <td className="hidden px-2 py-2.5 text-muted-foreground md:table-cell">
                   {entry.addedBy}
                 </td>

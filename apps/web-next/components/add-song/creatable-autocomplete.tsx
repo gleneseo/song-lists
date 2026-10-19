@@ -28,7 +28,7 @@ function selectionLabel<T extends CreatableOption>(
     : selection.name;
 }
 
-interface CreatableAutocompleteProps<T extends CreatableOption> {
+interface CreatableAutocompleteProperties<T extends CreatableOption> {
   label: string;
   placeholder?: string;
   search: (query: string) => Promise<T[]>;
@@ -49,7 +49,7 @@ function CreatableAutocomplete<T extends CreatableOption>({
   search,
   value,
   onChange,
-}: CreatableAutocompleteProps<T>) {
+}: CreatableAutocompleteProperties<T>) {
   const [inputValue, setInputValue] = useState(
     value ? selectionLabel(value) : "",
   );
@@ -64,9 +64,9 @@ function CreatableAutocomplete<T extends CreatableOption>({
   // enough to keep this in sync. Adjusting state during render (rather than
   // in an effect) avoids an extra render pass -- see
   // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes.
-  const [prevValue, setPrevValue] = useState(value);
-  if (value !== prevValue) {
-    setPrevValue(value);
+  const [previousValue, setPreviousValue] = useState(value);
+  if (value !== previousValue) {
+    setPreviousValue(value);
     setInputValue(value ? selectionLabel(value) : "");
   }
 

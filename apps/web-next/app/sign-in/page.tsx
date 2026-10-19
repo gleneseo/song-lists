@@ -23,6 +23,12 @@ export default function SignInPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  function resetForm() {
+    setEmail("");
+    setPassword("");
+    setLoading(false);
+  }
+
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
@@ -35,10 +41,7 @@ export default function SignInPage() {
       setLoading(false);
       return;
     }
-
-    setEmail("");
-    setPassword("");
-    setLoading(false);
+    resetForm();
     router.push("/songs");
     router.refresh();
   }

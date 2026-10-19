@@ -28,7 +28,7 @@ function selectionKey<T extends CreatableOption>(
     : `new:${selection.name.toLowerCase()}`;
 }
 
-interface CreatableComboboxProps<T extends CreatableOption> {
+interface CreatableComboboxProperties<T extends CreatableOption> {
   label: string;
   placeholder?: string;
   search: (query: string) => Promise<T[]>;
@@ -46,7 +46,7 @@ function CreatableCombobox<T extends CreatableOption>({
   search,
   values,
   onChange,
-}: CreatableComboboxProps<T>) {
+}: CreatableComboboxProperties<T>) {
   const [inputValue, setInputValue] = useState("");
   const [results, setResults] = useState<T[]>([]);
   const debouncedInput = useDebouncedValue(inputValue);

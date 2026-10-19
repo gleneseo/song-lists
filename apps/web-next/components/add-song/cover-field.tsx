@@ -12,7 +12,7 @@ import {
   type CreatableSelection,
 } from "./creatable-autocomplete";
 
-interface CoverFieldProps {
+interface CoverFieldProperties {
   choice: CreatableSelection<CreatableOption> | null;
   onChoiceChange: (choice: CreatableSelection<CreatableOption> | null) => void;
   newArtist: CreatableSelection<CreatableOption> | null;
@@ -34,7 +34,7 @@ function CoverField({
   onNewArtistChange,
   newTitle,
   onNewTitleChange,
-}: CoverFieldProps) {
+}: CoverFieldProperties) {
   return (
     <div className="flex flex-col gap-3">
       <CreatableAutocomplete

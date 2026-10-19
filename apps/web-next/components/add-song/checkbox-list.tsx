@@ -8,20 +8,20 @@ interface CheckboxListOption<Id> {
   name: string;
 }
 
-interface CheckboxListProps<Id extends string | number> {
+interface CheckboxListProperties<Id extends string | number> {
   label: string;
   options: CheckboxListOption<Id>[];
   selectedIds: Id[];
   onChange: (ids: Id[]) => void;
 }
 
-/** A plain checkbox-per-row list, shared by the Lists and Advocates fields. */
+/** A plain checkbox-per-row list */
 function CheckboxList<Id extends string | number>({
   label,
   options,
   selectedIds,
   onChange,
-}: CheckboxListProps<Id>) {
+}: CheckboxListProperties<Id>) {
   const selected = new Set(selectedIds);
 
   function toggle(id: Id, checked: boolean) {

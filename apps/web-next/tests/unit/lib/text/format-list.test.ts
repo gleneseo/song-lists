@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatList } from "../../../../lib/text/format-list";
+import { formatList } from "@/lib/text/format-list";
 
 describe("formatList", () => {
   it("should return an empty string for no items", () => {

@@ -17,7 +17,7 @@ import {
   type CreatableSelection,
 } from "./creatable-autocomplete";
 
-interface ProductionFieldProps {
+interface ProductionFieldProperties {
   productionTypes: ProductionTypeOption[];
   choice: CreatableSelection<CreatableOption> | null;
   onChoiceChange: (choice: CreatableSelection<CreatableOption> | null) => void;
@@ -35,7 +35,7 @@ function ProductionField({
   onReleaseYearChange,
   typeId,
   onTypeIdChange,
-}: ProductionFieldProps) {
+}: ProductionFieldProperties) {
   return (
     <div className="flex flex-col gap-3">
       <CreatableAutocomplete

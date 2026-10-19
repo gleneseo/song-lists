@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeText } from "../../../../lib/text/normalize";
+import { normalizeText } from "@/lib/text/normalize";
 
 describe("normalizeText", () => {
   it("should trim leading and trailing whitespace", () => {

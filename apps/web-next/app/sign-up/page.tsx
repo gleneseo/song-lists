@@ -24,6 +24,13 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  function resetForm() {
+    setName("");
+    setEmail("");
+    setPassword("");
+    setLoading(false);
+  }
+
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
@@ -41,10 +48,7 @@ export default function SignUpPage() {
       return;
     }
 
-    setName("");
-    setEmail("");
-    setPassword("");
-    setLoading(false);
+    resetForm();
     router.push("/songs");
     router.refresh();
   }

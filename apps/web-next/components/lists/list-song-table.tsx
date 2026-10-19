@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import { ClampedText } from "@/components/clamped-text";
 import {
   listHref,
   sortedBy,
@@ -84,16 +85,18 @@ function ListSongTable({
               label="Title"
               view={view}
               basePath={basePath}
+              className="min-w-44"
             />
             <SortHeader
               column="artist"
               label="Artist"
               view={view}
               basePath={basePath}
+              className="min-w-36"
             />
             <th
               scope="col"
-              className="hidden px-2 py-2 font-medium md:table-cell"
+              className="hidden px-2 py-2 font-medium whitespace-nowrap md:table-cell"
             >
               Added by
             </th>
@@ -117,19 +120,26 @@ function ListSongTable({
                   {(firstPosition + index).toLocaleString("en-US")}
                 </td>
                 <td className="px-2 py-2.5">
-                  <p className="font-medium">{entry.song.title}</p>
+                  <ClampedText
+                    text={entry.song.title}
+                    className="font-medium"
+                  />
                   {cover && (
-                    <p className="text-xs text-muted-foreground">
-                      Cover of {cover}
-                    </p>
+                    <ClampedText
+                      lines={1}
+                      text={`Cover of ${cover}`}
+                      className="text-xs text-muted-foreground"
+                    />
                   )}
                 </td>
                 <td className="px-2 py-2.5">
-                  <p>{entry.song.artist.name}</p>
+                  <ClampedText text={entry.song.artist.name} />
                   {featured && (
-                    <p className="text-xs text-muted-foreground">
-                      feat. {featured}
-                    </p>
+                    <ClampedText
+                      lines={1}
+                      text={`feat. ${featured}`}
+                      className="text-xs text-muted-foreground"
+                    />
                   )}
                 </td>
                 <td className="hidden px-2 py-2.5 text-muted-foreground md:table-cell">

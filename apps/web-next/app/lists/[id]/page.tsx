@@ -45,6 +45,7 @@ async function List({ params, searchParams }: PageProps<"/lists/[id]">) {
   // A page past the end is clamped, so every link below uses the real page.
   const view = { ...requested, page: pagination.page };
   const basePath = `/lists/${summary.id}`;
+  const hrefForPage = (page: number) => listHref(basePath, { ...view, page });
   const entries = await getListEntries(
     summary.id,
     view,
@@ -62,15 +63,29 @@ async function List({ params, searchParams }: PageProps<"/lists/[id]">) {
       <div className="mb-4 flex flex-col gap-2">
         <ListSearch basePath={basePath} view={view} />
         {view.query && (
-          <p className="text-sm text-muted-foreground" aria-live="polite">
+          <p
+            className="text-sm wrap-anywhere text-muted-foreground"
+            aria-live="polite"
+          >
             {matching.toLocaleString("en-US")} of{" "}
             {summary.songCount.toLocaleString("en-US")} songs match &ldquo;
             {view.query}&rdquo;
           </p>
         )}
       </div>
+      {pagination.pageCount > 1 && (
+        <div className="mb-3">
+          <PaginationNav
+            label="Pagination (top)"
+            hrefForPage={hrefForPage}
+            pagination={pagination}
+            total={matching}
+            noun="songs"
+          />
+        </div>
+      )}
       {entries.length === 0 ? (
-        <p className="py-10 text-center text-muted-foreground">
+        <p className="py-10 text-center wrap-anywhere text-muted-foreground">
           {view.query
             ? `No songs on this list match “${view.query}”.`
             : "Nothing on this list yet."}
@@ -85,7 +100,8 @@ async function List({ params, searchParams }: PageProps<"/lists/[id]">) {
       )}
       <div className="mt-6">
         <PaginationNav
-          hrefForPage={(page) => listHref(basePath, { ...view, page })}
+          label="Pagination (bottom)"
+          hrefForPage={hrefForPage}
           pagination={pagination}
           total={matching}
           noun="songs"

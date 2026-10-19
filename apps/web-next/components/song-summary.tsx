@@ -1,3 +1,4 @@
+import { ClampedText } from "@/components/clamped-text";
 import type { Song } from "@/lib/queries/songs";
 import { coverOfLabel, featuredArtistsLabel } from "@/lib/text/song-labels";
 
@@ -11,15 +12,20 @@ function SongSummary({ song }: { song: Song }) {
 
   return (
     <div className="min-w-0">
-      <p className="truncate font-medium">{song.title}</p>
-      <p className="truncate text-sm text-muted-foreground">
-        {song.artist.name}
-        {featured && ` feat. ${featured}`}
-      </p>
+      <ClampedText lines={1} text={song.title} className="font-medium" />
+      <ClampedText
+        lines={1}
+        text={
+          featured ? `${song.artist.name} feat. ${featured}` : song.artist.name
+        }
+        className="text-sm text-muted-foreground"
+      />
       {cover && (
-        <p className="truncate text-xs text-muted-foreground">
-          Cover of {cover}
-        </p>
+        <ClampedText
+          lines={1}
+          text={`Cover of ${cover}`}
+          className="text-xs text-muted-foreground"
+        />
       )}
     </div>
   );

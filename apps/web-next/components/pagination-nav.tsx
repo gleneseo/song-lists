@@ -9,17 +9,20 @@ function PaginationNav({
   pagination,
   total,
   noun,
+  label = "Pagination",
 }: {
   hrefForPage: (page: number) => string;
   pagination: Pagination;
   total: number;
   noun: string;
+  /** The landmark's name -- give each pager on a page its own so they can be told apart. */
+  label?: string;
 }) {
   const { page, pageCount, from, to, hasPrevious, hasNext } = pagination;
 
   return (
     <nav
-      aria-label="Pagination"
+      aria-label={label}
       className="flex items-center justify-between gap-4 text-sm"
     >
       <p className="text-muted-foreground">

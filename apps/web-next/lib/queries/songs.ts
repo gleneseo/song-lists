@@ -1,5 +1,6 @@
 import { and, asc, eq, sql } from "drizzle-orm";
 import { schema } from "@song-lists/db";
+import { selectDuplicateMatches } from "@/lib/search/select-duplicate-matches";
 import { db } from "./client";
 
 interface FeaturedArtist {
@@ -62,9 +63,6 @@ interface DuplicateCheckResult {
   near: ExistingSongMatch | null;
 }
 
-/** Below this, two titles are treated as coincidentally similar, not the same song. */
-const NEAR_DUPLICATE_SIMILARITY_THRESHOLD = 0.5;
-
 async function getSongs(): Promise<Song[]> {
   return db.query.songs.findMany({
     columns: { id: true, title: true },
@@ -121,20 +119,7 @@ async function findExistingSong(
     .orderBy(sql`similarity(${schema.songs.title}, ${normalizedTitle}) DESC`)
     .limit(5);
 
-  const exact =
-    candidates.find(
-      (candidate) =>
-        candidate.title.toLowerCase() === normalizedTitle.toLowerCase(),
-    ) ?? null;
-
-  const near =
-    candidates.find(
-      (candidate) =>
-        candidate !== exact &&
-        candidate.similarity >= NEAR_DUPLICATE_SIMILARITY_THRESHOLD,
-    ) ?? null;
-
-  return { exact, near };
+  return selectDuplicateMatches(candidates, normalizedTitle);
 }
 
 export { getSongs, searchSongs, findExistingSong };

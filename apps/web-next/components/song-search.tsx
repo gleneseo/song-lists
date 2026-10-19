@@ -4,22 +4,8 @@ import { useMemo, useState } from "react";
 import { Disc3 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { filterSongs } from "@/lib/search/filter-songs";
-import { formatList } from "@/lib/text/format-list";
-import type { FeaturedArtist, Song } from "@/lib/queries/songs";
-
-function featuredArtistsLabel(featuredArtists: FeaturedArtist[]): string {
-  return formatList(featuredArtists.map((featured) => featured.artist.name));
-}
-
-function coverOfLabel(song: Song): string {
-  return song.coverOf
-    .map((cover) => {
-      const featured = featuredArtistsLabel(cover.original.featuredArtists);
-      const featuredSuffix = featured ? ` (feat. ${featured})` : "";
-      return `"${cover.original.title}" by ${cover.original.artist.name}${featuredSuffix}`;
-    })
-    .join(", ");
-}
+import { coverOfLabel, featuredArtistsLabel } from "@/lib/text/song-labels";
+import type { Song } from "@/lib/queries/songs";
 
 export function SongSearch({ songs }: { songs: Song[] }) {
   const [query, setQuery] = useState("");

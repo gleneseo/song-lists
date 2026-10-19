@@ -1,8 +1,5 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { ListSearch } from "@/components/lists/list-search";
 import { ListSongTable } from "@/components/lists/list-song-table";
 import { PaginationNav } from "@/components/pagination-nav";
@@ -131,16 +128,6 @@ async function List({ params, searchParams }: PageProps<"/lists/[id]">) {
 export default function ListPage(props: PageProps<"/lists/[id]">) {
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-10">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="mb-4 -ml-2.5"
-        nativeButton={false}
-        render={<Link href="/lists" />}
-      >
-        <ArrowLeft />
-        All lists
-      </Button>
       <Suspense
         fallback={<p className="text-muted-foreground">Loading list…</p>}
       >

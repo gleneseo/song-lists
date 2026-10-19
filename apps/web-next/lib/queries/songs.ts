@@ -122,5 +122,5 @@ async function findExistingSong(
   return selectDuplicateMatches(candidates, normalizedTitle);
 }
 
-export { getSongs, searchSongs, findExistingSong };
+export { getSongs, searchSongs, findExistingSong, songWith };
 export type { Song, FeaturedArtist, ExistingSongMatch, DuplicateCheckResult };

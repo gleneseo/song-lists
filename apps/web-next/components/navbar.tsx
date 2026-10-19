@@ -21,7 +21,7 @@ function Navbar() {
     <nav className="border-b border-border bg-background">
       <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
         <Link
-          href="/"
+          href={session?.user ? "/dashboard" : "/"}
           className="flex items-center gap-2 text-lg font-semibold"
         >
           <ListMusic className="size-5" />
@@ -30,6 +30,20 @@ function Navbar() {
         <div className="flex items-center gap-2">
           {session?.user ? (
             <>
+              <Button
+                variant="ghost"
+                nativeButton={false}
+                render={<Link href="/dashboard" />}
+              >
+                Dashboard
+              </Button>
+              <Button
+                variant="ghost"
+                nativeButton={false}
+                render={<Link href="/lists" />}
+              >
+                Lists
+              </Button>
               <Button
                 variant="ghost"
                 nativeButton={false}

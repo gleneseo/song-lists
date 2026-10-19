@@ -1,10 +1,27 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { ListMusic, Search, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getSession } from "@/lib/auth/auth";
+
+/** Signed-in visitors have no use for the sales pitch -- send them to their dashboard. */
+async function RedirectIfSignedIn() {
+  const session = await getSession();
+
+  if (session?.user) {
+    redirect("/dashboard");
+  }
+
+  return null;
+}
 
 export default function Page() {
   return (
     <main className="flex flex-col">
+      <Suspense fallback={null}>
+        <RedirectIfSignedIn />
+      </Suspense>
       <section className="mx-auto max-w-3xl px-4 py-24 text-center">
         <h1 className="mb-6 text-5xl font-bold">
           Browse and build song lists together.

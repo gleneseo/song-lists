@@ -49,7 +49,7 @@ export default function SignUpPage() {
     }
 
     resetForm();
-    router.push("/songs");
+    router.push("/dashboard");
     router.refresh();
   }
 

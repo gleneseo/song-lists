@@ -1,12 +1,13 @@
 import { notFound, redirect } from "next/navigation";
-import { SongDetailsView } from "@/components/songs/song-details-view";
+import { SongDetailsPanel } from "@/components/songs/song-details-panel";
 import { getSession } from "@/lib/auth/auth";
 import { getSongDetails } from "@/lib/queries/song-details";
+import { isAdminUser } from "@/lib/queries/users";
 
 /**
  * Loads the song named by a route's `id` param and shows its details. Used
  * by both the full page and the modal, so they share one sign-in check, one
- * id parse, and one query. A missing song is a real 404 on the full page,
+ * id parse, and one query. Admins also get the Edit button. A missing song is a real 404 on the full page,
  * but a short message inside the modal -- a 404 page would replace the list
  * the modal is sitting on top of.
  */
@@ -26,6 +27,7 @@ async function SongDetailsLoader({
   }
 
   const { id } = await params;
+  const canEdit = await isAdminUser(session.user.id);
   const songId = Number(id);
   const details =
     Number.isInteger(songId) && songId > 0
@@ -33,7 +35,13 @@ async function SongDetailsLoader({
       : null;
 
   if (details) {
-    return <SongDetailsView details={details} headingLevel={headingLevel} />;
+    return (
+      <SongDetailsPanel
+        details={details}
+        headingLevel={headingLevel}
+        canEdit={canEdit}
+      />
+    );
   }
 
   if (whenMissing === "not-found") {

@@ -1,7 +1,5 @@
 "use server";
 
-import type { ExtractTablesWithRelations } from "drizzle-orm";
-import type { NodePgTransaction } from "drizzle-orm/node-postgres";
 import { schema } from "@song-lists/db";
 import { getSession } from "@/lib/auth/auth";
 import { db } from "@/lib/queries/client";
@@ -9,25 +7,15 @@ import {
   findExistingSong,
   type DuplicateCheckResult,
 } from "@/lib/queries/songs";
+import {
+  resolveArtist,
+  resolveCover,
+  resolveProduction,
+  type ArtistSelection,
+  type CoverSelection,
+  type ProductionSelection,
+} from "@/lib/songs/resolve-selections";
 import { normalizeText } from "@/lib/text/normalize";
-
-type Transaction = NodePgTransaction<
-  typeof schema,
-  ExtractTablesWithRelations<typeof schema>
->;
-
-type ArtistSelection =
-  { kind: "existing"; id: number } | { kind: "new"; name: string };
-
-type ProductionSelection =
-  | { kind: "existing"; id: number }
-  | { kind: "new"; name: string; releaseYear: number; typeId: number }
-  | null;
-
-type CoverSelection =
-  | { kind: "existing"; songId: number }
-  | { kind: "new"; title: string; artist: ArtistSelection }
-  | null;
 
 interface CreateSongInput {
   artist: ArtistSelection;
@@ -64,49 +52,6 @@ async function checkDuplicateSong(input: {
   }
 
   return findExistingSong(input.artistId, normalizedTitle);
-}
-
-/**
- * Resolves an artist selection to an id, inserting a new artist row when the
- * user chose to create one. New artists are cached by normalized name within
- * a single submission, so e.g. picking "create new" for the same typed name
- * in both the main Artist field and a Featured Artist chip only inserts one
- * row.
- */
-async function resolveArtist(
-  tx: Transaction,
-  selection: ArtistSelection,
-  userId: string,
-  newArtistsByName: Map<string, number>,
-): Promise<number> {
-  if (selection.kind === "existing") {
-    return selection.id;
-  }
-
-  const name = normalizeText(selection.name);
-
-  if (!name) {
-    throw new Error("Artist name is required.");
-  }
-
-  const cacheKey = name.toLowerCase();
-  const cached = newArtistsByName.get(cacheKey);
-
-  if (cached !== undefined) {
-    return cached;
-  }
-
-  const [artist] = await tx
-    .insert(schema.artists)
-    .values({ name, createdBy: userId, updatedBy: userId })
-    .returning({ id: schema.artists.id });
-
-  if (!artist) {
-    throw new Error("Expected the artist insert to return a row.");
-  }
-
-  newArtistsByName.set(cacheKey, artist.id);
-  return artist.id;
 }
 
 async function createSong(input: CreateSongInput): Promise<CreateSongResult> {
@@ -169,71 +114,17 @@ async function createSong(input: CreateSongInput): Promise<CreateSongResult> {
         }
       }
 
-      let productionId: number | null = null;
-      if (input.production) {
-        if (input.production.kind === "existing") {
-          productionId = input.production.id;
-        } else {
-          const name = normalizeText(input.production.name);
-
-          if (!name) {
-            throw new Error("Production name is required.");
-          }
-
-          const [production] = await tx
-            .insert(schema.productions)
-            .values({
-              name,
-              releaseYear: input.production.releaseYear,
-              typeId: input.production.typeId,
-              createdBy: userId,
-              updatedBy: userId,
-            })
-            .returning({ id: schema.productions.id });
-
-          if (!production) {
-            throw new Error("Expected the production insert to return a row.");
-          }
-
-          productionId = production.id;
-        }
-      }
-
-      let originalSongId: number | null = null;
-      if (input.cover) {
-        if (input.cover.kind === "existing") {
-          originalSongId = input.cover.songId;
-        } else {
-          const title = normalizeText(input.cover.title);
-
-          if (!title) {
-            throw new Error("Cover title is required.");
-          }
-
-          const coverArtistId = await resolveArtist(
-            tx,
-            input.cover.artist,
-            userId,
-            newArtistsByName,
-          );
-
-          const [originalSong] = await tx
-            .insert(schema.songs)
-            .values({
-              title,
-              artistId: coverArtistId,
-              createdBy: userId,
-              updatedBy: userId,
-            })
-            .returning({ id: schema.songs.id });
-
-          if (!originalSong) {
-            throw new Error("Expected the song insert to return a row.");
-          }
-
-          originalSongId = originalSong.id;
-        }
-      }
+      const productionId = await resolveProduction(
+        tx,
+        input.production,
+        userId,
+      );
+      const originalSongId = await resolveCover(
+        tx,
+        input.cover,
+        userId,
+        newArtistsByName,
+      );
 
       const [song] = await tx
         .insert(schema.songs)
@@ -312,11 +203,4 @@ async function createSong(input: CreateSongInput): Promise<CreateSongResult> {
 }
 
 export { checkDuplicateSong, createSong };
-export type {
-  ArtistSelection,
-  ProductionSelection,
-  CoverSelection,
-  CreateSongInput,
-  CreateSongResult,
-  ExistingSongReference,
-};
+export type { CreateSongInput, CreateSongResult, ExistingSongReference };

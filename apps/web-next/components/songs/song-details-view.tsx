@@ -37,9 +37,12 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 function SongDetailsView({
   details,
   headingLevel = "h1",
+  footerAction,
 }: {
   details: SongDetails;
   headingLevel?: "h1" | "h2";
+  /** Something to show beside the footer line, such as an Edit button. */
+  footerAction?: ReactNode;
 }) {
   const Heading = headingLevel;
   const artist =
@@ -139,9 +142,12 @@ function SongDetailsView({
         </Section>
       )}
 
-      <p className="border-t border-border pt-3 text-xs text-muted-foreground">
-        Added to the catalog {formatDate(details.addedAt)}
-      </p>
+      <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
+        <p className="text-xs text-muted-foreground">
+          Added to the catalog {formatDate(details.addedAt)}
+        </p>
+        {footerAction}
+      </div>
     </article>
   );
 }

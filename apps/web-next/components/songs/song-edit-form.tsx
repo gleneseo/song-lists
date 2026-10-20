@@ -22,7 +22,7 @@ import {
 } from "@/components/add-song/creatable-autocomplete";
 import { CreatableCombobox } from "@/components/add-song/creatable-combobox";
 import { ProductionField } from "@/components/add-song/production-field";
-import { SONG_HEADING_ID } from "@/components/songs/song-details-view";
+import { ENTITY_HEADING_ID } from "@/components/entity-heading";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -151,7 +151,7 @@ function LoadedForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <h2
-        id={SONG_HEADING_ID}
+        id={ENTITY_HEADING_ID}
         className="pr-8 text-xl leading-snug font-semibold"
       >
         Edit song
@@ -345,7 +345,7 @@ function SongEditForm({
   return (
     <div className="flex flex-col gap-4">
       <h2
-        id={SONG_HEADING_ID}
+        id={ENTITY_HEADING_ID}
         className="pr-8 text-xl leading-snug font-semibold"
       >
         Edit song

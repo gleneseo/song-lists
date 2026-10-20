@@ -5,7 +5,7 @@ import { db } from "./client";
 
 const relatedSongWith = {
   columns: { id: true, title: true },
-  with: { artist: { columns: { name: true } } },
+  with: { artist: { columns: { id: true, name: true } } },
 } as const;
 
 /** One song with everything attached to it, or `null` when no song has that id. */
@@ -14,10 +14,10 @@ async function getSongDetails(songId: number): Promise<SongDetails | null> {
     where: eq(schema.songs.id, songId),
     columns: { id: true, title: true, bio: true, createdAt: true },
     with: {
-      artist: { columns: { name: true } },
+      artist: { columns: { id: true, name: true } },
       featuredArtists: {
         columns: { id: true },
-        with: { artist: { columns: { name: true } } },
+        with: { artist: { columns: { id: true, name: true } } },
       },
       coverOf: { columns: { id: true }, with: { original: relatedSongWith } },
       coveredBy: { columns: { id: true }, with: { song: relatedSongWith } },
@@ -25,7 +25,7 @@ async function getSongDetails(songId: number): Promise<SongDetails | null> {
         columns: { id: true },
         with: {
           production: {
-            columns: { name: true, releaseYear: true },
+            columns: { id: true, name: true, releaseYear: true },
             with: { type: { columns: { name: true } } },
           },
         },

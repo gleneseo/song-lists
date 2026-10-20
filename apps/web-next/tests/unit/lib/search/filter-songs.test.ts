@@ -5,21 +5,21 @@ import type { Song } from "@/lib/queries/songs";
 const paintItBlack: Song = {
   id: 1,
   title: "Paint It, Black",
-  artist: { name: "The Rolling Stones" },
+  artist: { id: 1, name: "The Rolling Stones" },
   featuredArtists: [],
   coverOf: [],
 };
 const satisfaction: Song = {
   id: 2,
   title: "Satisfaction",
-  artist: { name: "Devo" },
+  artist: { id: 2, name: "Devo" },
   featuredArtists: [],
   coverOf: [],
 };
 const angie: Song = {
   id: 3,
   title: "Angie",
-  artist: { name: "The Rolling Stones" },
+  artist: { id: 1, name: "The Rolling Stones" },
   featuredArtists: [],
   coverOf: [],
 };

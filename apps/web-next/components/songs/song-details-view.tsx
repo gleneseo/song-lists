@@ -1,34 +1,14 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
+import { DetailsSection as Section } from "@/components/details-section";
+import { ENTITY_HEADING_ID } from "@/components/entity-heading";
+import {
+  ArtistLink,
+  ProductionLink,
+  SongLink,
+} from "@/components/entity-links";
 import { ListPill } from "@/components/lists/list-pill";
-import type { RelatedSong, SongDetails } from "@/lib/songs/song-details";
+import type { SongDetails } from "@/lib/songs/song-details";
 import { formatDate } from "@/lib/text/format-date";
-import { formatList } from "@/lib/text/format-list";
-
-/** The id the dialog uses to name itself after the song's heading. */
-const SONG_HEADING_ID = "song-details-title";
-
-function SongLink({ song }: { song: RelatedSong }) {
-  return (
-    <Link
-      href={`/song/${song.id}`}
-      className="font-medium underline-offset-4 hover:underline"
-    >
-      {song.title}
-    </Link>
-  );
-}
-
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="flex flex-col gap-2">
-      <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-        {title}
-      </h3>
-      {children}
-    </section>
-  );
-}
 
 /**
  * Everything known about one song. Shared by the full song page and the
@@ -45,28 +25,39 @@ function SongDetailsView({
   footerAction?: ReactNode;
 }) {
   const Heading = headingLevel;
-  const artist =
-    details.featuredArtistNames.length > 0
-      ? `${details.artistName} feat. ${formatList(details.featuredArtistNames)}`
-      : details.artistName;
-
   return (
     <article className="flex flex-col gap-5">
       <header className="flex flex-col gap-1 pr-8">
         <Heading
-          id={SONG_HEADING_ID}
+          id={ENTITY_HEADING_ID}
           className="text-xl leading-snug font-semibold wrap-anywhere"
         >
           {details.title}
         </Heading>
-        <p className="text-muted-foreground wrap-anywhere">{artist}</p>
+        <p className="text-muted-foreground wrap-anywhere">
+          <ArtistLink id={details.artistId}>{details.artistName}</ArtistLink>
+          {details.featuredArtists.length > 0 && (
+            <>
+              {" feat. "}
+              {details.featuredArtists.map((artist, index) => (
+                <span key={artist.id}>
+                  {index > 0 && ", "}
+                  <ArtistLink id={artist.id}>{artist.name}</ArtistLink>
+                </span>
+              ))}
+            </>
+          )}
+        </p>
         {details.covers.length > 0 && (
           <p className="text-sm text-muted-foreground">
             Cover of{" "}
             {details.covers.map((song, index) => (
               <span key={song.id}>
                 {index > 0 && ", "}
-                <SongLink song={song} /> by {song.artistName}
+                <SongLink id={song.id} className="font-medium">
+                  {song.title}
+                </SongLink>{" "}
+                by <ArtistLink id={song.artistId}>{song.artistName}</ArtistLink>
               </span>
             ))}
           </p>
@@ -102,9 +93,12 @@ function SongDetailsView({
           <ul className="flex flex-col gap-1">
             {details.coveredBy.map((song) => (
               <li key={song.id}>
-                <SongLink song={song} />{" "}
+                <SongLink id={song.id} className="font-medium">
+                  {song.title}
+                </SongLink>{" "}
                 <span className="text-muted-foreground">
-                  by {song.artistName}
+                  by{" "}
+                  <ArtistLink id={song.artistId}>{song.artistName}</ArtistLink>
                 </span>
               </li>
             ))}
@@ -116,8 +110,10 @@ function SongDetailsView({
         <Section title="Appears in">
           <ul className="flex flex-col gap-1">
             {details.productions.map((production) => (
-              <li key={`${production.name}-${production.releaseYear}`}>
-                <span className="font-medium">{production.name}</span>{" "}
+              <li key={production.id}>
+                <ProductionLink id={production.id} className="font-medium">
+                  {production.name}
+                </ProductionLink>{" "}
                 <span className="text-muted-foreground">
                   ({production.releaseYear}) · {production.typeName}
                 </span>
@@ -152,4 +148,4 @@ function SongDetailsView({
   );
 }
 
-export { SONG_HEADING_ID, SongDetailsView };
+export { SongDetailsView };

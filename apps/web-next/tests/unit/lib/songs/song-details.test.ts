@@ -8,7 +8,7 @@ const bareRow: SongDetailsRow = {
   title: "Summer Breeze",
   bio: null,
   createdAt: day("2020-08-28"),
-  artist: { name: "The Isley Brothers" },
+  artist: { id: 10, name: "The Isley Brothers" },
   featuredArtists: [],
   coverOf: [],
   coveredBy: [],
@@ -24,8 +24,9 @@ describe("toSongDetails", () => {
       title: "Summer Breeze",
       bio: null,
       addedAt: day("2020-08-28"),
+      artistId: 10,
       artistName: "The Isley Brothers",
-      featuredArtistNames: [],
+      featuredArtists: [],
       covers: [],
       coveredBy: [],
       productions: [],
@@ -38,18 +39,18 @@ describe("toSongDetails", () => {
     expect(toSongDetails({ ...bareRow, bio: "A gem." }).bio).toBe("A gem.");
   });
 
-  it("should list featured artists by name, in the order given", () => {
+  it("should list featured artists with their ids, in the order given", () => {
     const actual = toSongDetails({
       ...bareRow,
       featuredArtists: [
-        { artist: { name: "Eddie Vedder" } },
-        { artist: { name: "Kawika Kahiapo" } },
+        { artist: { id: 11, name: "Eddie Vedder" } },
+        { artist: { id: 12, name: "Kawika Kahiapo" } },
       ],
     });
 
-    expect(actual.featuredArtistNames).toEqual([
-      "Eddie Vedder",
-      "Kawika Kahiapo",
+    expect(actual.featuredArtists).toEqual([
+      { id: 11, name: "Eddie Vedder" },
+      { id: 12, name: "Kawika Kahiapo" },
     ]);
   });
 
@@ -61,22 +62,27 @@ describe("toSongDetails", () => {
           original: {
             id: 1,
             title: "Black Magic Woman",
-            artist: { name: "Fleetwood Mac" },
+            artist: { id: 20, name: "Fleetwood Mac" },
           },
         },
         {
           original: {
             id: 2,
             title: "Gypsy Queen",
-            artist: { name: "Gábor Szabó" },
+            artist: { id: 21, name: "Gábor Szabó" },
           },
         },
       ],
     });
 
     expect(actual.covers).toEqual([
-      { id: 1, title: "Black Magic Woman", artistName: "Fleetwood Mac" },
-      { id: 2, title: "Gypsy Queen", artistName: "Gábor Szabó" },
+      {
+        id: 1,
+        title: "Black Magic Woman",
+        artistId: 20,
+        artistName: "Fleetwood Mac",
+      },
+      { id: 2, title: "Gypsy Queen", artistId: 21, artistName: "Gábor Szabó" },
     ]);
   });
 
@@ -84,9 +90,9 @@ describe("toSongDetails", () => {
     const actual = toSongDetails({
       ...bareRow,
       coveredBy: [
-        { song: { id: 3, title: "B", artist: { name: "Zed" } } },
-        { song: { id: 4, title: "Z", artist: { name: "Abe" } } },
-        { song: { id: 5, title: "A", artist: { name: "Abe" } } },
+        { song: { id: 3, title: "B", artist: { id: 30, name: "Zed" } } },
+        { song: { id: 4, title: "Z", artist: { id: 31, name: "Abe" } } },
+        { song: { id: 5, title: "A", artist: { id: 31, name: "Abe" } } },
       ],
     });
 
@@ -99,6 +105,7 @@ describe("toSongDetails", () => {
       productions: [
         {
           production: {
+            id: 41,
             name: "Zoolander",
             releaseYear: 2001,
             type: { name: "Film" },
@@ -106,6 +113,7 @@ describe("toSongDetails", () => {
         },
         {
           production: {
+            id: 42,
             name: "Almost Famous",
             releaseYear: 2001,
             type: { name: "Film" },
@@ -113,6 +121,7 @@ describe("toSongDetails", () => {
         },
         {
           production: {
+            id: 43,
             name: "Fletch",
             releaseYear: 1985,
             type: { name: "Film" },
@@ -122,9 +131,9 @@ describe("toSongDetails", () => {
     });
 
     expect(actual.productions).toEqual([
-      { name: "Fletch", releaseYear: 1985, typeName: "Film" },
-      { name: "Almost Famous", releaseYear: 2001, typeName: "Film" },
-      { name: "Zoolander", releaseYear: 2001, typeName: "Film" },
+      { id: 43, name: "Fletch", releaseYear: 1985, typeName: "Film" },
+      { id: 42, name: "Almost Famous", releaseYear: 2001, typeName: "Film" },
+      { id: 41, name: "Zoolander", releaseYear: 2001, typeName: "Film" },
     ]);
   });
 

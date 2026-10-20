@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil } from "lucide-react";
 import { SongDetailsView } from "@/components/songs/song-details-view";
 import { SongEditForm } from "@/components/songs/song-edit-form";
-import { Button } from "@/components/ui/button";
+import { EditButton } from "@/components/edit-button";
 import type { SongDetails } from "@/lib/songs/song-details";
 
 /**
@@ -44,17 +43,7 @@ function SongDetailsPanel({
       details={details}
       headingLevel={headingLevel}
       footerAction={
-        canEdit ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setEditing(true)}
-          >
-            <Pencil />
-            Edit
-          </Button>
-        ) : null
+        canEdit ? <EditButton onClick={() => setEditing(true)} /> : null
       }
     />
   );

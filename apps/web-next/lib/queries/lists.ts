@@ -39,6 +39,7 @@ interface ListSummary extends ListOption {
 }
 
 interface EntryProduction {
+  id: number;
   name: string;
   releaseYear: number;
 }
@@ -206,6 +207,7 @@ async function getProductionsBySong(
   const rows = await db
     .select({
       songId: schema.songProductions.songId,
+      id: schema.productions.id,
       name: schema.productions.name,
       releaseYear: schema.productions.releaseYear,
     })

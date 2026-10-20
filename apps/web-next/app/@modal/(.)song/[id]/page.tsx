@@ -1,5 +1,5 @@
 import { SongDetailsLoader } from "@/components/songs/song-details-loader";
-import { SongModal } from "@/components/songs/song-modal";
+import { EntityModal } from "@/components/entity-modal";
 
 /**
  * Intercepts a soft navigation to /song/[id] and shows the song in a modal
@@ -10,16 +10,16 @@ import { SongModal } from "@/components/songs/song-modal";
  * interceptor on /songs/[id] would match it as id "new" and swallow the
  * navigation to it.
  */
-export default function SongModalPage({ params }: PageProps<"/song/[id]">) {
+export default function EntityModalPage({ params }: PageProps<"/song/[id]">) {
   // No loading state of its own: the layout holds the whole modal back until
   // the song has loaded, so it never opens small and then resizes.
   return (
-    <SongModal>
+    <EntityModal>
       <SongDetailsLoader
         params={params}
         headingLevel="h2"
         whenMissing="message"
       />
-    </SongModal>
+    </EntityModal>
   );
 }

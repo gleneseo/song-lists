@@ -6,7 +6,7 @@ function song(overrides: Partial<Song>): Song {
   return {
     id: 1,
     title: "Song",
-    artist: { name: "Artist" },
+    artist: { id: 1, name: "Artist" },
     featuredArtists: [],
     coverOf: [],
     ...overrides,

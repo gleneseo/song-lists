@@ -10,7 +10,7 @@ interface FeaturedArtist {
 interface Song {
   id: number;
   title: string;
-  artist: { name: string };
+  artist: { id: number; name: string };
   featuredArtists: FeaturedArtist[];
   coverOf: {
     original: {
@@ -32,7 +32,7 @@ const featuredArtistsWith = {
  * kept as one constant so the two queries below can't drift apart.
  */
 const songWith = {
-  artist: { columns: { name: true } },
+  artist: { columns: { id: true, name: true } },
   featuredArtists: featuredArtistsWith,
   coverOf: {
     columns: { id: true },

@@ -1,4 +1,5 @@
 interface NamedArtist {
+  id: number;
   name: string;
 }
 
@@ -19,7 +20,12 @@ interface SongDetailsRow {
   coverOf: { original: RelatedSongRow }[];
   coveredBy: { song: RelatedSongRow }[];
   productions: {
-    production: { name: string; releaseYear: number; type: { name: string } };
+    production: {
+      id: number;
+      name: string;
+      releaseYear: number;
+      type: { name: string };
+    };
   }[];
   advocates: { createdAt: Date; advocate: { name: string } }[];
   lists: {
@@ -32,6 +38,7 @@ interface SongDetailsRow {
 interface RelatedSong {
   id: number;
   title: string;
+  artistId: number;
   artistName: string;
 }
 
@@ -40,13 +47,19 @@ interface SongDetails {
   title: string;
   bio: string | null;
   addedAt: Date;
+  artistId: number;
   artistName: string;
-  featuredArtistNames: string[];
+  featuredArtists: { id: number; name: string }[];
   /** The songs this one covers -- usually one, occasionally a medley's several. */
   covers: RelatedSong[];
   /** Other recordings of this song, grouped by artist. */
   coveredBy: RelatedSong[];
-  productions: { name: string; releaseYear: number; typeName: string }[];
+  productions: {
+    id: number;
+    name: string;
+    releaseYear: number;
+    typeName: string;
+  }[];
   advocates: { name: string; since: Date }[];
   lists: { id: number; name: string; addedBy: string; addedAt: Date }[];
 }
@@ -54,7 +67,7 @@ interface SongDetails {
 const byText = (a: string, b: string) => a.localeCompare(b);
 
 function toRelatedSong({ id, title, artist }: RelatedSongRow): RelatedSong {
-  return { id, title, artistName: artist.name };
+  return { id, title, artistId: artist.id, artistName: artist.name };
 }
 
 /**
@@ -69,8 +82,12 @@ function toSongDetails(row: SongDetailsRow): SongDetails {
     title: row.title,
     bio: row.bio,
     addedAt: row.createdAt,
+    artistId: row.artist.id,
     artistName: row.artist.name,
-    featuredArtistNames: row.featuredArtists.map(({ artist }) => artist.name),
+    featuredArtists: row.featuredArtists.map(({ artist }) => ({
+      id: artist.id,
+      name: artist.name,
+    })),
     covers: row.coverOf.map(({ original }) => toRelatedSong(original)),
     coveredBy: row.coveredBy
       .map(({ song }) => toRelatedSong(song))
@@ -80,6 +97,7 @@ function toSongDetails(row: SongDetailsRow): SongDetails {
       ),
     productions: row.productions
       .map(({ production }) => ({
+        id: production.id,
         name: production.name,
         releaseYear: production.releaseYear,
         typeName: production.type.name,

@@ -1,4 +1,5 @@
 import { ClampedText } from "@/components/clamped-text";
+import { ArtistLink } from "@/components/entity-links";
 import { SongTitleLink } from "@/components/songs/song-title-link";
 import type { Song } from "@/lib/queries/songs";
 import { coverOfLabel, featuredArtistsLabel } from "@/lib/text/song-labels";
@@ -10,17 +11,20 @@ import { coverOfLabel, featuredArtistsLabel } from "@/lib/text/song-labels";
 function SongSummary({ song }: { song: Song }) {
   const featured = featuredArtistsLabel(song.featuredArtists);
   const cover = coverOfLabel(song);
+  const artistLine = featured
+    ? `${song.artist.name} feat. ${featured}`
+    : song.artist.name;
 
   return (
     <div className="min-w-0">
       <SongTitleLink id={song.id} title={song.title} />
-      <ClampedText
-        lines={1}
-        text={
-          featured ? `${song.artist.name} feat. ${featured}` : song.artist.name
-        }
-        className="text-sm text-muted-foreground"
-      />
+      <p
+        title={artistLine}
+        className="line-clamp-1 text-sm wrap-anywhere text-muted-foreground"
+      >
+        <ArtistLink id={song.artist.id}>{song.artist.name}</ArtistLink>
+        {featured && ` feat. ${featured}`}
+      </p>
       {cover && (
         <ClampedText
           lines={1}

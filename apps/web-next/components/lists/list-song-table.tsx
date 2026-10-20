@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import type { ListExtraColumn } from "@song-lists/db/list-extra-column";
 import { ClampedText } from "@/components/clamped-text";
+import { DetailsLink } from "@/components/details-link";
 import { SongTitleLink } from "@/components/songs/song-title-link";
 import {
   listHref,
@@ -149,7 +150,10 @@ function ListSongTable({
                   )}
                 </td>
                 <td className="px-2 py-2.5">
-                  <ClampedText text={entry.song.artist.name} />
+                  <DetailsLink
+                    href={`/artist/${entry.song.artist.id}`}
+                    text={entry.song.artist.name}
+                  />
                   {featured && (
                     <ClampedText
                       lines={1}
@@ -164,8 +168,9 @@ function ListSongTable({
                       <span className="text-muted-foreground">–</span>
                     ) : (
                       entry.productions.map((production) => (
-                        <ClampedText
-                          key={`${production.name}-${production.releaseYear}`}
+                        <DetailsLink
+                          key={production.id}
+                          href={`/production/${production.id}`}
                           lines={1}
                           text={`${production.name} (${production.releaseYear})`}
                         />

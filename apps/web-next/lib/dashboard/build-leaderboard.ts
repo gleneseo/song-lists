@@ -10,7 +10,7 @@ interface RankedContributor extends Contributor {
 }
 
 interface Leaderboard {
-  /** The top `size` contributors, plus the viewer's own row when they fall outside it. */
+  /** Every contributor, ranked, with the viewer's own row flagged. */
   entries: RankedContributor[];
   /** The viewer's row, or `null` when they haven't contributed anything yet. */
   you: RankedContributor | null;
@@ -43,19 +43,17 @@ function rankContributors(
   });
 }
 
+/** Ranks every contributor -- the list is short enough to show in full -- and picks out the viewer's row. */
 function buildLeaderboard(
   contributors: Contributor[],
   viewerId: string,
-  size = 5,
 ): Leaderboard {
-  const ranked = rankContributors(contributors, viewerId);
-  const top = ranked.slice(0, size);
-  const you = ranked.find((contributor) => contributor.isYou) ?? null;
+  const entries = rankContributors(contributors, viewerId);
 
   return {
-    entries: you && !top.includes(you) ? [...top, you] : top,
-    you,
-    totalContributors: ranked.length,
+    entries,
+    you: entries.find((contributor) => contributor.isYou) ?? null,
+    totalContributors: entries.length,
   };
 }
 

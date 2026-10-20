@@ -2,7 +2,7 @@ import type {
   ArtistSelection,
   CoverSelection,
   ProductionSelection,
-} from "@/lib/actions/add-song";
+} from "@/lib/songs/resolve-selections";
 import type {
   CreatableOption,
   CreatableSelection,

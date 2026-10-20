@@ -63,7 +63,7 @@ function SortHeader({
 }
 
 /**
- * One page of a list's songs, with sortable Title, Artist, and Added columns
+ * One page of a list's songs, with sortable Title, Artist, Added by, and Added columns
  * -- plus whichever optional columns the list has turned on.
  */
 function ListSongTable({
@@ -114,12 +114,13 @@ function ListSongTable({
                 className="min-w-36"
               />
             )}
-            <th
-              scope="col"
-              className="hidden px-2 py-2 font-medium whitespace-nowrap md:table-cell"
-            >
-              Added by
-            </th>
+            <SortHeader
+              column="addedBy"
+              label="Added by"
+              view={view}
+              basePath={basePath}
+              className="hidden whitespace-nowrap md:table-cell"
+            />
             <SortHeader
               column="added"
               label="Added"
@@ -179,7 +180,9 @@ function ListSongTable({
                   </td>
                 )}
                 <td className="hidden px-2 py-2.5 text-muted-foreground md:table-cell">
-                  {entry.addedBy}
+                  {entry.addedBy || (
+                    <span className="text-muted-foreground">–</span>
+                  )}
                 </td>
                 <td className="px-2 py-2.5 text-right whitespace-nowrap text-muted-foreground">
                   {formatDate(entry.addedAt)}

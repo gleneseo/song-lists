@@ -47,6 +47,7 @@ interface EntryProduction {
 interface ListEntry {
   id: number;
   addedAt: Date;
+  /** The song's advocates, comma separated; empty when it has none. */
   addedBy: string;
   song: Song;
   /** The song's film/TV productions; only loaded for lists that show them, otherwise empty. */
@@ -126,6 +127,17 @@ const firstProductionName = sql`(
 )`;
 
 /**
+ * The names of a song's advocates, alphabetical and comma separated -- the
+ * "Added by" column, and its sort key -- or null when it has none.
+ */
+const advocateNames = sql<string | null>`(
+  select string_agg(${schema.users.name}, ', ' order by lower(${schema.users.name}), ${schema.users.id})
+  from ${schema.songAdvocates}
+  inner join ${schema.users} on ${schema.users.id} = ${schema.songAdvocates.userId}
+  where ${schema.songAdvocates.songId} = ${schema.songs.id}
+)`;
+
+/**
  * Narrows a list to songs whose title or artist contains `query`, ignoring
  * case -- and, on a list that shows Productions, whose production does too.
  */
@@ -168,6 +180,13 @@ function orderEntries({
       // Songs without a production sort last whichever way it's going.
       return [
         sql`${firstProductionName} ${direction === "asc" ? sql`asc` : sql`desc`} nulls last`,
+        asc(sql`lower(${schema.songs.title})`),
+        asc(schema.listSongs.id),
+      ];
+    case "addedBy":
+      // Songs without an advocate sort last whichever way it's going.
+      return [
+        sql`lower(${advocateNames}) ${direction === "asc" ? sql`asc` : sql`desc`} nulls last`,
         asc(sql`lower(${schema.songs.title})`),
         asc(schema.listSongs.id),
       ];
@@ -246,12 +265,11 @@ async function getListEntries(
       id: schema.listSongs.id,
       songId: schema.songs.id,
       addedAt: schema.listSongs.createdAt,
-      addedBy: schema.users.name,
+      addedBy: advocateNames,
     })
     .from(schema.listSongs)
     .innerJoin(schema.songs, eq(schema.songs.id, schema.listSongs.songId))
     .innerJoin(schema.artists, eq(schema.artists.id, schema.songs.artistId))
-    .innerJoin(schema.users, eq(schema.users.id, schema.listSongs.createdBy))
     .where(
       and(
         eq(schema.listSongs.listId, listId),
@@ -287,7 +305,7 @@ async function getListEntries(
           {
             id,
             addedAt,
-            addedBy,
+            addedBy: addedBy ?? "",
             song,
             productions: productionsBySong.get(songId) ?? [],
           },

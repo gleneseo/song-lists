@@ -1,6 +1,6 @@
 import { parsePage } from "@/lib/dashboard/pagination";
 
-type SortColumn = "added" | "title" | "artist" | "production";
+type SortColumn = "added" | "addedBy" | "title" | "artist" | "production";
 type SortDirection = "asc" | "desc";
 
 /** The sort a list shows in until someone picks another. */
@@ -43,6 +43,7 @@ const MAX_QUERY_LENGTH = 100;
 /** Which way a column sorts the first time it's chosen: newest first for dates, A to Z for text. */
 const FIRST_CLICK_DIRECTION: Record<SortColumn, SortDirection> = {
   added: "desc",
+  addedBy: "asc",
   title: "asc",
   artist: "asc",
   production: "asc",

@@ -37,13 +37,14 @@ describe("showsProductions", () => {
 
 describe("sortsFor", () => {
   it("should offer just the standard sorts to a list with no optional columns", () => {
-    expect(sortsFor([])).toEqual(["added", "title", "artist"]);
+    expect(sortsFor([])).toEqual(["added", "addedBy", "title", "artist"]);
     expect(sortsFor([])).toBe(BASE_SORTS);
   });
 
   it("should add a production sort when the list shows productions", () => {
     expect(sortsFor(["productions"])).toEqual([
       "added",
+      "addedBy",
       "title",
       "artist",
       "production",

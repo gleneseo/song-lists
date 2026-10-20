@@ -145,6 +145,13 @@ describe("sortedBy", () => {
     });
   });
 
+  it("should start the added-by column A to Z when first chosen", () => {
+    expect(sortedBy(view, "addedBy")).toMatchObject({
+      sort: "addedBy",
+      direction: "asc",
+    });
+  });
+
   it("should start the date column newest first when first chosen", () => {
     expect(sortedBy(view, "added")).toMatchObject({
       sort: "added",

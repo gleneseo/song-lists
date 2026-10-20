@@ -114,6 +114,7 @@ function LoadedForm({
         songId: data.songId,
         title,
         bio,
+        originalBio: data.bio,
         newNote,
         artist: toArtistSelection(artist),
         featuredArtists: featuredArtists.map(toArtistSelection),

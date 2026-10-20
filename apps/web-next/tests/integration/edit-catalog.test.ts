@@ -107,6 +107,7 @@ describe("an admin editing the catalog, from the action down to the database", (
         songId: song,
         title: "Zz Hijacked",
         bio: "",
+        originalBio: "",
         newNote: "",
         artist: { kind: "existing", id: artist },
         featuredArtists: [],
@@ -211,6 +212,7 @@ describe("an admin editing the catalog, from the action down to the database", (
       songId: song,
       title: "Zz Edited Song",
       bio: "",
+      originalBio: "",
       newNote: "",
       artist: { kind: "existing", id: artist },
       featuredArtists: [],
@@ -268,6 +270,7 @@ describe("an admin editing the catalog, from the action down to the database", (
         ...blank(song, artist),
         title: "  Zz   Renamed   Song ",
         bio: "Old notes",
+        originalBio: "Old notes",
         newNote: "Great live.",
         artist: { kind: "new", name: "Zz Brand New Artist" },
         featuredArtists: [{ kind: "existing", id: featuredNew }],
@@ -407,6 +410,7 @@ describe("an admin editing the catalog, from the action down to the database", (
         ...blank(song, artist),
         title: "Zz Atomic Renamed",
         bio: "Changed notes",
+        originalBio: "Untouched notes",
         artist: { kind: "new", name: "Zz Atomic New Artist" },
         addCover: { kind: "existing", songId: song },
       });
@@ -453,11 +457,78 @@ describe("an admin editing the catalog, from the action down to the database", (
     });
   });
 
+  describe("a song's notes, when edited at the same time as another change", () => {
+    it("should keep a note added while the form was open, if the form left the notes alone", async () => {
+      session.userId = al;
+      const artist = await insertArtist("Zz Merge Artist");
+      const song = await insertSong("Zz Merge Song", artist, "A.\nB.");
+
+      const result = await editSong.updateSong({
+        songId: song,
+        title: "Zz Merge Song",
+        bio: "A.",
+        originalBio: "A.",
+        newNote: "From Al.",
+        artist: { kind: "existing", id: artist },
+        featuredArtists: [],
+        keepProductionIds: [],
+        addProduction: null,
+        keepCoverSongIds: [],
+        addCover: null,
+        listIds: [],
+        advocateUserIds: [],
+      });
+
+      expect(result).toEqual({ status: "updated" });
+      expect(
+        (
+          await one<{ bio: string }>(
+            "select bio from song_lists.songs where id = $1",
+            [song],
+          )
+        ).bio.split("\n"),
+      ).toEqual(["A.", "B.", expect.stringMatching(/^From Al\. — Al/)]);
+    });
+
+    it("should refuse to replace notes that someone else changed too", async () => {
+      session.userId = al;
+      const artist = await insertArtist("Zz Conflict Artist");
+      const song = await insertSong("Zz Conflict Song", artist, "A.\nB.");
+
+      const result = await editSong.updateSong({
+        songId: song,
+        title: "Zz Conflict Renamed",
+        bio: "Rewritten.",
+        originalBio: "A.",
+        newNote: "",
+        artist: { kind: "existing", id: artist },
+        featuredArtists: [],
+        keepProductionIds: [],
+        addProduction: null,
+        keepCoverSongIds: [],
+        addCover: null,
+        listIds: [],
+        advocateUserIds: [],
+      });
+
+      expect(result).toMatchObject({
+        status: "error",
+        message: expect.stringContaining("changed by someone else"),
+      });
+      expect(
+        await one("select title, bio from song_lists.songs where id = $1", [
+          song,
+        ]),
+      ).toEqual({ title: "Zz Conflict Song", bio: "A.\nB." });
+    });
+  });
+
   describe("a song's other links, when edited", () => {
     const edit = (song: number, artist: number): UpdateSongInput => ({
       songId: song,
       title: "Zz Linked Song",
       bio: "",
+      originalBio: "",
       newNote: "",
       artist: { kind: "existing", id: artist },
       featuredArtists: [],

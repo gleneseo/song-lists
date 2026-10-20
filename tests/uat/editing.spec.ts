@@ -275,12 +275,7 @@ test.describe("adding a note", () => {
     });
   });
 
-  // KNOWN GAP, found by writing the test above for an admin and a manager. The
-  // admin's full form saves the notes exactly as they were when it was opened,
-  // so a note a manager adds in the meantime is silently overwritten. Remove
-  // `fixme` once the admin form appends its note and leaves other changes to
-  // the notes to be merged rather than replaced.
-  test.fixme("a manager's note isn't lost when an admin saves the full form at the same moment", async ({
+  test("a manager's note isn't lost when an admin saves the full form at the same moment", async ({
     as,
   }) => {
     const manager = await as("manager");
@@ -316,14 +311,68 @@ test.describe("adding a note", () => {
         .click(),
     ]);
 
+    // Both saves are in flight after the clicks, so wait for them to land.
+    await expect
+      .poll(async () => {
+        const bio = await withDatabase(async (pool) => {
+          const { rows } = await pool.query<{ bio: string }>(
+            "select bio from song_lists.songs where id = $1",
+            [song.id],
+          );
+          return rows[0]?.bio ?? "";
+        });
+        return [bio.includes("From Cliff."), bio.includes("From Al.")];
+      })
+      .toEqual([true, true]);
+  });
+
+  test("an admin who rewrote the notes is told, not allowed to overwrite a note added meanwhile", async ({
+    as,
+  }) => {
+    const manager = await as("manager");
+    const admin = await as("admin");
+    const song = await arrangeSong({ bio: "Original." });
+    await openSong(manager, song);
+    await openSong(admin, song);
+    await manager
+      .getByRole("dialog")
+      .getByRole("button", { name: "Edit" })
+      .click();
+    await admin
+      .getByRole("dialog")
+      .getByRole("button", { name: "Edit" })
+      .click();
+    await admin
+      .getByRole("dialog")
+      .getByRole("textbox", { name: "Notes", exact: true })
+      .fill("Rewritten.");
+    await manager
+      .getByRole("dialog")
+      .getByRole("textbox", { name: "New note" })
+      .fill("From Cliff.");
+    await manager
+      .getByRole("dialog")
+      .getByRole("button", { name: "Add note" })
+      .click();
+    await expect(
+      manager.getByRole("dialog").getByText("From Cliff."),
+    ).toBeVisible();
+
+    await admin
+      .getByRole("dialog")
+      .getByRole("button", { name: "Save changes" })
+      .click();
+
+    await expect(
+      admin.getByRole("dialog").getByText(/changed by someone else/),
+    ).toBeVisible();
     await withDatabase(async (pool) => {
       const { rows } = await pool.query<{ bio: string }>(
         "select bio from song_lists.songs where id = $1",
         [song.id],
       );
-      const lines = rows[0]?.bio.split("\n") ?? [];
-      expect(lines.some((line) => line.startsWith("From Cliff."))).toBe(true);
-      expect(lines.some((line) => line.startsWith("From Al."))).toBe(true);
+      expect(rows[0]?.bio).toContain("From Cliff.");
+      expect(rows[0]?.bio).not.toContain("Rewritten.");
     });
   });
 });

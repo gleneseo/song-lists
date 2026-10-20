@@ -30,15 +30,17 @@ function Navbar({
 
   return (
     <nav className="border-b border-border bg-background">
-      <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
+      <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-2 px-4">
         <Link
           href={session?.user ? "/dashboard" : "/"}
-          className="flex items-center gap-2 text-lg font-semibold"
+          aria-label="Song Lists"
+          className="flex shrink-0 items-center gap-2 text-lg font-semibold"
         >
           <ListMusic className="size-5" />
-          Song Lists
+          {/* On a phone the links need the room; the icon still says whose it is. */}
+          <span className="hidden sm:inline">Song Lists</span>
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-1 sm:gap-2">
           {session?.user ? (
             <>
               <Button

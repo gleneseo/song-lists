@@ -65,11 +65,7 @@ const scrollsSideways = (page: Page) =>
 test.describe("on a phone", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  // KNOWN GAP, found by this test. For a signed-in person the top bar is wider
-  // than a phone's screen (about 420px of links in 390px) on every page, so the
-  // whole page scrolls sideways, and the Songs page is wider still (about
-  // 890px). Remove `fixme` once the bar collapses or wraps on small screens.
-  test.fixme("the pages fit the screen: nothing makes the page itself scroll sideways", async ({
+  test("the pages fit the screen: nothing makes the page itself scroll sideways", async ({
     as,
   }) => {
     const page = await as("admin");
@@ -94,8 +90,7 @@ test.describe("on a phone", () => {
     }
   });
 
-  // KNOWN GAP: the same top-bar overflow as above; the table itself is fine.
-  test.fixme("a list's table scrolls within itself, so every column can still be reached", async ({
+  test("a list's table scrolls within itself, so every column can still be reached", async ({
     as,
   }) => {
     const page = await as("admin");

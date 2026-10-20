@@ -2,7 +2,7 @@
 --
 -- Sample data for the song-lists demo: featured artists, covers, and film/TV
 -- productions for the songs seeded in 0003_seed_artists_and_songs.sql.
--- Rows resolve their foreign keys through resource_id, so the serial ids are
+-- Rows resolve their foreign keys through resource_id, so the serial IDs are
 -- free to differ.
 
 

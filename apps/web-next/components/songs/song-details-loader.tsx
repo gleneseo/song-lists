@@ -8,7 +8,7 @@ import { getUserAccess } from "@/lib/queries/users";
 /**
  * Loads the song named by a route's `id` param and shows its details. Used
  * by both the full page and the modal, so they share one sign-in check, one
- * id parse, and one query. Admins and managers also get the Edit button. A missing song is a real 404 on the full page,
+ * ID parse, and one query. Admins and managers also get the Edit button. A missing song is a real 404 on the full page,
  * but a short message inside the modal -- a 404 page would replace the list
  * the modal is sitting on top of.
  */

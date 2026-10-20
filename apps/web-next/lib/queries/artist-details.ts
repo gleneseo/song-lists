@@ -11,7 +11,7 @@ const relatedSongWith = {
   with: { artist: { columns: { id: true, name: true } } },
 } as const;
 
-/** One artist with their songs, or `null` when no artist has that id. */
+/** One artist with their songs, or `null` when no artist has that ID. */
 async function getArtistDetails(
   artistId: number,
 ): Promise<ArtistDetails | null> {

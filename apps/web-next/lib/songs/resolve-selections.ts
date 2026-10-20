@@ -22,7 +22,7 @@ type CoverSelection =
   | null;
 
 /**
- * Resolves an artist selection to an id, inserting a new artist row when the
+ * Resolves an artist selection to an ID, inserting a new artist row when the
  * user chose to create one. New artists are cached by normalized name within
  * a single submission, so e.g. picking "create new" for the same typed name
  * in both the main Artist field and a Featured Artist chip only inserts one
@@ -64,7 +64,7 @@ async function resolveArtist(
   return artist.id;
 }
 
-/** Resolves a production selection to an id, inserting a new production when asked to. */
+/** Resolves a production selection to an ID, inserting a new production when asked to. */
 async function resolveProduction(
   tx: Transaction,
   selection: ProductionSelection,
@@ -103,7 +103,7 @@ async function resolveProduction(
 }
 
 /**
- * Resolves a "cover of" selection to the id of the original song, inserting
+ * Resolves a "cover of" selection to the ID of the original song, inserting
  * a new original song (and its artist) when asked to.
  */
 async function resolveCover(

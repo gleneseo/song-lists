@@ -8,7 +8,7 @@ const relatedSongWith = {
   with: { artist: { columns: { id: true, name: true } } },
 } as const;
 
-/** One song with everything attached to it, or `null` when no song has that id. */
+/** One song with everything attached to it, or `null` when no song has that ID. */
 async function getSongDetails(songId: number): Promise<SongDetails | null> {
   const row = await db.query.songs.findFirst({
     where: eq(schema.songs.id, songId),

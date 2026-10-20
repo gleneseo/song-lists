@@ -7,7 +7,7 @@ import { EntityModal } from "@/components/entity-modal";
  * renders the full page at app/song/[id] instead.
  *
  * The path is /song/[id], not /songs/[id]: /songs/new is a real page, and an
- * interceptor on /songs/[id] would match it as id "new" and swallow the
+ * interceptor on /songs/[id] would match it as ID "new" and swallow the
  * navigation to it.
  */
 export default function EntityModalPage({ params }: PageProps<"/song/[id]">) {

@@ -84,7 +84,7 @@ async function getListsOverview(userId: string): Promise<ListOverview[]> {
     .orderBy(asc(schema.lists.id));
 }
 
-/** A single list's header details, or `null` when no list has that id. */
+/** A single list's header details, or `null` when no list has that ID. */
 async function getListSummary(listId: number): Promise<ListSummary | null> {
   const [row] = await db
     .select({

@@ -2,7 +2,7 @@
 --
 -- Sample data for the song-lists demo: each song's advocates, the people who
 -- put it forward. Rows resolve their foreign keys through resource_id, so the
--- serial ids are free to differ.
+-- serial IDs are free to differ.
 --
 -- Every song on The Master List has at least one advocate. Cover originals that
 -- sit on no list are intentional and have none.

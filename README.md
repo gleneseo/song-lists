@@ -67,7 +67,7 @@ Each app owns its own Docker scripts, e.g. `npm run docker:build -w @song-lists/
 
 ## Testing
 
-Every package and app has its own **`unit-<name>`** vitest project (`<workspace>/tests/unit/**/*.test.ts`) — pure, fast, no external dependencies. A single root **`integration`** project (`tests/integration/**/*.test.ts`) starts real services in throwaway containers via [Testcontainers](https://node.testcontainers.org/) and drives them through the workspace packages.
+Every package and app has its own **`unit-<name>`** vitest project (`<workspace>/tests/unit/**/*.test.ts`) — pure, fast, no external dependencies. A single root **`integration`** project starts real services in throwaway containers via [Testcontainers](https://node.testcontainers.org/) and checks that the pieces work together: the packages against each other and the real schema (`tests/integration/**/*.test.ts`), and the web app's own queries and actions against a real, seeded database (`apps/web-next/tests/integration/**/*.test.ts`).
 
 `npm run test:unit` runs every `unit-*` project (the `unit-*` glob excludes `integration`), so it needs no Docker.
 
@@ -95,7 +95,11 @@ const postgres = inject("postgres");
 
 The type of each provided value comes from the `ProvidedContext` interface augmented in `tests/integration/setup/postgres.ts`. Values must be structured-cloneable, so tests receive plain connection details rather than the container handle itself.
 
-Because the container is shared, integration tests are **not** isolated from each other's data. Tests that write to Postgres are responsible for their own isolation — use a schema per file, or truncate what you touched.
+### A database for each test file
+
+The container's database is migrated once, in the `globalSetup`, into a **template** database holding the schema and all the seed data. A test file that writes asks for a copy of its own with `createIsolatedDatabase()` (`tests/integration/support/isolated-database.ts`), which is a quick `CREATE DATABASE ... TEMPLATE` — so files run in parallel, start from the same realistic data, and can change it freely without cleaning up after themselves.
+
+The web app's tests go one step further. `openAppDatabase()` (`apps/web-next/tests/integration/support/app-database.ts`) points the app's `DATABASE_URL` at that copy, and the test then imports the real `@/lib/queries/*` and `@/lib/actions/*` with `await import(...)` so they pick it up. Only the signed-in user is faked, by mocking `getSession`; Better Auth, the Drizzle schema, and the SQL are all real. Check what an action did with plain SQL through the pool `openAppDatabase()` returns, and prefer an independent query as the expected value over restating the app's own SQL.
 
 This is separate from [Docker Compose](#docker-compose) below — the integration tests manage their own containers on random ports and do not use the Compose services.
 

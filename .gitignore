@@ -156,3 +156,10 @@ vite.config.ts.timestamp-*
 
 # workmux prompt files
 .workmux/
+
+# UAT browser tests (Playwright)
+.next-uat/
+.uat-report/
+.uat-logs/
+test-results/
+tests/uat/.auth/

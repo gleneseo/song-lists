@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // The UAT browser tests build into a folder of their own, so a build for
+  // them never touches the one a running dev server is using.
+  distDir: process.env.NEXT_DIST_DIR ?? ".next",
   cacheComponents: true,
   transpilePackages: ["@song-lists/db", "@song-lists/auth"],
   // @song-lists/* packages are consumed as raw TypeScript (their `exports`

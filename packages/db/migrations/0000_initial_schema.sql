@@ -164,6 +164,7 @@ CREATE TABLE "song_lists"."users" (
 	"role" text DEFAULT 'user' NOT NULL,
 	"bio" text,
 	"image" text,
+	"deactivated_at" timestamp,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	"created_by" uuid,

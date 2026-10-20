@@ -6,7 +6,7 @@ describe("diffIds", () => {
     expect(diffIds([1, 2], [2, 1])).toEqual({ toRemove: [], toAdd: [] });
   });
 
-  it("should report ids to remove and to add", () => {
+  it("should report IDs to remove and to add", () => {
     expect(diffIds([1, 2, 3], [2, 3, 4])).toEqual({
       toRemove: [1],
       toAdd: [4],
@@ -20,7 +20,7 @@ describe("diffIds", () => {
     });
   });
 
-  it("should work with string ids", () => {
+  it("should work with string IDs", () => {
     expect(diffIds(["a"], ["b"])).toEqual({ toRemove: ["a"], toAdd: ["b"] });
   });
 

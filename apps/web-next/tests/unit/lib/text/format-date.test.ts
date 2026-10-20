@@ -1,7 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { formatDate, formatTimeAgo } from "@/lib/text/format-date";
+import {
+  formatDate,
+  formatDateTime,
+  formatTimeAgo,
+} from "@/lib/text/format-date";
 
 const now = new Date(2026, 9, 19, 12);
+
+describe("formatDateTime", () => {
+  it("should show Pacific daylight time in summer", () => {
+    expect(formatDateTime(new Date(Date.UTC(2026, 7, 6, 15, 42)))).toBe(
+      "Aug 6, 2026, 8:42 AM PDT",
+    );
+  });
+
+  it("should show Pacific standard time in winter", () => {
+    expect(formatDateTime(new Date(Date.UTC(2026, 0, 6, 15, 42)))).toBe(
+      "Jan 6, 2026, 7:42 AM PST",
+    );
+  });
+});
 
 describe("formatDate", () => {
   it("should format as an abbreviated month, day, and year", () => {

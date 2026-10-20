@@ -10,7 +10,9 @@ import {
   type SongEditData,
 } from "@/lib/queries/song-edit";
 import { findExistingSong, type ExistingSongMatch } from "@/lib/queries/songs";
+import { getUserAccess } from "@/lib/queries/users";
 import { diffIds } from "@/lib/songs/diff-ids";
+import { formatNote } from "@/lib/songs/format-note";
 import {
   resolveArtist,
   resolveCover,
@@ -25,6 +27,8 @@ interface UpdateSongInput {
   songId: number;
   title: string;
   bio: string;
+  /** A new note to sign and add to the end of the bio; blank for none. */
+  newNote: string;
   artist: ArtistSelection;
   featuredArtists: ArtistSelection[];
   /** Production links to keep; any current link not listed here is removed. */
@@ -81,6 +85,11 @@ async function updateSong(input: UpdateSongInput): Promise<UpdateSongResult> {
   if (!title) {
     return { status: "error", message: "Title is required." };
   }
+
+  // Only trimmed, not normalized, so the line breaks between notes survive.
+  const author = (await getUserAccess(userId))?.name ?? "An admin";
+  const note = formatNote(input.newNote, author, new Date());
+  const bio = [input.bio.trim(), note].filter(Boolean).join("\n") || null;
 
   if (input.artist.kind === "existing") {
     const duplicate = await findExistingSong(input.artist.id, title);
@@ -151,7 +160,7 @@ async function updateSong(input: UpdateSongInput): Promise<UpdateSongResult> {
         .set({
           title,
           artistId,
-          bio: normalizeText(input.bio) || null,
+          bio,
           updatedBy: userId,
           updatedAt: new Date(),
         })

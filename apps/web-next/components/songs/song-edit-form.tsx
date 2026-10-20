@@ -63,6 +63,7 @@ function LoadedForm({
 }) {
   const [title, setTitle] = useState(data.title);
   const [bio, setBio] = useState(data.bio);
+  const [newNote, setNewNote] = useState("");
   const [artist, setArtist] = useState<Selection | null>(existing(data.artist));
   const [featuredArtists, setFeaturedArtists] = useState<Selection[]>(
     data.featuredArtists.map(existing),
@@ -113,6 +114,7 @@ function LoadedForm({
         songId: data.songId,
         title,
         bio,
+        newNote,
         artist: toArtistSelection(artist),
         featuredArtists: featuredArtists.map(toArtistSelection),
         keepProductionIds,
@@ -190,6 +192,18 @@ function LoadedForm({
             value={bio}
             onChange={(event) => setBio(event.target.value)}
           />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="edit-song-new-note">Add a note</Label>
+          <Textarea
+            id="edit-song-new-note"
+            value={newNote}
+            onChange={(event) => setNewNote(event.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">
+            Added to the end of the notes with your name and the date and time
+            (Pacific).
+          </p>
         </div>
       </FormSection>
 

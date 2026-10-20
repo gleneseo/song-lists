@@ -9,9 +9,28 @@ const dateFormat = new Intl.DateTimeFormat("en-US", {
   timeZone: "UTC",
 });
 
+const dateTimeFormat = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+  timeZone: "America/Los_Angeles",
+  timeZoneName: "short",
+});
+
 /** "Aug 6, 2026". */
 function formatDate(date: Date): string {
   return dateFormat.format(date);
+}
+
+/**
+ * "Aug 6, 2026, 8:42 AM PDT" -- in Pacific time, with the zone named. Unlike
+ * the stored dates above, this is baked into text, so it can't follow the
+ * reader's own time zone.
+ */
+function formatDateTime(date: Date): string {
+  return dateTimeFormat.format(date);
 }
 
 /** A coarse "how long ago" -- "today", "3 days ago", "5 months ago", "2 years ago". */
@@ -33,4 +52,4 @@ function formatTimeAgo(date: Date, now: Date): string {
   return `${countLabel(Math.floor(days / 365), "year")} ago`;
 }
 
-export { formatDate, formatTimeAgo };
+export { formatDate, formatDateTime, formatTimeAgo };

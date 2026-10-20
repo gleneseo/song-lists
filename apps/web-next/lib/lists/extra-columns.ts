@@ -7,7 +7,12 @@ import type { SortColumn } from "./list-view";
 const KNOWN_COLUMNS: readonly string[] = Object.values(LIST_EXTRA_COLUMN);
 
 /** The sorts every list offers, whatever optional columns it has turned on. */
-const BASE_SORTS: readonly SortColumn[] = ["added", "title", "artist"];
+const BASE_SORTS: readonly SortColumn[] = [
+  "added",
+  "addedBy",
+  "title",
+  "artist",
+];
 
 /**
  * Narrows the free text stored in a list's `extra_columns` to the optional

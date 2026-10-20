@@ -1,7 +1,9 @@
 import { and, asc, eq, sql } from "drizzle-orm";
 import { schema } from "@song-lists/db";
 import { selectDuplicateMatches } from "@/lib/search/select-duplicate-matches";
+import { readSymbols } from "@/lib/text/read-symbols";
 import { db } from "./client";
+import { readSymbolsSql, sortKeySql } from "./sort-key";
 
 interface FeaturedArtist {
   artist: { name: string };
@@ -67,7 +69,7 @@ async function getSongs(): Promise<Song[]> {
   return db.query.songs.findMany({
     columns: { id: true, title: true },
     with: songWith,
-    orderBy: [asc(schema.songs.title)],
+    orderBy: [sortKeySql(schema.songs.title), asc(schema.songs.id)],
   });
 }
 
@@ -82,11 +84,15 @@ async function searchSongs(query: string, limit = 8): Promise<Song[]> {
     return [];
   }
 
+  // Compared with "$" and "!" read as letters, so "short" finds "Too $hort".
+  const title = readSymbolsSql(schema.songs.title);
+  const read = readSymbols(trimmed);
+
   return db.query.songs.findMany({
     columns: { id: true, title: true },
     with: songWith,
-    where: sql`(${schema.songs.title} % ${trimmed} OR ${schema.songs.title} ILIKE ${`%${trimmed}%`})`,
-    orderBy: [sql`similarity(${schema.songs.title}, ${trimmed}) DESC`],
+    where: sql`(${title} % ${read} OR ${title} ILIKE ${`%${read}%`})`,
+    orderBy: [sql`similarity(${title}, ${read}) DESC`],
     limit,
   });
 }
@@ -100,23 +106,27 @@ async function findExistingSong(
   artistId: number,
   normalizedTitle: string,
 ): Promise<DuplicateCheckResult> {
+  // Compared with "$" and "!" read as letters, so "Too Short" is close enough
+  // to the existing "Too $hort" to be offered as a match.
+  const title = readSymbolsSql(schema.songs.title);
+  const read = readSymbols(normalizedTitle);
   const candidates = await db
     .select({
       id: schema.songs.id,
       resourceId: schema.songs.resource_id,
       title: schema.songs.title,
       artistName: schema.artists.name,
-      similarity: sql<number>`similarity(${schema.songs.title}, ${normalizedTitle})`,
+      similarity: sql<number>`similarity(${title}, ${read})`,
     })
     .from(schema.songs)
     .innerJoin(schema.artists, eq(schema.songs.artistId, schema.artists.id))
     .where(
       and(
         eq(schema.songs.artistId, artistId),
-        sql`(${schema.songs.title} % ${normalizedTitle} OR lower(${schema.songs.title}) = lower(${normalizedTitle}))`,
+        sql`(${title} % ${read} OR lower(${schema.songs.title}) = lower(${normalizedTitle}) OR lower(${title}) = lower(${read}))`,
       ),
     )
-    .orderBy(sql`similarity(${schema.songs.title}, ${normalizedTitle}) DESC`)
+    .orderBy(sql`similarity(${title}, ${read}) DESC`)
     .limit(5);
 
   return selectDuplicateMatches(candidates, normalizedTitle);

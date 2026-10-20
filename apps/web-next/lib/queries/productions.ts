@@ -1,6 +1,8 @@
 import { asc, sql } from "drizzle-orm";
 import { schema } from "@song-lists/db";
+import { readSymbols } from "@/lib/text/read-symbols";
 import { db } from "./client";
+import { readSymbolsSql } from "./sort-key";
 
 interface ProductionOption {
   id: number;
@@ -28,11 +30,15 @@ async function searchProductions(
     return [];
   }
 
+  // Compared with "$" and "!" read as letters, so "short" finds "$hort".
+  const name = readSymbolsSql(schema.productions.name);
+  const read = readSymbols(trimmed);
+
   return db.query.productions.findMany({
     columns: { id: true, name: true, releaseYear: true },
     with: { type: { columns: { id: true, name: true } } },
-    where: sql`(${schema.productions.name} % ${trimmed} OR ${schema.productions.name} ILIKE ${`%${trimmed}%`})`,
-    orderBy: [sql`similarity(${schema.productions.name}, ${trimmed}) DESC`],
+    where: sql`(${name} % ${read} OR ${name} ILIKE ${`%${read}%`})`,
+    orderBy: [sql`similarity(${name}, ${read}) DESC`],
     limit,
   });
 }

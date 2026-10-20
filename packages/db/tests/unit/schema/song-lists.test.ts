@@ -484,7 +484,7 @@ describe("accounts", () => {
    * (providerId, accountId); without this constraint the Drizzle adapter
    * cannot enforce that a sign-up is unique per issuer
    */
-  it("should require a unique combination of issuer and account id", () => {
+  it("should require a unique combination of issuer and account ID", () => {
     const { uniqueConstraints } = getTableConfig(accounts);
     const constraint = uniqueConstraints.find(
       (candidate) => candidate.name === "accounts_issuer_account_id_unique",

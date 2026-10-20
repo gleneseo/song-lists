@@ -16,6 +16,10 @@
       "types": "./src/list-extra-column.ts",
       "default": "./src/list-extra-column.ts"
     },
+    "./user-role": {
+      "types": "./src/user-role.ts",
+      "default": "./src/user-role.ts"
+    },
     "./migrations": "./migrations"
   },
   "main": "./src/index.ts",

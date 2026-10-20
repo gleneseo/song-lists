@@ -1,3 +1,5 @@
+import { byText } from "@/lib/text/sort-key";
+
 interface NamedArtist {
   id: number;
   name: string;
@@ -63,8 +65,6 @@ interface SongDetails {
   advocates: { name: string; since: Date }[];
   lists: { id: number; name: string; addedBy: string; addedAt: Date }[];
 }
-
-const byText = (a: string, b: string) => a.localeCompare(b);
 
 function toRelatedSong({ id, title, artist }: RelatedSongRow): RelatedSong {
   return { id, title, artistId: artist.id, artistName: artist.name };

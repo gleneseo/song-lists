@@ -53,4 +53,29 @@ describe("filterSongs", () => {
   it("should return no songs when nothing matches", () => {
     expect(filterSongs(songs, "zzzznotasong")).toEqual([]);
   });
+
+  it("should find a song whose artist spells a letter with a symbol", () => {
+    const tooShort: Song = {
+      id: 4,
+      title: "Blow The Whistle",
+      artist: { id: 3, name: "Too $hort" },
+      featuredArtists: [],
+      coverOf: [],
+    };
+
+    expect(filterSongs([...songs, tooShort], "short")).toEqual([tooShort]);
+    expect(filterSongs([...songs, tooShort], "$hort")).toEqual([tooShort]);
+  });
+
+  it("should find a song whose title spells a letter with a symbol", () => {
+    const pink: Song = {
+      id: 5,
+      title: "P!nk Cadillac",
+      artist: { id: 4, name: "Bruce Springsteen" },
+      featuredArtists: [],
+      coverOf: [],
+    };
+
+    expect(filterSongs([...songs, pink], "pink cad")).toEqual([pink]);
+  });
 });

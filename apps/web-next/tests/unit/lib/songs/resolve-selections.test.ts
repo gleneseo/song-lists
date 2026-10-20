@@ -29,7 +29,7 @@ function fakeTransaction(options: { returnNothing?: boolean } = {}) {
 const USER = "user-1";
 
 describe("resolveArtist", () => {
-  it("should pass an existing artist's id straight through", async () => {
+  it("should pass an existing artist's ID straight through", async () => {
     const { tx, inserted } = fakeTransaction();
 
     expect(
@@ -99,7 +99,7 @@ describe("resolveProduction", () => {
     expect(await resolveProduction(tx, null, USER)).toBeNull();
   });
 
-  it("should pass an existing production's id straight through", async () => {
+  it("should pass an existing production's ID straight through", async () => {
     const { tx, inserted } = fakeTransaction();
 
     expect(await resolveProduction(tx, { kind: "existing", id: 3 }, USER)).toBe(
@@ -161,7 +161,7 @@ describe("resolveCover", () => {
     expect(await resolveCover(tx, null, USER, new Map())).toBeNull();
   });
 
-  it("should pass an existing original song's id straight through", async () => {
+  it("should pass an existing original song's ID straight through", async () => {
     const { tx, inserted } = fakeTransaction();
 
     expect(

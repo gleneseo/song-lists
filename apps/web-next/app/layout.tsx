@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Link from "next/link";
 import { Suspense } from "react";
+import { Button } from "@/components/ui/button";
+import { PENDING_ENTITY_CLICK_SCRIPT } from "@/lib/entity-links/pending-click-script";
+import { AdminMenu } from "@/components/admin-menu";
+import { ListsMenu } from "@/components/lists-menu";
 import { Navbar } from "@/components/navbar";
 import "./globals.css";
 
@@ -25,8 +30,36 @@ function RootLayout({ children, modal }: LayoutProps<"/">) {
       lang="en"
       className={`${fontSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        {/* Holds back a click on a name that lands before the page has
+            hydrated, so it opens the modal later instead of the full page. */}
+        <script
+          dangerouslySetInnerHTML={{ __html: PENDING_ENTITY_CLICK_SCRIPT }}
+        />
+      </head>
       <body className="flex min-h-full flex-col">
-        <Navbar />
+        <Navbar
+          listsMenu={
+            <Suspense
+              fallback={
+                <Button
+                  variant="ghost"
+                  nativeButton={false}
+                  render={<Link href="/lists" />}
+                >
+                  Lists
+                </Button>
+              }
+            >
+              <ListsMenu />
+            </Suspense>
+          }
+          adminMenu={
+            <Suspense fallback={null}>
+              <AdminMenu />
+            </Suspense>
+          }
+        />
         {children}
         {/* Held back until the song has loaded, so the modal opens at its real
             size and fades in once -- rather than opening on a small loading

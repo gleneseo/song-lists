@@ -26,7 +26,7 @@ describe("toArtistDetails", () => {
     });
   });
 
-  it("should order their songs by title, then id", () => {
+  it("should order their songs by title, then ID", () => {
     const actual = toArtistDetails(
       {
         ...bareRow,
@@ -93,7 +93,7 @@ describe("toArtistDetails", () => {
     ]);
   });
 
-  it("should order featured-on songs with the same title by id", () => {
+  it("should order featured-on songs with the same title by ID", () => {
     const actual = toArtistDetails(
       {
         ...bareRow,

@@ -59,6 +59,8 @@ const users = songListsSchema.table("users", {
   role: text().default(USER_ROLE.USER).notNull(),
   bio: text(),
   image: text(),
+  /** When an admin deactivated the account, or `null` while it's active. */
+  deactivatedAt: timestamp(),
   ...timestampColumns,
   createdBy: uuid().references((): AnyPgColumn => users.id),
   updatedBy: uuid().references((): AnyPgColumn => users.id),

@@ -24,6 +24,7 @@
     "clean": "rimraf dist",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/run-migrations.ts",
+    "db:reset": "tsx src/reset-db.ts",
     "db:docs": "tsx src/generate-docs.ts"
   },
   "dependencies": {

@@ -60,6 +60,7 @@ Run these from the repository root.
 | `npm run clean`            | Remove build and coverage output from every workspace.                                                           |
 | `npm run db:generate`      | Generate migrations from the schema (delegates to `@song-lists/db`; needs `DATABASE_URL`).                       |
 | `npm run db:migrate`       | Apply pending migrations to the database at `DATABASE_URL`. Idempotent — already-applied migrations are skipped. |
+| `npm run db:reset`         | **Destructive.** Drop the app schema and re-apply every migration, leaving only migration data. Localhost only.  |
 | `npm run db:docs`          | Regenerate `packages/db/docs/schema.md` from the schema.                                                         |
 
 Each app owns its own Docker scripts, e.g. `npm run docker:build -w @song-lists/cli`.

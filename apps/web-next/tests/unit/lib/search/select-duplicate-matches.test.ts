@@ -32,6 +32,15 @@ describe("selectDuplicateMatches", () => {
     });
   });
 
+  it("should offer a title that differs only by a symbol as a near match, not an exact one", () => {
+    const candidate: Candidate = { title: "Too $hort", similarity: 1 };
+
+    expect(selectDuplicateMatches([candidate], "Too Short")).toEqual({
+      exact: null,
+      near: candidate,
+    });
+  });
+
   it("should not surface a near match below the similarity threshold", () => {
     const candidate: Candidate = { title: "La Grangeeeee", similarity: 0.4 };
 

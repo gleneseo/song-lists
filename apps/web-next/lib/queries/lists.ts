@@ -14,7 +14,9 @@ import type { ListExtraColumn } from "@song-lists/db/list-extra-column";
 import { parseExtraColumns, showsProductions } from "@/lib/lists/extra-columns";
 import type { ListView } from "@/lib/lists/list-view";
 import { escapeLike } from "@/lib/text/escape-like";
+import { readSymbols } from "@/lib/text/read-symbols";
 import { db } from "./client";
+import { readSymbolsSql, sortKeySql } from "./sort-key";
 import { songWith, type Song } from "./songs";
 import { decodeTimestamp } from "./timestamps";
 
@@ -114,13 +116,13 @@ function songHasProductionMatching(pattern: string) {
     inner join ${schema.productions}
       on ${schema.productions.id} = ${schema.songProductions.productionId}
     where ${schema.songProductions.songId} = ${schema.songs.id}
-      and ${schema.productions.name} ilike ${pattern}
+      and ${readSymbolsSql(schema.productions.name)} ilike ${pattern}
   )`;
 }
 
 /** The alphabetically first production a song appears in, for sorting; null when it has none. */
 const firstProductionName = sql`(
-  select min(lower(${schema.productions.name})) from ${schema.songProductions}
+  select min(${sortKeySql(schema.productions.name)}) from ${schema.songProductions}
   inner join ${schema.productions}
     on ${schema.productions.id} = ${schema.songProductions.productionId}
   where ${schema.songProductions.songId} = ${schema.songs.id}
@@ -146,11 +148,13 @@ function matchesQuery(query: string, extraColumns: ListExtraColumn[]) {
     return undefined;
   }
 
-  const pattern = `%${escapeLike(query)}%`;
+  // Matched with "$" and "!" read as letters on both sides, so "short" finds
+  // "Too $hort" and "too $hort" does too.
+  const pattern = `%${escapeLike(readSymbols(query))}%`;
 
   return or(
-    ilike(schema.songs.title, pattern),
-    ilike(schema.artists.name, pattern),
+    ilike(readSymbolsSql(schema.songs.title), pattern),
+    ilike(readSymbolsSql(schema.artists.name), pattern),
     showsProductions(extraColumns)
       ? songHasProductionMatching(pattern)
       : undefined,
@@ -167,27 +171,27 @@ function orderEntries({
   switch (sort) {
     case "title":
       return [
-        directed(sql`lower(${schema.songs.title})`),
+        directed(sortKeySql(schema.songs.title)),
         asc(schema.listSongs.id),
       ];
     case "artist":
       return [
-        directed(sql`lower(${schema.artists.name})`),
-        asc(sql`lower(${schema.songs.title})`),
+        directed(sortKeySql(schema.artists.name)),
+        asc(sortKeySql(schema.songs.title)),
         asc(schema.listSongs.id),
       ];
     case "production":
       // Songs without a production sort last whichever way it's going.
       return [
         sql`${firstProductionName} ${direction === "asc" ? sql`asc` : sql`desc`} nulls last`,
-        asc(sql`lower(${schema.songs.title})`),
+        asc(sortKeySql(schema.songs.title)),
         asc(schema.listSongs.id),
       ];
     case "addedBy":
       // Songs without an advocate sort last whichever way it's going.
       return [
         sql`lower(${advocateNames}) ${direction === "asc" ? sql`asc` : sql`desc`} nulls last`,
-        asc(sql`lower(${schema.songs.title})`),
+        asc(sortKeySql(schema.songs.title)),
         asc(schema.listSongs.id),
       ];
     case "added":

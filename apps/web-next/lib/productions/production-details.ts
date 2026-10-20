@@ -1,3 +1,5 @@
+import { byText } from "@/lib/text/sort-key";
+
 import type { ListUsage } from "@/lib/artists/artist-details";
 
 /** The shape the database hands back for one production and the songs attached to it. */
@@ -29,8 +31,6 @@ interface ProductionDetails {
   /** The lists this production's songs are on, with how many of them each holds. */
   lists: ListUsage[];
 }
-
-const byText = (a: string, b: string) => a.localeCompare(b);
 
 /**
  * Shapes a production's database row for display: its songs alphabetical by

@@ -5,6 +5,7 @@ import type { YearCount } from "@/lib/dashboard/activity-by-year";
 import type { Contributor } from "@/lib/dashboard/build-leaderboard";
 import { songOfTheDayIndex } from "@/lib/dashboard/song-of-the-day";
 import { db } from "./client";
+import { sortKeySql } from "./sort-key";
 import { songWith, type Song } from "./songs";
 import { decodeTimestamp } from "./timestamps";
 
@@ -158,7 +159,7 @@ async function getUserTopArtists(
     .innerJoin(schema.artists, eq(schema.artists.id, schema.songs.artistId))
     .where(advocatedBy(userId))
     .groupBy(schema.artists.id, schema.artists.name)
-    .orderBy(desc(songCount), asc(schema.artists.name))
+    .orderBy(desc(songCount), sortKeySql(schema.artists.name))
     .limit(limit);
 }
 

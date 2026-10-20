@@ -1,6 +1,8 @@
 import { sql } from "drizzle-orm";
 import { schema } from "@song-lists/db";
+import { readSymbols } from "@/lib/text/read-symbols";
 import { db } from "./client";
+import { readSymbolsSql } from "./sort-key";
 
 interface ArtistOption {
   id: number;
@@ -23,13 +25,15 @@ async function searchArtists(
     return [];
   }
 
+  // Compared with "$" and "!" read as letters, so "short" finds "Too $hort".
+  const name = readSymbolsSql(schema.artists.name);
+  const read = readSymbols(trimmed);
+
   return db
     .select({ id: schema.artists.id, name: schema.artists.name })
     .from(schema.artists)
-    .where(
-      sql`(${schema.artists.name} % ${trimmed} OR ${schema.artists.name} ILIKE ${`%${trimmed}%`})`,
-    )
-    .orderBy(sql`similarity(${schema.artists.name}, ${trimmed}) DESC`)
+    .where(sql`(${name} % ${read} OR ${name} ILIKE ${`%${read}%`})`)
+    .orderBy(sql`similarity(${name}, ${read}) DESC`)
     .limit(limit);
 }
 

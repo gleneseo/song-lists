@@ -1,3 +1,5 @@
+import { byText } from "@/lib/text/sort-key";
+
 interface RelatedArtistSongRow {
   id: number;
   title: string;
@@ -44,8 +46,6 @@ interface ArtistDetails {
   /** The lists this artist's own songs are on, with how many of them each holds. */
   lists: ListUsage[];
 }
-
-const byText = (a: string, b: string) => a.localeCompare(b);
 
 /**
  * Shapes an artist's database row for display: their own songs and the songs

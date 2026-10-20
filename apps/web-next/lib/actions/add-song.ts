@@ -7,6 +7,7 @@ import {
   findExistingSong,
   type DuplicateCheckResult,
 } from "@/lib/queries/songs";
+import { findStyleIssues, type StyleIssue } from "@/lib/songs/name-style";
 import {
   resolveArtist,
   resolveCover,
@@ -26,6 +27,11 @@ interface CreateSongInput {
   cover: CoverSelection;
   listIds: number[];
   advocateUserIds: string[];
+  /**
+   * New names (as they'd be saved) that someone has said are deliberately
+   * stylized and should be let through despite breaking our style.
+   */
+  styleOverrides?: string[];
 }
 
 interface ExistingSongReference {
@@ -38,6 +44,7 @@ interface ExistingSongReference {
 type CreateSongResult =
   | { status: "created"; songId: number }
   | { status: "duplicate"; existing: ExistingSongReference }
+  | { status: "style"; issues: StyleIssue[] }
   | { status: "error"; message: string };
 
 /** Below this, two titles are treated as coincidentally similar, not the same song. */
@@ -85,6 +92,14 @@ async function createSong(input: CreateSongInput): Promise<CreateSongResult> {
         },
       };
     }
+  }
+
+  // Checked on the server so it can't be skipped: nothing new is created
+  // until each name follows our style or has been waved through.
+  const styleIssues = findStyleIssues(input, input.styleOverrides ?? []);
+
+  if (styleIssues.length > 0) {
+    return { status: "style", issues: styleIssues };
   }
 
   try {

@@ -12,6 +12,7 @@ import type { ListOption } from "@/lib/queries/lists";
 import type { ProductionTypeOption } from "@/lib/queries/productions";
 import type { DuplicateCheckResult } from "@/lib/queries/songs";
 import type { UserOption } from "@/lib/queries/users";
+import type { StyleIssue } from "@/lib/songs/name-style";
 import {
   toArtistSelection,
   toCoverSelection,
@@ -31,6 +32,7 @@ import {
   type CreatableSelection,
 } from "./creatable-autocomplete";
 import { CreatableCombobox } from "./creatable-combobox";
+import { NameStylePanel } from "./name-style-panel";
 import { ProductionField } from "./production-field";
 import { searchArtistOptions } from "@/lib/actions/search-adapters";
 
@@ -85,6 +87,9 @@ function AddSongForm({
 
   const [duplicateCheck, setDuplicateCheck] =
     useState<DuplicateCheckResult | null>(null);
+  const [styleIssues, setStyleIssues] = useState<StyleIssue[]>([]);
+  const [styleOverrides, setStyleOverrides] = useState<string[]>([]);
+  const [styleAttempt, setStyleAttempt] = useState(0);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [summary, setSummary] = useState<AddedSongSummary | null>(null);
@@ -119,6 +124,48 @@ function AddSongForm({
     };
   }, [artist, debouncedTitle]);
 
+  /** Puts our suggested spelling back into the field the name came from. */
+  function applySuggestion({ field, suggestion }: StyleIssue) {
+    const rename = <T extends CreatableSelection<CreatableOption>>(
+      selection: T | null,
+    ): T | null =>
+      selection?.kind === "new"
+        ? { ...selection, name: suggestion }
+        : selection;
+
+    if (field === "title") {
+      setTitle(suggestion);
+    } else if (field === "artist") {
+      setArtist(rename);
+    } else if (field === "production") {
+      setProductionChoice(rename);
+    } else if (field === "coverTitle") {
+      setCoverNewTitle(suggestion);
+    } else if (field === "coverArtist") {
+      setCoverNewArtist(rename);
+    } else {
+      const index = Number(field.slice("featured:".length));
+
+      setFeaturedArtists((current) =>
+        current.map((selection, position) =>
+          position === index ? (rename(selection) ?? selection) : selection,
+        ),
+      );
+    }
+
+    setStyleIssues((current) =>
+      current.filter((issue) => issue.field !== field),
+    );
+  }
+
+  function toggleStyleOverride(text: string, checked: boolean) {
+    setStyleOverrides((current) =>
+      checked
+        ? [...current.filter((name) => name !== text), text]
+        : current.filter((name) => name !== text),
+    );
+  }
+
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
@@ -149,6 +196,7 @@ function AddSongForm({
         cover: toCoverSelection(coverChoice, coverNewArtist, coverNewTitle),
         listIds,
         advocateUserIds: advocateIds,
+        styleOverrides,
       };
 
       const result = await createSong(input);
@@ -196,6 +244,14 @@ function AddSongForm({
         setListIds(lists[0] ? [lists[0].id] : []);
         setAdvocateIds([]);
         setDuplicateCheck(null);
+        setStyleIssues([]);
+        setStyleOverrides([]);
+        return;
+      }
+
+      if (result.status === "style") {
+        setStyleIssues(result.issues);
+        setStyleAttempt((attempt) => attempt + 1);
         return;
       }
 
@@ -391,6 +447,16 @@ function AddSongForm({
           onChange={setAdvocateIds}
         />
       </section>
+
+      {styleIssues.length > 0 && (
+        <NameStylePanel
+          key={styleAttempt}
+          issues={styleIssues}
+          overrides={styleOverrides}
+          onUseSuggestion={applySuggestion}
+          onToggleOverride={toggleStyleOverride}
+        />
+      )}
 
       <Button type="submit" disabled={submitting || !!duplicateCheck?.exact}>
         {submitting ? "Adding song…" : "Add song"}

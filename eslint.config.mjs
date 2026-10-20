@@ -12,6 +12,10 @@ export default defineConfig(
       ".coverage/**",
       ".eslint/**",
       ".workmux/**",
+      // What the browser tests write while they run.
+      ".uat-report/**",
+      ".uat-logs/**",
+      "test-results/**",
       "**/vitest.config.ts",
       "commitlint.config.js",
       // Next.js apps own their own eslint config (see the Why note in

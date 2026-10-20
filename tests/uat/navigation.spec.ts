@@ -142,6 +142,15 @@ test.describe("the Lists menu", () => {
 });
 
 test.describe("pages that aren't there", () => {
+  // Asking for a page that doesn't exist sometimes makes React report error
+  // #419 ("the server could not finish this Suspense boundary"): the check
+  // that it's missing runs inside a streamed section, which React then has to
+  // redo in the browser. Nothing shows, and the not-found page still appears,
+  // so the error is allowed here -- and only here.
+  test.use({
+    allowedErrors: [/React error #419|could not finish this Suspense boundary/],
+  });
+
   test("an unknown address shows the not-found page", async ({ as }) => {
     const page = await as("user");
     await page.goto("/no-such-page");

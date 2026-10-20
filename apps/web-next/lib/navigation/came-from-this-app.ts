@@ -26,9 +26,7 @@ function cameFromThisApp({ navigation, location, document }: Browser): boolean {
     const current = navigation.currentEntry?.index ?? 0;
     const previous = navigation.entries()[current - 1]?.url;
 
-    return (
-      Boolean(previous) && new URL(previous ?? "").origin === location.origin
-    );
+    return previous ? new URL(previous).origin === location.origin : false;
   }
 
   return document.referrer.startsWith(`${location.origin}/`);

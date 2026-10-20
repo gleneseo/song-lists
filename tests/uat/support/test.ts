@@ -1,6 +1,19 @@
-import { test as base, expect, type Page } from "@playwright/test";
+import {
+  test as base,
+  expect,
+  type BrowserContext,
+  type Page,
+} from "@playwright/test";
 import { withOwnAddress } from "./app.js";
 import { PEOPLE, SEED_PASSWORD, type Role } from "./people.js";
+
+interface Options {
+  /**
+   * Errors a test expects its pages to raise, as patterns: the rare test that
+   * is about something known to. Anything else still fails it.
+   */
+  allowedErrors: RegExp[];
+}
 
 interface Fixtures {
   /**
@@ -12,30 +25,47 @@ interface Fixtures {
    */
   as: (role: Role) => Promise<Page>;
   /**
-   * Uncaught errors in any page the test opened. Every test checks that
-   * there were none, so a page that quietly breaks fails the journey it's on.
+   * Uncaught errors in any page the test opened, and server errors (5xx) any
+   * of them was answered with. Every test checks that there were none, so a
+   * page that quietly breaks fails the journey it's on.
    */
   pageErrors: string[];
 }
 
-const test = base.extend<Fixtures>({
+/** Notes down every uncaught error in the browser's pages, and every server error it is sent. */
+function watch(context: BrowserContext, errors: string[]): void {
+  context.on("weberror", (error) => {
+    errors.push(error.error().message);
+  });
+  context.on("response", (response) => {
+    if (response.status() >= 500) {
+      errors.push(`${String(response.status())} from ${response.url()}`);
+    }
+  });
+}
+
+const test = base.extend<Fixtures & Options>({
+  allowedErrors: [[], { option: true }],
+
   // Every browser a test opens, including the built-in one, gets its own
   // address (see `withOwnAddress`).
-  context: async ({ context }, use) => {
+  context: async ({ context, pageErrors }, use) => {
     await withOwnAddress(context);
+    watch(context, pageErrors);
     await use(context);
   },
 
   pageErrors: [
-    // Playwright needs the first argument written as a destructuring pattern,
-    // even when, as here, there is nothing in it to use.
-    // eslint-disable-next-line no-empty-pattern
-    async ({}, use) => {
+    async ({ allowedErrors }, use) => {
       const errors: string[] = [];
 
       await use(errors);
 
-      expect(errors, "uncaught errors in the page").toEqual([]);
+      const unexpected = errors.filter(
+        (error) => !allowedErrors.some((allowed) => allowed.test(error)),
+      );
+
+      expect(unexpected, "uncaught errors or server errors").toEqual([]);
     },
     { auto: true },
   ],
@@ -46,6 +76,7 @@ const test = base.extend<Fixtures>({
     await use(async (role) => {
       const context = await browser.newContext();
       await withOwnAddress(context);
+      watch(context, pageErrors);
       contexts.push(context);
 
       const response = await context.request.post("/api/auth/sign-in/email", {
@@ -55,10 +86,6 @@ const test = base.extend<Fixtures>({
       expect(response.ok(), `signing in as the ${role}`).toBe(true);
 
       const page = await context.newPage();
-
-      page.on("pageerror", (error) => {
-        pageErrors.push(error.message);
-      });
 
       return page;
     });

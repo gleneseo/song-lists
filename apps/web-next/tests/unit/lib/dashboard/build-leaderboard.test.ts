@@ -50,26 +50,34 @@ describe("rankContributors", () => {
 });
 
 describe("buildLeaderboard", () => {
-  it("should keep only the top entries", () => {
-    const actual = buildLeaderboard([al, chad, minnz, vic], "al", 2);
-
-    expect(actual.entries.map(({ userId }) => userId)).toEqual(["al", "chad"]);
-  });
-
-  it("should not repeat the viewer when they are already in the top entries", () => {
-    const actual = buildLeaderboard([al, chad, minnz, vic], "chad", 2);
-
-    expect(actual.entries.map(({ userId }) => userId)).toEqual(["al", "chad"]);
-  });
-
-  it("should append the viewer's own row when they fall outside the top entries", () => {
-    const actual = buildLeaderboard([al, chad, minnz, vic], "vic", 2);
+  it("should include every contributor, ranked", () => {
+    const actual = buildLeaderboard([vic, minnz, al, chad], "al");
 
     expect(actual.entries.map(({ userId }) => userId)).toEqual([
       "al",
       "chad",
+      "minnz",
       "vic",
     ]);
+  });
+
+  it("should not cap the number of entries", () => {
+    const many = Array.from({ length: 25 }, (_, index) => ({
+      userId: `user-${index}`,
+      name: `User ${index}`,
+      count: 100 - index,
+    }));
+
+    expect(buildLeaderboard(many, "user-24").entries).toHaveLength(25);
+  });
+
+  it("should flag the viewer's row within the entries without repeating it", () => {
+    const actual = buildLeaderboard([al, chad, minnz, vic], "vic");
+
+    expect(actual.entries.filter(({ isYou }) => isYou)).toEqual([
+      expect.objectContaining({ userId: "vic", rank: 4 }),
+    ]);
+    expect(actual.entries).toHaveLength(4);
   });
 
   it("should expose the viewer's own row and the total number of contributors", () => {
@@ -84,15 +92,5 @@ describe("buildLeaderboard", () => {
 
     expect(actual.you).toBeNull();
     expect(actual.entries).toHaveLength(2);
-  });
-
-  it("should default to the top five", () => {
-    const many = Array.from({ length: 8 }, (_, index) => ({
-      userId: `user-${index}`,
-      name: `User ${index}`,
-      count: 100 - index,
-    }));
-
-    expect(buildLeaderboard(many, "user-0").entries).toHaveLength(5);
   });
 });

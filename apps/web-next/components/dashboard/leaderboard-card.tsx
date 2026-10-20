@@ -9,7 +9,7 @@ import {
 import type { Leaderboard } from "@/lib/dashboard/build-leaderboard";
 import { countLabel } from "@/lib/text/count-label";
 
-/** The top contributors by songs added, with the viewer's own row always shown. */
+/** Every contributor ranked by songs added, with the viewer's own row highlighted. Scrolls within the card once it gets long. */
 function LeaderboardCard({ leaderboard }: { leaderboard: Leaderboard }) {
   return (
     <Card>
@@ -23,7 +23,11 @@ function LeaderboardCard({ leaderboard }: { leaderboard: Leaderboard }) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ol className="flex flex-col gap-1">
+        <ol
+          tabIndex={0}
+          aria-label="Contributors ranked by songs added"
+          className="-mx-1 flex max-h-[32rem] flex-col gap-1 overflow-y-auto px-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        >
           {leaderboard.entries.map((entry) => (
             <li
               key={entry.userId}

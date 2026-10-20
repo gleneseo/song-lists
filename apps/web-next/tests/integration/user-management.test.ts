@@ -433,6 +433,9 @@ describe("an admin managing users, through the real Better Auth and database", (
       expect((await users.getUser(id))?.deactivatedAt).toBeInstanceOf(Date);
       expect(all.map((user) => user.id)).not.toContain(SYSTEM_USER_ID);
       expect(await users.getUser(SYSTEM_USER_ID)).toBeNull();
+      expect(
+        await users.getUser("11111111-1111-4111-8111-111111111111"),
+      ).toBeNull();
     });
 
     it.each([

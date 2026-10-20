@@ -453,6 +453,101 @@ describe("an admin editing the catalog, from the action down to the database", (
     });
   });
 
+  describe("a song's other links, when edited", () => {
+    const edit = (song: number, artist: number): UpdateSongInput => ({
+      songId: song,
+      title: "Zz Linked Song",
+      bio: "",
+      newNote: "",
+      artist: { kind: "existing", id: artist },
+      featuredArtists: [],
+      keepProductionIds: [],
+      addProduction: null,
+      keepCoverSongIds: [],
+      addCover: null,
+      listIds: [],
+      advocateUserIds: [],
+    });
+
+    it("should not list a song's own artist as one of its featured artists", async () => {
+      session.userId = al;
+      const artist = await insertArtist("Zz Solo Artist");
+      const guest = await insertArtist("Zz Solo Guest");
+      const song = await insertSong("Zz Linked Song", artist);
+
+      const result = await editSong.updateSong({
+        ...edit(song, artist),
+        featuredArtists: [
+          { kind: "existing", id: artist },
+          { kind: "existing", id: guest },
+        ],
+      });
+
+      expect(result).toEqual({ status: "updated" });
+      expect(
+        (
+          await all(
+            "select artist_id from song_lists.song_featured_artists where song_id = $1",
+            [song],
+          )
+        ).map((row) => row.artist_id),
+      ).toEqual([guest]);
+    });
+
+    it("should link a song to an original it covers, existing or new, and keep both", async () => {
+      session.userId = al;
+      const artist = await insertArtist("Zz Cover Artist");
+      const song = await insertSong("Zz Linked Song", artist);
+      const original = await insertSong(
+        "Zz Existing Original",
+        await insertArtist("Zz Original Artist"),
+      );
+
+      expect(
+        await editSong.updateSong({
+          ...edit(song, artist),
+          addCover: { kind: "existing", songId: original },
+        }),
+      ).toEqual({ status: "updated" });
+      expect(
+        (
+          await all(
+            "select original_song_id from song_lists.song_covers where song_id = $1",
+            [song],
+          )
+        ).map((row) => row.original_song_id),
+      ).toEqual([original]);
+
+      expect(
+        await editSong.updateSong({
+          ...edit(song, artist),
+          keepCoverSongIds: [original],
+          addCover: {
+            kind: "new",
+            title: "Zz Brand New Original",
+            artist: { kind: "new", name: "Zz Brand New Original Artist" },
+          },
+        }),
+      ).toEqual({ status: "updated" });
+
+      const covers = await all(
+        `select o.title, a.name artist from song_lists.song_covers c
+         join song_lists.songs o on o.id = c.original_song_id
+         join song_lists.artists a on a.id = o.artist_id
+         where c.song_id = $1 order by o.title`,
+        [song],
+      );
+
+      expect(covers).toEqual([
+        {
+          title: "Zz Brand New Original",
+          artist: "Zz Brand New Original Artist",
+        },
+        { title: "Zz Existing Original", artist: "Zz Original Artist" },
+      ]);
+    });
+  });
+
   describe("renaming an artist", () => {
     it("should rename and record who did it", async () => {
       session.userId = al;

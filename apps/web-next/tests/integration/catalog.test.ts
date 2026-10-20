@@ -16,6 +16,7 @@ describe("searching and looking up the catalog, against the real database", () =
   let artistDetails: typeof import("@/lib/queries/artist-details");
   let productionDetails: typeof import("@/lib/queries/production-details");
   let songEdit: typeof import("@/lib/queries/song-edit");
+  let adapters: typeof import("@/lib/actions/search-adapters");
 
   beforeAll(async () => {
     ({ pool } = await openAppDatabase());
@@ -26,6 +27,7 @@ describe("searching and looking up the catalog, against the real database", () =
     artistDetails = await import("@/lib/queries/artist-details");
     productionDetails = await import("@/lib/queries/production-details");
     songEdit = await import("@/lib/queries/song-edit");
+    adapters = await import("@/lib/actions/search-adapters");
   });
 
   afterAll(async () => {
@@ -80,6 +82,45 @@ describe("searching and looking up the catalog, against the real database", () =
       expect(
         (await productions.getProductionTypes()).map((type) => type.name),
       ).toEqual(expect.arrayContaining(["Film", "Television", "Stage"]));
+    });
+  });
+
+  describe("the add-song form's pickers, as the form receives them", () => {
+    it("should offer artists as an ID and a label", async () => {
+      const id = await artistId(pool, "A$AP Rocky");
+
+      expect(await adapters.searchArtistOptions("asap")).toContainEqual({
+        id,
+        label: "A$AP Rocky",
+      });
+    });
+
+    it("should offer productions with their year in the label", async () => {
+      const id = await productionId(pool, "Heavy Metal", 1981);
+
+      expect(
+        await adapters.searchProductionOptions("heavy metal"),
+      ).toContainEqual({
+        id,
+        label: "Heavy Metal (1981)",
+      });
+    });
+
+    it("should offer songs to cover with the artist in the label", async () => {
+      const id = await songId(pool, "Paper Trail$", "Joey Bada$$");
+
+      expect(
+        await adapters.searchCoverSongOptions("paper trail"),
+      ).toContainEqual({
+        id,
+        label: "Paper Trail$ — Joey Bada$$",
+      });
+    });
+
+    it("should offer nothing for an empty search", async () => {
+      expect(await adapters.searchArtistOptions("")).toEqual([]);
+      expect(await adapters.searchProductionOptions("")).toEqual([]);
+      expect(await adapters.searchCoverSongOptions("")).toEqual([]);
     });
   });
 
@@ -284,6 +325,41 @@ describe("searching and looking up the catalog, against the real database", () =
       expect(data?.advocateIds.toSorted()).toEqual(
         rows.map((row) => row.user_id).toSorted(),
       );
+    });
+
+    it("should load a song's featured artists, productions, and an empty bio", async () => {
+      const artist = await artistId(pool, "Beck");
+      const featured = await artistId(pool, "Cowboy Junkies");
+      const production = await productionId(pool, "Heavy Metal", 1981);
+      const al = (
+        await pool.query<{ id: string }>(
+          "select id from song_lists.users where name = 'Al'",
+        )
+      ).rows[0]?.id;
+      const song = (
+        await pool.query<{ id: number }>(
+          "insert into song_lists.songs (title, artist_id, created_by, updated_by) values ('Zz Edit Data Song', $1, $2, $2) returning id",
+          [artist, al],
+        )
+      ).rows[0]?.id as number;
+      await pool.query(
+        "insert into song_lists.song_featured_artists (song_id, artist_id, created_by, updated_by) values ($1, $2, $3, $3)",
+        [song, featured, al],
+      );
+      await pool.query(
+        "insert into song_lists.song_productions (song_id, production_id, created_by, updated_by) values ($1, $2, $3, $3)",
+        [song, production, al],
+      );
+
+      const data = await songEdit.getSongEditData(song);
+
+      expect(data?.bio).toBe("");
+      expect(data?.featuredArtists).toEqual([
+        { id: featured, label: "Cowboy Junkies" },
+      ]);
+      expect(data?.productions).toEqual([
+        { id: production, label: "Heavy Metal (1981)" },
+      ]);
     });
 
     it("should find nothing for a song that doesn't exist", async () => {

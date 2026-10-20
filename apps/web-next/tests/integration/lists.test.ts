@@ -263,6 +263,35 @@ describe("the list queries, against the real schema and seed data", () => {
       },
     );
 
+    it.each(["asc", "desc"] as const)(
+      "should sort by when each song was added, %s",
+      async (direction) => {
+        const entries = await lists.getListEntries(
+          masterId,
+          view({ sort: "added", direction }),
+          [],
+          0,
+          60,
+        );
+        const expected = await orderOf(
+          `select id from song_lists.list_songs where list_id = $1
+           order by created_at ${direction}, id ${direction} limit 60`,
+          [masterId],
+        );
+
+        expect(entries.map((entry) => entry.id)).toEqual(expected);
+        expect(entries.map((entry) => entry.addedAt)).toEqual(
+          entries
+            .map((entry) => entry.addedAt)
+            .toSorted((a, b) =>
+              direction === "asc"
+                ? a.getTime() - b.getTime()
+                : b.getTime() - a.getTime(),
+            ),
+        );
+      },
+    );
+
     it("should show every advocate, comma separated, and sort by that text", async () => {
       const rio = await lists.getListEntries(
         masterId,
@@ -379,6 +408,102 @@ describe("the list queries, against the real schema and seed data", () => {
       expect(summary?.extraColumns).toContain("productions");
       expect(entries.length).toBeGreaterThan(0);
       expect(entries.some((entry) => entry.productions.length > 0)).toBe(true);
+    });
+
+    const soundtrackList = async () => {
+      const { rows } = await pool.query<{ id: number }>(
+        "select id from song_lists.lists where name = 'Best Soundtrack Yams'",
+      );
+      const id = rows[0]?.id as number;
+      const summary = await lists.getListSummary(id);
+
+      return { id, columns: summary?.extraColumns ?? [] };
+    };
+
+    it.each(["asc", "desc"] as const)(
+      "should sort by production %s, with songs that have none last",
+      async (direction) => {
+        const { id, columns } = await soundtrackList();
+        const total = await lists.countListEntries(id, "", columns);
+        const entries = await lists.getListEntries(
+          id,
+          view({ sort: "production", direction }),
+          columns,
+          0,
+          total,
+        );
+        const expected = (
+          await pool.query<{ id: number }>(
+            `select ls.id from song_lists.list_songs ls
+             join song_lists.songs s on s.id = ls.song_id
+             where ls.list_id = $1
+             order by (select min(lower(regexp_replace(p.name, '^(the|an|a|tha)\\s+(.+)$', '\\2, \\1', 'i')))
+                       from song_lists.song_productions sp
+                       join song_lists.productions p on p.id = sp.production_id
+                       where sp.song_id = s.id) ${direction} nulls last,
+                      lower(regexp_replace(s.title, '^(the|an|a|tha)\\s+(.+)$', '\\2, \\1', 'i')), ls.id`,
+            [id],
+          )
+        ).rows.map((row) => row.id);
+
+        expect(entries.map((entry) => entry.id)).toEqual(expected);
+      },
+    );
+
+    it("should find a song by its production's name on a list that shows productions", async () => {
+      const { id, columns } = await soundtrackList();
+      const { rows } = await pool.query<{
+        entry: number;
+        title: string;
+        artist: string;
+        production: string;
+      }>(
+        `select ls.id entry, s.title, a.name artist, p.name production
+         from song_lists.list_songs ls
+         join song_lists.songs s on s.id = ls.song_id
+         join song_lists.artists a on a.id = s.artist_id
+         join song_lists.song_productions sp on sp.song_id = s.id
+         join song_lists.productions p on p.id = sp.production_id
+         where ls.list_id = $1`,
+        [id],
+      );
+      // A word of the production's name that isn't in the song's own title or artist.
+      const pick = rows
+        .flatMap((row) =>
+          row.production
+            .toLowerCase()
+            .split(/[^a-z]+/)
+            .filter((word) => word.length >= 5)
+            .filter(
+              (word) =>
+                !`${row.title} ${row.artist}`.toLowerCase().includes(word),
+            )
+            .map((word) => ({ word, entry: row.entry })),
+        )
+        .at(0);
+
+      expect(pick).toBeDefined();
+
+      const withColumn = await lists.getListEntries(
+        id,
+        view({ query: pick?.word ?? "" }),
+        columns,
+        0,
+        500,
+      );
+      const withoutColumn = await lists.getListEntries(
+        id,
+        view({ query: pick?.word ?? "" }),
+        [],
+        0,
+        500,
+      );
+
+      expect(withColumn.map((entry) => entry.id)).toContain(pick?.entry);
+      expect(withoutColumn.map((entry) => entry.id)).not.toContain(pick?.entry);
+      expect(await lists.countListEntries(id, pick?.word ?? "", columns)).toBe(
+        withColumn.length,
+      );
     });
   });
 });

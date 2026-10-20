@@ -93,6 +93,21 @@ describe("toArtistDetails", () => {
     ]);
   });
 
+  it("should order featured-on songs with the same title by id", () => {
+    const actual = toArtistDetails(
+      {
+        ...bareRow,
+        featuredOnSongs: [
+          { song: { id: 9, title: "Same", artist: { id: 1, name: "A" } } },
+          { song: { id: 8, title: "Same", artist: { id: 2, name: "B" } } },
+        ],
+      },
+      [],
+    );
+
+    expect(actual.featuredOn.map(({ id }) => id)).toEqual([8, 9]);
+  });
+
   it("should put the lists in list order without mutating the input", () => {
     const lists = [
       { id: 4, name: "Best Cover Songs", songCount: 1 },

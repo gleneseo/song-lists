@@ -423,6 +423,29 @@ test.describe("an admin editing a song", () => {
     ).toBeVisible();
   });
 
+  // On purpose: the house-style check guards adding a song only. Editing stays
+  // powerful, so an admin can save a title exactly as typed. If the check is
+  // ever added here, this test should fail and that should be a decision.
+  test("saves a title exactly as typed: the house-style check doesn't apply to editing", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    const song = await arrangeSong();
+    await openSong(page, song);
+    await dialog(page).getByRole("button", { name: "Edit" }).click();
+    const lowercase = `${song.title} renamed in lowercase`.toLowerCase();
+
+    await dialog(page)
+      .getByRole("textbox", { name: "Title", exact: true })
+      .fill(lowercase);
+    await dialog(page).getByRole("button", { name: "Save changes" }).click();
+
+    await expect(
+      dialog(page).getByRole("heading", { name: lowercase, level: 2 }),
+    ).toBeVisible();
+    await expect(dialog(page).getByText(/in our style yet/)).toHaveCount(0);
+  });
+
   test("won't rename a song to another by the same artist", async ({ as }) => {
     const page = await as("admin");
     const first = await arrangeSong();

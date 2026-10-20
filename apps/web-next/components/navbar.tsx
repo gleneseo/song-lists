@@ -19,7 +19,13 @@ import { useSession } from "@/lib/auth/auth-client";
  * `listsMenu` is the server-rendered "Lists" hover menu; it's passed in as a
  * slot because the navbar is a client component and can't query the database.
  */
-function Navbar({ listsMenu }: { listsMenu: ReactNode }) {
+function Navbar({
+  listsMenu,
+  adminMenu,
+}: {
+  listsMenu: ReactNode;
+  adminMenu: ReactNode;
+}) {
   const { data: session } = useSession();
 
   return (
@@ -50,6 +56,7 @@ function Navbar({ listsMenu }: { listsMenu: ReactNode }) {
               >
                 Songs
               </Button>
+              {adminMenu}
               <DropdownMenu>
                 <DropdownMenuTrigger
                   render={

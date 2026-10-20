@@ -1,4 +1,5 @@
 import { betterAuth, type BetterAuthOptions } from "better-auth";
+import { APIError } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { schema, type Database } from "@song-lists/db";
 import authConfig from "./config.js";
@@ -14,6 +15,26 @@ function createAuth(db: Database, overrides?: Partial<BetterAuthOptions>) {
   return betterAuth({
     ...authConfig,
     ...overrides,
+    databaseHooks: {
+      session: {
+        create: {
+          // A deactivated account can't start a session, however it signs in.
+          before: async (session) => {
+            const user = await db.query.users.findFirst({
+              columns: { deactivatedAt: true },
+              where: (users, { eq }) => eq(users.id, session.userId),
+            });
+
+            if (user?.deactivatedAt) {
+              throw new APIError("FORBIDDEN", {
+                message: "This account has been deactivated.",
+              });
+            }
+          },
+        },
+      },
+      ...overrides?.databaseHooks,
+    },
     database: drizzleAdapter(db, {
       schema,
       provider: "pg",

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
+import { AdminMenu } from "@/components/admin-menu";
 import { ListsMenu } from "@/components/lists-menu";
 import { Navbar } from "@/components/navbar";
 import "./globals.css";
@@ -43,6 +44,11 @@ function RootLayout({ children, modal }: LayoutProps<"/">) {
               }
             >
               <ListsMenu />
+            </Suspense>
+          }
+          adminMenu={
+            <Suspense fallback={null}>
+              <AdminMenu />
             </Suspense>
           }
         />

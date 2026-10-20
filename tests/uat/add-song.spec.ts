@@ -485,7 +485,7 @@ test.describe("cancelling", () => {
   test("goes back to the page the person came from", async ({ as }) => {
     const page = await as("admin");
     await page.goto("/songs");
-    await page.getByRole("button", { name: "+ Add Song" }).click();
+    await page.getByRole("link", { name: "+ Add Song" }).click();
     await expect(page).toHaveURL(/\/songs\/new$/);
 
     await page.getByRole("button", { name: "Cancel" }).click();
@@ -496,7 +496,7 @@ test.describe("cancelling", () => {
   test("from the dashboard goes back to the dashboard", async ({ as }) => {
     const page = await as("admin");
     await page.goto("/dashboard");
-    await page.getByRole("button", { name: "Add song" }).click();
+    await page.getByRole("link", { name: "Add song" }).click();
 
     await page.getByRole("button", { name: "Cancel" }).click();
 

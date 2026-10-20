@@ -74,7 +74,7 @@ test.describe("the Songs page", () => {
     const page = await as("manager");
     await page.goto("/songs");
 
-    await page.getByRole("button", { name: "+ Add Song" }).click();
+    await page.getByRole("link", { name: "+ Add Song" }).click();
 
     await expect(page).toHaveURL(/\/songs\/new$/);
     await expect(

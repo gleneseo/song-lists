@@ -240,7 +240,7 @@ test.describe("sorting a list", () => {
       )
       .toEqual(["The Rolling Stones", "The Stone Foxes", "The Stone Roses"]);
 
-    await page.getByRole("button", { name: "Next" }).first().click();
+    await page.getByRole("link", { name: "Next" }).first().click();
     await expect(page).toHaveURL(/page=2/);
     await expect
       .poll(() => inOrder(["Stone Sour", "Stone Temple Pilots"]))
@@ -370,14 +370,14 @@ test.describe("paging through a list", () => {
     const first = (await column(page, "Title"))[0];
     await expect(page.getByText(/1–50 of \d+ songs/).first()).toBeVisible();
 
-    await page.getByRole("button", { name: "Next" }).first().click();
+    await page.getByRole("link", { name: "Next" }).first().click();
 
     await expect(page).toHaveURL(/page=2/);
     await expect(page.getByText(/51–100 of \d+ songs/).first()).toBeVisible();
     expect((await column(page, "Position"))[0]).toContain("51");
     expect((await column(page, "Title"))[0]).not.toBe(first);
 
-    await page.getByRole("button", { name: "Previous" }).first().click();
+    await page.getByRole("link", { name: "Previous" }).first().click();
 
     await expect(page.getByText(/1–50 of \d+ songs/).first()).toBeVisible();
     expect((await column(page, "Title"))[0]).toBe(first);

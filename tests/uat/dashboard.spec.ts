@@ -27,7 +27,7 @@ test.describe("the dashboard", () => {
       ).toBeVisible();
       await expect(
         page.getByRole("region", { name: "Browse lists" }).getByRole("link"),
-      ).toHaveCount(8);
+      ).toHaveCount(9); // the eight lists, and View all lists
     });
   }
 
@@ -113,11 +113,11 @@ test.describe("the dashboard", () => {
     const page = await as("admin");
     await page.goto("/dashboard");
 
-    await page.getByRole("button", { name: "Browse songs" }).click();
+    await page.getByRole("link", { name: "Browse songs" }).click();
     await expect(page).toHaveURL(/\/songs$/);
 
     await page.goto("/dashboard");
-    await page.getByRole("button", { name: "Add song" }).click();
+    await page.getByRole("link", { name: "Add song" }).click();
     await expect(page).toHaveURL(/\/songs\/new$/);
   });
 
@@ -134,7 +134,7 @@ test.describe("the dashboard", () => {
     await expect(page).toHaveURL(/\/lists\/6$/);
 
     await page.goto("/dashboard");
-    await page.getByRole("button", { name: "View all lists" }).click();
+    await page.getByRole("link", { name: "View all lists" }).click();
     await expect(page).toHaveURL(/\/lists$/);
   });
 });

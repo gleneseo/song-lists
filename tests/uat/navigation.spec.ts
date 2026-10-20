@@ -38,6 +38,22 @@ test.describe("the top bar", () => {
     });
   }
 
+  test("the links are links to assistive technology, and the menus are buttons", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    await page.goto("/dashboard");
+    const nav = page.locator("nav");
+
+    for (const name of ["Dashboard", "Songs", "Users"]) {
+      await expect(
+        nav.getByRole("link", { name, exact: true }),
+        name,
+      ).toBeVisible();
+    }
+    await expect(nav.getByRole("button", { name: "Lists" })).toBeVisible();
+  });
+
   test("each link goes where it says", async ({ as }) => {
     const page = await as("admin");
     await page.goto("/dashboard");

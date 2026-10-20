@@ -189,10 +189,16 @@ test.describe("signing up", () => {
 test.describe("moving between the two forms and out of the app", () => {
   test("each form links to the other", async ({ page }) => {
     await page.goto("/sign-in");
-    await page.getByRole("link", { name: "Sign up" }).click();
+    await page
+      .getByText("have an account?")
+      .getByRole("link", { name: "Sign up" })
+      .click();
     await expect(page).toHaveURL(/\/sign-up$/);
 
-    await page.getByRole("link", { name: "Sign in" }).click();
+    await page
+      .getByText("Already have an account?")
+      .getByRole("link", { name: "Sign in" })
+      .click();
     await expect(page).toHaveURL(/\/sign-in$/);
   });
 

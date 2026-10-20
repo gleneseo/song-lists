@@ -1,16 +1,38 @@
 "use client";
 
-import Link from "next/link";
 import type { ReactNode } from "react";
+import { EntityAnchor } from "@/components/entity-anchor";
 import { useInEntityModal } from "@/components/entity-modal-context";
 
 const linkClassName = "underline-offset-4 hover:underline";
 
 /**
- * Inside a modal, a link to another entity replaces the current history
- * entry instead of pushing a new one, so one close steps back out of the
- * whole chain of modals.
+ * An inline link to an entity's details. Inside a modal it replaces the
+ * current history entry instead of pushing a new one, so one close steps back
+ * out of the whole chain of modals.
  */
+function EntityLink({
+  href,
+  children,
+  className = "",
+}: {
+  href: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  const replace = useInEntityModal();
+
+  return (
+    <EntityAnchor
+      href={href}
+      replace={replace}
+      className={`${linkClassName} ${className}`}
+    >
+      {children}
+    </EntityAnchor>
+  );
+}
+
 /** An inline link to a song, opening its details. */
 function SongLink({
   id,
@@ -21,16 +43,10 @@ function SongLink({
   children: ReactNode;
   className?: string;
 }) {
-  const replace = useInEntityModal();
-
   return (
-    <Link
-      href={`/song/${id}`}
-      replace={replace}
-      className={`${linkClassName} ${className}`}
-    >
+    <EntityLink href={`/song/${id}`} className={className}>
       {children}
-    </Link>
+    </EntityLink>
   );
 }
 
@@ -44,16 +60,10 @@ function ArtistLink({
   children: ReactNode;
   className?: string;
 }) {
-  const replace = useInEntityModal();
-
   return (
-    <Link
-      href={`/artist/${id}`}
-      replace={replace}
-      className={`${linkClassName} ${className}`}
-    >
+    <EntityLink href={`/artist/${id}`} className={className}>
       {children}
-    </Link>
+    </EntityLink>
   );
 }
 
@@ -67,16 +77,10 @@ function ProductionLink({
   children: ReactNode;
   className?: string;
 }) {
-  const replace = useInEntityModal();
-
   return (
-    <Link
-      href={`/production/${id}`}
-      replace={replace}
-      className={`${linkClassName} ${className}`}
-    >
+    <EntityLink href={`/production/${id}`} className={className}>
       {children}
-    </Link>
+    </EntityLink>
   );
 }
 

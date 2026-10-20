@@ -82,6 +82,18 @@ async function getUser(userId: string): Promise<UserRecord | null> {
   return user ?? null;
 }
 
+/** A user's name and role, read fresh from the database, or `null` when they don't exist. */
+async function getUserAccess(
+  userId: string,
+): Promise<{ name: string; role: string } | null> {
+  const user = await db.query.users.findFirst({
+    columns: { name: true, role: true },
+    where: eq(schema.users.id, userId),
+  });
+
+  return user ?? null;
+}
+
 /** Whether this user holds the admin role, read fresh from the database. */
 async function isAdminUser(userId: string): Promise<boolean> {
   const user = await db.query.users.findFirst({
@@ -96,6 +108,7 @@ export {
   getAdvocateCandidates,
   getAllAdvocateOptions,
   getUser,
+  getUserAccess,
   getUsers,
   isAdminUser,
 };

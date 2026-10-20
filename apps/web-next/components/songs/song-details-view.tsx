@@ -6,6 +6,7 @@ import {
   ProductionLink,
   SongLink,
 } from "@/components/entity-links";
+import { NoteLines } from "@/components/songs/note-lines";
 import { ListPill } from "@/components/lists/list-pill";
 import type { SongDetails } from "@/lib/songs/song-details";
 import { formatDate } from "@/lib/text/format-date";
@@ -66,7 +67,7 @@ function SongDetailsView({
 
       {details.bio && (
         <Section title="Notes">
-          <p className="whitespace-pre-line wrap-anywhere">{details.bio}</p>
+          <NoteLines notes={details.bio} />
         </Section>
       )}
 

@@ -22,7 +22,7 @@ const newOption: CreatableSelection<Option> = {
 };
 
 describe("toArtistSelection", () => {
-  it("should pass through an existing option's id", () => {
+  it("should pass through an existing option's ID", () => {
     expect(toArtistSelection(existingOption)).toEqual({
       kind: "existing",
       id: 7,
@@ -42,7 +42,7 @@ describe("toProductionSelection", () => {
     expect(toProductionSelection(null, "", null)).toBeNull();
   });
 
-  it("should pass through an existing production's id, ignoring year and type", () => {
+  it("should pass through an existing production's ID, ignoring year and type", () => {
     expect(toProductionSelection(existingOption, "", null)).toEqual({
       kind: "existing",
       id: 7,
@@ -76,7 +76,7 @@ describe("toCoverSelection", () => {
     expect(toCoverSelection(null, null, "")).toBeNull();
   });
 
-  it("should pass through an existing song's id, ignoring the new-song fields", () => {
+  it("should pass through an existing song's ID, ignoring the new-song fields", () => {
     expect(toCoverSelection(existingOption, null, "")).toEqual({
       kind: "existing",
       songId: 7,

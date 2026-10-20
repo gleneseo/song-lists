@@ -29,7 +29,7 @@ describe("getAdminUserId", () => {
     expect(isAdminUser).toHaveBeenCalledWith("u1");
   });
 
-  it("should return the user's id when they're an admin", async () => {
+  it("should return the user's ID when they're an admin", async () => {
     getSession.mockResolvedValue({ user: { id: "u1" } });
     isAdminUser.mockResolvedValue(true);
     const { getAdminUserId } = await import("@/lib/auth/admin");

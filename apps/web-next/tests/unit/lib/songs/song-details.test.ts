@@ -39,7 +39,7 @@ describe("toSongDetails", () => {
     expect(toSongDetails({ ...bareRow, bio: "A gem." }).bio).toBe("A gem.");
   });
 
-  it("should list featured artists with their ids, in the order given", () => {
+  it("should list featured artists with their IDs, in the order given", () => {
     const actual = toSongDetails({
       ...bareRow,
       featuredArtists: [

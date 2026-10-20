@@ -30,7 +30,7 @@ describe("toProductionDetails", () => {
     });
   });
 
-  it("should flatten its songs and order them by title, then id", () => {
+  it("should flatten its songs and order them by title, then ID", () => {
     const actual = toProductionDetails(
       {
         ...bareRow,

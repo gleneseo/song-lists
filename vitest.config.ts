@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
@@ -8,8 +9,22 @@ export default defineConfig({
       {
         test: {
           name: "integration",
-          include: ["tests/integration/**/*.test.ts"],
+          // Both the cross-package tests at the root and the web app's own:
+          // its queries and actions run against a real database here.
+          include: [
+            "tests/integration/**/*.test.ts",
+            "apps/web-next/tests/integration/**/*.test.ts",
+          ],
           globalSetup: ["./tests/integration/setup/postgres.ts"],
+          testTimeout: 30_000,
+          hookTimeout: 60_000,
+        },
+        resolve: {
+          // Mirrors apps/web-next's "@/*" path mapping, for the app's own
+          // modules that the web app's integration tests import.
+          alias: {
+            "@": fileURLToPath(new URL("./apps/web-next", import.meta.url)),
+          },
         },
       },
     ],

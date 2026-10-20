@@ -1,7 +1,7 @@
 -- Seed artists and songs
 --
 -- Sample data for the song-lists demo: the artist roster and the songs by them.
--- Rows resolve their foreign keys through resource_id, so the serial ids are
+-- Rows resolve their foreign keys through resource_id, so the serial IDs are
 -- free to differ.
 
 

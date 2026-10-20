@@ -2,7 +2,7 @@
 --
 -- Sample data for the song-lists demo.
 --
--- The System user is the fixed-id actor behind created_by / updated_by for rows
+-- The System user is the fixed-ID actor behind created_by / updated_by for rows
 -- no person authored. It is its own creator, and it is not loginable (no
 -- credential account).
 --

@@ -34,7 +34,7 @@ interface ProductionDetails {
 
 /**
  * Shapes a production's database row for display: its songs alphabetical by
- * title (then id, so ties stay put) and the lists they appear on in list order.
+ * title (then ID, so ties stay put) and the lists they appear on in list order.
  */
 function toProductionDetails(
   row: ProductionDetailsRow,

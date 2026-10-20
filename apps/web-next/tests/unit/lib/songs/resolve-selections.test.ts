@@ -6,7 +6,7 @@ import {
   type Transaction,
 } from "@/lib/songs/resolve-selections";
 
-/** A stand-in transaction that records inserts and hands back sequential ids. */
+/** A stand-in transaction that records inserts and hands back sequential IDs. */
 function fakeTransaction(options: { returnNothing?: boolean } = {}) {
   const inserted: unknown[] = [];
   let nextId = 100;

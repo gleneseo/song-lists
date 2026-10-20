@@ -1,5 +1,5 @@
 /**
- * The fixed id of the bootstrap "System" user seeded by
+ * The fixed ID of the bootstrap "System" user seeded by
  * `migrations/0004_seed_admin_user.sql`.
  *
  * It backfills `created_by`/`updated_by` for rows introduced by seed-data

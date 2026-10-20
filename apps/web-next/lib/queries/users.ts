@@ -68,7 +68,7 @@ async function getUsers(): Promise<UserRecord[]> {
   });
 }
 
-/** One user for the admin edit page, or `null` for an unknown or System id. */
+/** One user for the admin edit page, or `null` for an unknown or System ID. */
 async function getUser(userId: string): Promise<UserRecord | null> {
   if (userId === SYSTEM_USER_ID) {
     return null;

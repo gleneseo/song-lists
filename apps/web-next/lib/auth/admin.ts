@@ -2,7 +2,7 @@ import { isAdminUser } from "@/lib/queries/users";
 import { getSession } from "./auth";
 
 /**
- * The signed-in user's id when they're an admin, otherwise `null`. The role
+ * The signed-in user's ID when they're an admin, otherwise `null`. The role
  * is read from the database on every call, so a demotion takes effect
  * immediately rather than when the session next refreshes.
  */

@@ -478,10 +478,10 @@ const productionsRelations = relations(productions, ({ one, many }) => ({
 
 /**
  * Fields required by Better Auth for its session, account, and verification
- * models. `id` uses uuidV7() (not Better Auth's default random string id) to
+ * models. `id` uses uuidV7() (not Better Auth's default random string ID) to
  * match the rest of this schema; authConfig sets advanced.database.generateId
  * to false so Better Auth defers to the database default instead of
- * generating its own id.
+ * generating its own ID.
  */
 const sessions = songListsSchema.table(
   "sessions",

@@ -91,7 +91,7 @@ async function getSongEditData(songId: number): Promise<SongEditData | null> {
   };
 }
 
-/** The ids and rows currently linked to a song, for diffing against an edit. */
+/** The IDs and rows currently linked to a song, for diffing against an edit. */
 async function getSongLinks(tx: Pick<typeof db, "select">, songId: number) {
   const [featured, productions, covers, lists, advocates] = await Promise.all([
     tx

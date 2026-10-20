@@ -19,8 +19,8 @@ const authConfig: BetterAuthOptions = {
   },
   advanced: {
     database: {
-      // Defer id generation to the database's own uuidV7() default instead
-      // of Better Auth's random string id, matching the rest of this schema.
+      // Defer ID generation to the database's own uuidV7() default instead
+      // of Better Auth's random string ID, matching the rest of this schema.
       generateId: false,
     },
   },

@@ -6,7 +6,7 @@ import {
 } from "@/lib/productions/production-details";
 import { db } from "./client";
 
-/** One production with its songs, or `null` when no production has that id. */
+/** One production with its songs, or `null` when no production has that ID. */
 async function getProductionDetails(
   productionId: number,
 ): Promise<ProductionDetails | null> {

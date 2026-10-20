@@ -10,7 +10,7 @@ import { validatePassword } from "@/lib/users/validate-password";
 type ManageUserResult =
   { status: "done" } | { status: "error"; message: string };
 
-/** The admin's id when they may act on `userId`, otherwise the error to show. */
+/** The admin's ID when they may act on `userId`, otherwise the error to show. */
 async function authorize(
   userId: string,
   verb: string,

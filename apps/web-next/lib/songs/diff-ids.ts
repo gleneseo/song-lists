@@ -1,7 +1,7 @@
 /**
- * What it takes to turn the `current` set of ids into the `desired` one:
- * the ids to remove and the ids to add. Duplicates in either input are
- * ignored, and ids in both are left alone.
+ * What it takes to turn the `current` set of IDs into the `desired` one:
+ * the IDs to remove and the IDs to add. Duplicates in either input are
+ * ignored, and IDs in both are left alone.
  */
 function diffIds<Id extends string | number>(
   current: readonly Id[],

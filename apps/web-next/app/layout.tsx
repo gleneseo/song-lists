@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Link from "next/link";
 import { Suspense } from "react";
+import { Button } from "@/components/ui/button";
+import { ListsMenu } from "@/components/lists-menu";
 import { Navbar } from "@/components/navbar";
 import "./globals.css";
 
@@ -26,7 +29,23 @@ function RootLayout({ children, modal }: LayoutProps<"/">) {
       className={`${fontSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <Navbar />
+        <Navbar
+          listsMenu={
+            <Suspense
+              fallback={
+                <Button
+                  variant="ghost"
+                  nativeButton={false}
+                  render={<Link href="/lists" />}
+                >
+                  Lists
+                </Button>
+              }
+            >
+              <ListsMenu />
+            </Suspense>
+          }
+        />
         {children}
         {/* Held back until the song has loaded, so the modal opens at its real
             size and fades in once -- rather than opening on a small loading

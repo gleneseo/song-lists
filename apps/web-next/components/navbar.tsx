@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { ListMusic } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,11 @@ import {
 import { SignOutButton } from "@/components/sign-out-button";
 import { useSession } from "@/lib/auth/auth-client";
 
-function Navbar() {
+/**
+ * `listsMenu` is the server-rendered "Lists" hover menu; it's passed in as a
+ * slot because the navbar is a client component and can't query the database.
+ */
+function Navbar({ listsMenu }: { listsMenu: ReactNode }) {
   const { data: session } = useSession();
 
   return (
@@ -37,13 +42,7 @@ function Navbar() {
               >
                 Dashboard
               </Button>
-              <Button
-                variant="ghost"
-                nativeButton={false}
-                render={<Link href="/lists" />}
-              >
-                Lists
-              </Button>
+              {listsMenu}
               <Button
                 variant="ghost"
                 nativeButton={false}

@@ -124,6 +124,15 @@ function AddSongForm({
     };
   }, [artist, debouncedTitle]);
 
+  /** Leaves the form for wherever the person came from, or the Songs page if they landed here directly. */
+  function cancel() {
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/songs");
+    }
+  }
+
   /** Puts our suggested spelling back into the field the name came from. */
   function applySuggestion({ field, suggestion }: StyleIssue) {
     const rename = <T extends CreatableSelection<CreatableOption>>(
@@ -458,9 +467,23 @@ function AddSongForm({
         />
       )}
 
-      <Button type="submit" disabled={submitting || !!duplicateCheck?.exact}>
-        {submitting ? "Adding song…" : "Add song"}
-      </Button>
+      <div className="flex gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={cancel}
+          disabled={submitting}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          className="flex-1"
+          disabled={submitting || !!duplicateCheck?.exact}
+        >
+          {submitting ? "Adding song…" : "Add song"}
+        </Button>
+      </div>
     </form>
   );
 }

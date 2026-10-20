@@ -1,12 +1,14 @@
 import { test as base, expect, type Page } from "@playwright/test";
 import { withOwnAddress } from "./app.js";
-import { statePath, type Role } from "./people.js";
+import { PEOPLE, SEED_PASSWORD, type Role } from "./people.js";
 
 interface Fixtures {
   /**
-   * A new page, already signed in as the seeded person with that role -- a
-   * browser of its own, so signing in as another role in the same test
-   * doesn't disturb it.
+   * A new page, already signed in as the seeded person with that role. It is
+   * a browser of its own with a session of its own, signed in afresh each
+   * time: so signing in as another role in the same test doesn't disturb it,
+   * and a test that logs out (or whose person is deactivated or has their
+   * password reset) can't sign anyone else's test out.
    */
   as: (role: Role) => Promise<Page>;
   /**
@@ -38,20 +40,25 @@ const test = base.extend<Fixtures>({
     { auto: true },
   ],
 
-  as: async ({ browser, pageErrors }, use) => {
+  as: async ({ browser, baseURL, pageErrors }, use) => {
     const contexts: Awaited<ReturnType<typeof browser.newContext>>[] = [];
 
     await use(async (role) => {
-      const context = await browser.newContext({
-        storageState: statePath(role),
-      });
+      const context = await browser.newContext();
       await withOwnAddress(context);
+      contexts.push(context);
+
+      const response = await context.request.post("/api/auth/sign-in/email", {
+        data: { email: PEOPLE[role].email, password: SEED_PASSWORD },
+        headers: { Origin: new URL(baseURL ?? "").origin },
+      });
+      expect(response.ok(), `signing in as the ${role}`).toBe(true);
+
       const page = await context.newPage();
 
       page.on("pageerror", (error) => {
         pageErrors.push(error.message);
       });
-      contexts.push(context);
 
       return page;
     });

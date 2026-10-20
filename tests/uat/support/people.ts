@@ -10,9 +10,5 @@ const SEED_PASSWORD = "sample-password";
 
 type Role = keyof typeof PEOPLE;
 
-/** Where a role's saved sign-in lives, so a test can start already signed in. */
-const statePath = (role: Role): string =>
-  new URL(`../.auth/${role}.json`, import.meta.url).pathname;
-
-export { PEOPLE, SEED_PASSWORD, statePath };
+export { PEOPLE, SEED_PASSWORD };
 export type { Role };

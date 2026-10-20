@@ -1,8 +1,6 @@
 import { type ChildProcess, spawn, spawnSync } from "node:child_process";
 import { mkdirSync, openSync } from "node:fs";
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
-import { request } from "@playwright/test";
-import { PEOPLE, SEED_PASSWORD, statePath, type Role } from "./people.js";
 
 const REPO = new URL("../../../", import.meta.url).pathname;
 const APP = `${REPO}apps/web-next`;
@@ -59,46 +57,16 @@ async function waitForServer(server: ChildProcess): Promise<void> {
   throw new Error("The app never started answering; see .uat-logs/server.log");
 }
 
-/** Signs a seeded person in the way the sign-in page does, and keeps the session. */
-async function saveSignIn(role: Role): Promise<void> {
-  const api = await request.newContext({
-    baseURL: BASE_URL,
-    // Each person signs in from an address of their own, so the app's rate
-    // limit on sign-ins (a few every ten seconds) doesn't refuse any of them.
-    extraHTTPHeaders: {
-      Origin: BASE_URL,
-      "x-forwarded-for": `10.99.0.${String(Object.keys(PEOPLE).indexOf(role) + 1)}`,
-    },
-  });
-
-  try {
-    const response = await api.post("/api/auth/sign-in/email", {
-      data: { email: PEOPLE[role].email, password: SEED_PASSWORD },
-    });
-
-    if (!response.ok()) {
-      throw new Error(
-        `Couldn't sign in as ${role}: ${String(response.status())}`,
-      );
-    }
-
-    await api.storageState({ path: statePath(role) });
-  } finally {
-    await api.dispose();
-  }
-}
-
 /**
  * Everything the browser tests stand on, started once per run: a throwaway
  * Postgres with the migrations (and so the seed data) applied, a production
  * build of the app in a folder of its own, the app itself serving on
- * `PORT`, and a saved sign-in for each role. The teardown stops it all.
+ * `PORT`. The teardown stops it all.
  *
  * Set `UAT_SKIP_BUILD=1` to reuse the last build while writing tests.
  */
 async function globalSetup(): Promise<() => Promise<void>> {
   mkdirSync(LOGS, { recursive: true });
-  mkdirSync(new URL("../.auth", import.meta.url).pathname, { recursive: true });
 
   const container = await new PostgreSqlContainer("postgres:18-alpine").start();
   const databaseUrl = container.getConnectionUri();
@@ -144,9 +112,6 @@ async function globalSetup(): Promise<() => Promise<void>> {
     });
 
     await waitForServer(server);
-    await Promise.all(
-      (Object.keys(PEOPLE) as Role[]).map((role) => saveSignIn(role)),
-    );
   } catch (error) {
     await stop(server, container);
     throw error;

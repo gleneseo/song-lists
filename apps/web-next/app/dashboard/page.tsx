@@ -20,7 +20,7 @@ import {
 import { getSession } from "@/lib/auth/auth";
 import { formatDate } from "@/lib/text/format-date";
 
-const metadata: Metadata = { title: "Dashboard · Song Lists" };
+const metadata: Metadata = { title: "Dashboard" };
 
 function StatsSkeleton() {
   return (

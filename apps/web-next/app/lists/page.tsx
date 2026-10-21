@@ -7,7 +7,7 @@ import { getSession } from "@/lib/auth/auth";
 import { getListsOverview } from "@/lib/queries/lists";
 import { countLabel } from "@/lib/text/count-label";
 
-const metadata: Metadata = { title: "Lists · Song Lists" };
+const metadata: Metadata = { title: "Lists" };
 
 async function Lists() {
   const session = await getSession();

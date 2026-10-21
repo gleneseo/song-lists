@@ -5,7 +5,7 @@ import { requireAdmin } from "@/lib/auth/require-admin";
 import { getUsers } from "@/lib/queries/users";
 import { countLabel } from "@/lib/text/count-label";
 
-const metadata: Metadata = { title: "Users · Song Lists" };
+const metadata: Metadata = { title: "Users" };
 
 async function Users() {
   await requireAdmin();

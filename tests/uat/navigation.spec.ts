@@ -66,6 +66,21 @@ test.describe("the top bar", () => {
     await expect(page).toHaveURL(/\/dashboard$/);
   });
 
+  test("the app is called Song Lists in the top bar and the tab when no other title is configured", async ({
+    as,
+  }) => {
+    const page = await as("user");
+
+    await page.goto("/");
+    await expect(page).toHaveTitle("Song Lists");
+    await expect(page.locator("nav").getByText("Song Lists")).toBeVisible();
+
+    await page.goto("/dashboard");
+    await expect(page).toHaveTitle("Dashboard · Song Lists");
+    await page.goto("/lists");
+    await expect(page).toHaveTitle("Lists · Song Lists");
+  });
+
   test("the name on the left goes to the dashboard when signed in", async ({
     as,
   }) => {

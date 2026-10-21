@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import { connect } from "node:net";
+import { openCommand, waitUntil } from "./studio-launch.js";
 
 /** Drizzle Studio's own default, so its web page needs no port to find it. */
 const PORT = 4983;
@@ -22,26 +23,9 @@ const isListening = (): Promise<boolean> =>
     });
   });
 
-async function waitUntilListening(): Promise<boolean> {
-  for (let waited = 0; waited < GIVE_UP_AFTER_MS; waited += POLL_MS) {
-    if (await isListening()) {
-      return true;
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, POLL_MS));
-  }
-
-  return false;
-}
-
 /** Hands the address to whatever this machine opens web pages with. */
 function openInBrowser(url: string): void {
-  const [command, ...args] =
-    process.platform === "darwin"
-      ? ["open", url]
-      : process.platform === "win32"
-        ? ["cmd", "/c", "start", "", url]
-        : ["xdg-open", url];
+  const [command, ...args] = openCommand(process.platform, url);
 
   spawn(command, args, { stdio: "ignore", detached: true })
     .on("error", () => {
@@ -75,7 +59,12 @@ async function main(): Promise<void> {
     studio.kill();
   });
 
-  if (await waitUntilListening()) {
+  if (
+    await waitUntil(isListening, {
+      pollMs: POLL_MS,
+      giveUpAfterMs: GIVE_UP_AFTER_MS,
+    })
+  ) {
     openInBrowser(STUDIO_URL);
   } else {
     console.log(`Studio didn't start in time; try ${STUDIO_URL} in a moment.`);

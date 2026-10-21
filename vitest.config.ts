@@ -42,6 +42,7 @@ export default defineConfig({
         "packages/db/src/generate-docs.ts",
         "packages/db/src/reset-db.ts",
         "packages/db/src/run-migrations.ts",
+        "packages/db/src/studio.ts",
         "apps/cli/src/index.ts",
         "apps/web-next/lib/queries/**",
         "apps/web-next/lib/actions/**",

@@ -30,7 +30,7 @@
     "db:migrate": "tsx src/run-migrations.ts",
     "db:reset": "tsx src/reset-db.ts",
     "db:docs": "tsx src/generate-docs.ts",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "tsx src/studio.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",

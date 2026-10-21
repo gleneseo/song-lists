@@ -36,18 +36,37 @@ commit hash.
 
 ## Step 2 — find the pull request template
 
-Search, in order, and use the first one found:
+Don't rely on what happens to be in the session's working directories or on
+memory: run these checks, in order, and use the first template found. Run
+them from the repository root (`git rev-parse --show-toplevel`).
 
-1. `.github/PULL_REQUEST_TEMPLATE.md`, `.github/pull_request_template.md`, or
-   `docs/pull_request_template.md` in **this** repo.
-2. An org-wide default template, if a checkout of it is among the working
-   directories available in this session — i.e. a `.github`-named repo
-   containing `.github/PULL_REQUEST_TEMPLATE.md`. GitHub falls back to this
-   automatically when a repo has no template of its own, so it counts as
-   "the template" for this repo too.
+1. **This repo.** Look for `.github/PULL_REQUEST_TEMPLATE.md`,
+   `.github/pull_request_template.md`, `docs/pull_request_template.md`,
+   `PULL_REQUEST_TEMPLATE.md`, or `pull_request_template.md`, or a
+   `.github/PULL_REQUEST_TEMPLATE/` folder (if it holds several, pick the
+   one that fits, or ask).
+2. **The org's `.github` repo, checked out next to this one.** The org-wide
+   default lives in a repo named `.github`, and GitHub falls back to it for
+   any repo without its own template. Here it is normally a sibling of the
+   repository folder, so check
+   `../.github/.github/PULL_REQUEST_TEMPLATE.md` (and the lowercase
+   spelling) relative to the repo root. Also check the session's other
+   working directories for a `.github`-named repo.
+3. **The org's `.github` repo on GitHub.** If there's no local copy, fetch it
+   with the owner taken from the remote:
 
-If neither is found, **stop and alert the user** — do not invent a template
-or write a PR body from scratch.
+   ```bash
+   owner=$(gh repo view --json owner -q .owner.login)
+   gh api -H "Accept: application/vnd.github.raw" \
+     "repos/$owner/.github/contents/.github/PULL_REQUEST_TEMPLATE.md"
+   ```
+
+   Try the lowercase file name too if that returns a 404.
+
+Use the template exactly as found; it counts as "the template" for this repo
+whichever of the three it came from. Only if all three come up empty, **stop
+and alert the user**, saying which locations were checked — do not invent a
+template or write a PR body from scratch.
 
 ## Step 3 — open the pull request
 

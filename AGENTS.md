@@ -164,6 +164,48 @@ follow these conventions:
 3. Test names should avoid referencing code objects in an effort to be understood
    by the widest audience, that doesn't always include software engineers.
 
+## Browser (UAT) tests
+
+`tests/uat/` holds browser tests (Playwright, driving the installed Chrome) that
+prove the app's usage paths work as a person would use them. They are the last
+stage after the unit and integration tests, and they are part of the work, not
+an afterthought. Whenever you add or change UI -- a page, a form, a button, a
+link, a menu, a modal, a label, a sort or filter, a role's permissions, the
+layout on a phone -- take them into account in the same change:
+
+1. Find the spec that covers the area (`auth`, `navigation`, `dashboard`,
+   `lists`, `songs-page`, `modals`, `add-song`, `editing`, `users`,
+   `full-pages`, `sessions-and-layout`) and update any test the change
+   affects, so it still says what the app now does.
+2. Add tests for new behavior, including who can and can't do it (admin,
+   manager, user) and what happens when it goes wrong. A new page also goes
+   in `full-pages.spec.ts` so it is opened directly, not only by clicking.
+3. Run the affected specs before calling the work done:
+   `npm run test:uat -- <spec name>`. After a change to the app, the
+   build must be redone, so leave `UAT_SKIP_BUILD` unset; it reuses the
+   last build and would test the old code. Run the whole suite
+   (`npm run test:uat`) when a change reaches shared things like the top bar,
+   the shared `Button`, or the layout.
+
+How they are written:
+
+- They are `*.spec.ts` files, not `*.test.ts`, and the naming rules under
+  "Test conventions" do not apply; names read as what a person does or sees.
+- Find things the way a person or assistive technology would, by role and
+  accessible name (`getByRole`); a top-bar link is a link. Reach for a CSS
+  selector only when the page offers nothing better.
+- Use the helpers in `support/` (`as(role)` to be signed in as the seed
+  admin, manager, or user; `arrangeSong` and `idOf` for data of your own).
+  Each test arranges its own data and doesn't rely on another test's.
+- An uncaught page error or a 5xx response fails a test. Don't silence one
+  for a whole file; where one is truly expected, allow it for those tests
+  only, with a comment saying why.
+- A real gap found by a test is fixed, or marked `test.fixme` with a comment
+  saying what is wrong and when to remove the `fixme`. Never delete a test
+  to make a run pass.
+- `songs-page.spec.ts` covers the Songs page only, so it can be deleted with
+  the page when that page is removed.
+
 ## Code documentation
 
 IMPORTANT: Code documentation must follow [TSDoc](https://tsdoc.org/) conventions.

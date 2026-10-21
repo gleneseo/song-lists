@@ -7,6 +7,10 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./artwork": {
+      "types": "./src/artwork.ts",
+      "default": "./src/artwork.ts"
     }
   },
   "main": "./src/index.ts",

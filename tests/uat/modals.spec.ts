@@ -1,4 +1,5 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { arrangeSong, arrangeSongDetails } from "./support/app.js";
 import { expect, test } from "./support/test.js";
 
 const dialog = (page: Page) => page.getByRole("dialog");
@@ -398,5 +399,144 @@ test.describe("names around the app", () => {
 
     await expect(dialog(page)).toBeVisible();
     await expect(page).toHaveURL(/\/song\/\d+$/);
+  });
+});
+
+/** An image the app serves itself, standing in for art hosted by iTunes. */
+const ownArtwork = `http://127.0.0.1:${process.env["UAT_PORT"] ?? "3100"}/apple-icon.png`;
+
+const artwork = (page: Page | Locator) =>
+  page.getByRole("img", { name: /Album art/ });
+const youtubeLink = (page: Page | Locator) =>
+  page.getByRole("link", { name: "Listen on YouTube" });
+
+async function openSongInModal(
+  page: Page,
+  song: { title: string },
+): Promise<void> {
+  await openListPage(page, `/lists/1?q=${encodeURIComponent(song.title)}`);
+  await page.getByRole("link", { name: song.title }).first().click();
+  await expect(dialog(page)).toBeVisible();
+}
+
+test.describe("a song's art, album, and where to hear it", () => {
+  test("a song that was looked up shows its art, album, and year", async ({
+    as,
+  }) => {
+    const song = await arrangeSong();
+    await arrangeSongDetails(song, {
+      artworkUrl: ownArtwork,
+      albumName: "The Acceptance Album",
+      releaseYear: 1997,
+    });
+    const page = await as("user");
+
+    await openSongInModal(page, song);
+
+    const modal = dialog(page);
+    await expect(
+      modal.getByRole("img", { name: "Album art for The Acceptance Album" }),
+    ).toBeVisible();
+    await expect(modal.getByText("The Acceptance Album · 1997")).toBeVisible();
+    await expect(modal.getByText(/Album details via iTunes/)).toBeVisible();
+    expect(
+      await modal
+        .getByRole("img")
+        .evaluate((image: HTMLImageElement) => image.naturalWidth),
+      "the art actually loaded",
+    ).toBeGreaterThan(0);
+  });
+
+  test("the full page shows them too", async ({ as }) => {
+    const song = await arrangeSong();
+    await arrangeSongDetails(song, {
+      artworkUrl: ownArtwork,
+      albumName: "The Acceptance Album",
+      releaseYear: 1997,
+    });
+    const page = await as("user");
+
+    await page.goto(`/song/${String(song.id)}`);
+
+    await expect(artwork(page)).toBeVisible();
+    await expect(page.getByText("The Acceptance Album · 1997")).toBeVisible();
+    await expect(youtubeLink(page)).toBeVisible();
+  });
+
+  test("a song that was looked up shows only the year when the album is unknown", async ({
+    as,
+  }) => {
+    const song = await arrangeSong();
+    await arrangeSongDetails(song, { artworkUrl: null, releaseYear: 1981 });
+    const page = await as("user");
+
+    await openSongInModal(page, song);
+
+    await expect(artwork(dialog(page))).toHaveCount(0);
+    await expect(dialog(page).getByText("1981", { exact: true })).toBeVisible();
+  });
+
+  test("a link to hear it on YouTube opens a search for the song in a new tab", async ({
+    as,
+  }) => {
+    const song = await arrangeSong();
+    const page = await as("user");
+
+    await openSongInModal(page, song);
+
+    const link = youtubeLink(dialog(page));
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(link).toHaveAttribute("rel", /noopener/);
+    const href = new URL((await link.getAttribute("href")) ?? "");
+    expect(href.origin + href.pathname).toBe("https://www.youtube.com/results");
+    expect(href.searchParams.get("search_query")).toBe(
+      `${song.artist} ${song.title}`,
+    );
+  });
+
+  test("a song nothing was found for shows no art or album, but still the YouTube link", async ({
+    as,
+  }) => {
+    const song = await arrangeSong();
+    await arrangeSongDetails(song, { status: "not_found" });
+    const page = await as("user");
+
+    await openSongInModal(page, song);
+
+    await expect(artwork(dialog(page))).toHaveCount(0);
+    await expect(dialog(page).getByText(/via iTunes/)).toHaveCount(0);
+    await expect(youtubeLink(dialog(page))).toBeVisible();
+  });
+
+  test("a song that was never looked up looks just the same", async ({
+    as,
+  }) => {
+    const song = await arrangeSong();
+    const page = await as("user");
+
+    await openSongInModal(page, song);
+
+    await expect(artwork(dialog(page))).toHaveCount(0);
+    await expect(youtubeLink(dialog(page))).toBeVisible();
+  });
+
+  test("art that can't be loaded leaves nothing behind, and the rest of the song still shows", async ({
+    as,
+  }) => {
+    const song = await arrangeSong();
+    await arrangeSongDetails(song, {
+      artworkUrl: `${ownArtwork}.missing`,
+      albumName: "The Lost Album",
+      releaseYear: 1997,
+    });
+    const page = await as("user");
+
+    await openSongInModal(page, song);
+
+    await expect(artwork(dialog(page))).toHaveCount(0);
+    await expect(dialog(page).getByText("The Lost Album · 1997")).toBeVisible();
+    await expect(
+      dialog(page).getByRole("heading", { name: song.title, level: 2 }),
+    ).toBeVisible();
   });
 });

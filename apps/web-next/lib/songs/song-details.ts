@@ -1,3 +1,4 @@
+import { SONG_METADATA_STATUS } from "@song-lists/db";
 import { byText } from "@/lib/text/sort-key";
 
 interface NamedArtist {
@@ -35,6 +36,20 @@ interface SongDetailsRow {
     list: { id: number; name: string };
     creator: { name: string };
   }[];
+  /** What the automatic lookup found, or `null` if it hasn't run for this song. */
+  metadata: {
+    status: string;
+    artworkUrl: string | null;
+    albumName: string | null;
+    releaseYear: number | null;
+  } | null;
+}
+
+/** What an outside music service shows for a song that it matched. */
+interface SongMetadataDetails {
+  artworkUrl: string | null;
+  albumName: string | null;
+  releaseYear: number | null;
 }
 
 interface RelatedSong {
@@ -64,6 +79,8 @@ interface SongDetails {
   }[];
   advocates: { name: string; since: Date }[];
   lists: { id: number; name: string; addedBy: string; addedAt: Date }[];
+  /** `null` unless the song was looked up and a match was found. */
+  metadata: SongMetadataDetails | null;
 }
 
 function toRelatedSong({ id, title, artist }: RelatedSongRow): RelatedSong {
@@ -122,8 +139,16 @@ function toSongDetails(row: SongDetailsRow): SongDetails {
         addedAt: createdAt,
       }))
       .toSorted((a, b) => a.id - b.id),
+    metadata:
+      row.metadata?.status === SONG_METADATA_STATUS.MATCHED
+        ? {
+            artworkUrl: row.metadata.artworkUrl,
+            albumName: row.metadata.albumName,
+            releaseYear: row.metadata.releaseYear,
+          }
+        : null,
   };
 }
 
 export { toSongDetails };
-export type { RelatedSong, SongDetails, SongDetailsRow };
+export type { RelatedSong, SongDetails, SongDetailsRow, SongMetadataDetails };

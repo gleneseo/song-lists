@@ -1,4 +1,5 @@
-export { artworkUrlAtSize, createItunesLookup } from "./itunes.js";
+export { artworkUrlAtSize } from "./artwork.js";
+export { createItunesLookup } from "./itunes.js";
 export type { ItunesLookupOptions, SongLookupResult } from "./itunes.js";
 export { chooseMatch } from "./match.js";
 export type { Candidate, WantedSong } from "./match.js";

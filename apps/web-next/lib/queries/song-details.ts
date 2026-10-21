@@ -15,6 +15,14 @@ async function getSongDetails(songId: number): Promise<SongDetails | null> {
     columns: { id: true, title: true, bio: true, createdAt: true },
     with: {
       artist: { columns: { id: true, name: true } },
+      metadata: {
+        columns: {
+          status: true,
+          artworkUrl: true,
+          albumName: true,
+          releaseYear: true,
+        },
+      },
       featuredArtists: {
         columns: { id: true },
         with: { artist: { columns: { id: true, name: true } } },

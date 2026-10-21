@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import {
   request,
+  type Browser,
   type BrowserContext,
   type Locator,
   type Page,
@@ -213,8 +214,31 @@ async function createPerson(
   }
 }
 
+/**
+ * A browser of their own, signed in through the sign-in page the way a
+ * person would, as someone from {@link createPerson}. Each call has its own
+ * address, so several sign-ins in a test never trip the rate limit.
+ */
+async function signedInAs(browser: Browser, person: Person): Promise<Page> {
+  const page = await newPageOfTheirOwn(browser);
+  await signInThroughThePage(page, person.email, person.password);
+  await page.waitForURL(/\/dashboard$/);
+
+  return page;
+}
+
+/** A page in a browser context with an address of its own, signed in as nobody. */
+async function newPageOfTheirOwn(browser: Browser): Promise<Page> {
+  const context = await browser.newContext();
+  await withOwnAddress(context);
+
+  return context.newPage();
+}
+
 export {
   arrangeSong,
+  newPageOfTheirOwn,
+  signedInAs,
   createPerson,
   freshEmail,
   freshName,

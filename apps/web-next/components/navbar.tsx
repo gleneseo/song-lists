@@ -9,11 +9,13 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SignOutButton } from "@/components/sign-out-button";
 import { useSession } from "@/lib/auth/auth-client";
+import { APP_TITLE } from "@/lib/config/app-title";
 
 /**
  * `listsMenu` is the server-rendered "Lists" hover menu; it's passed in as a
@@ -33,12 +35,12 @@ function Navbar({
       <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-2 px-4">
         <Link
           href={session?.user ? "/dashboard" : "/"}
-          aria-label="Song Lists"
+          aria-label={APP_TITLE}
           className="flex shrink-0 items-center gap-2 text-lg font-semibold"
         >
           <ListMusic className="size-5" />
           {/* On a phone the links need the room; the icon still says whose it is. */}
-          <span className="hidden sm:inline">Song Lists</span>
+          <span className="hidden sm:inline">{APP_TITLE}</span>
         </Link>
         <div className="flex min-w-0 items-center gap-1 sm:gap-2">
           {session?.user ? (
@@ -51,13 +53,6 @@ function Navbar({
                 Dashboard
               </Button>
               {listsMenu}
-              <Button
-                variant="ghost"
-                nativeButton={false}
-                render={<Link href="/songs" />}
-              >
-                Songs
-              </Button>
               {adminMenu}
               <DropdownMenu>
                 <DropdownMenuTrigger
@@ -87,6 +82,9 @@ function Navbar({
                         </p>
                       </div>
                     </DropdownMenuLabel>
+                    <DropdownMenuItem render={<Link href="/account" />}>
+                      Account
+                    </DropdownMenuItem>
                     <SignOutButton />
                   </DropdownMenuGroup>
                 </DropdownMenuContent>

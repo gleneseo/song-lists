@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
+import { APP_TITLE } from "@/lib/config/app-title";
 import { PENDING_ENTITY_CLICK_SCRIPT } from "@/lib/entity-links/pending-click-script";
 import { AdminMenu } from "@/components/admin-menu";
 import { ListsMenu } from "@/components/lists-menu";
@@ -20,7 +21,8 @@ const geistMono = Geist_Mono({
 });
 
 const metadata: Metadata = {
-  title: "Song Lists",
+  // Each page names itself ("Lists") and the template adds the app's title.
+  title: { default: APP_TITLE, template: `%s · ${APP_TITLE}` },
   description: "Browse and search the song catalog",
 };
 

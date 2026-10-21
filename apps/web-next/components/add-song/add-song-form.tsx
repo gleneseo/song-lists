@@ -132,12 +132,12 @@ function AddSongForm({
     };
   }, [artist, debouncedTitle]);
 
-  /** Leaves the form for wherever the person came from, or the Songs page if they landed here directly. */
+  /** Leaves the form for wherever the person came from, or the dashboard if they landed here directly. */
   function cancel() {
     if (cameFromThisApp(window)) {
       router.back();
     } else {
-      router.push("/songs");
+      router.push("/dashboard");
     }
   }
 
@@ -339,11 +339,11 @@ function AddSongForm({
             variant="outline"
             onClick={() => {
               setSummary(null);
-              router.push("/songs");
+              router.push("/lists");
               router.refresh();
             }}
           >
-            View in Songs
+            View lists
           </Button>
         </div>
       </div>

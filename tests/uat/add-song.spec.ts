@@ -279,7 +279,7 @@ test.describe("after a song is added", () => {
     ).toBeChecked();
   });
 
-  test("View in Songs goes to the Songs page", async ({ as }) => {
+  test("View lists goes to the lists page", async ({ as }) => {
     const page = await as("admin");
     await startNewSong(page);
     await create(artistField(page), freshName("Band"));
@@ -287,9 +287,9 @@ test.describe("after a song is added", () => {
     await submit(page).click();
     await expect(page.getByText(/was added successfully/)).toBeVisible();
 
-    await page.getByRole("button", { name: "View in Songs" }).click();
+    await page.getByRole("button", { name: "View lists" }).click();
 
-    await expect(page).toHaveURL(/\/songs$/);
+    await expect(page).toHaveURL(/\/lists$/);
   });
 });
 
@@ -482,17 +482,6 @@ test.describe("our house style for names", () => {
 });
 
 test.describe("cancelling", () => {
-  test("goes back to the page the person came from", async ({ as }) => {
-    const page = await as("admin");
-    await page.goto("/songs");
-    await page.getByRole("link", { name: "+ Add Song" }).click();
-    await expect(page).toHaveURL(/\/songs\/new$/);
-
-    await page.getByRole("button", { name: "Cancel" }).click();
-
-    await expect(page).toHaveURL(/\/songs$/);
-  });
-
   test("from the dashboard goes back to the dashboard", async ({ as }) => {
     const page = await as("admin");
     await page.goto("/dashboard");
@@ -503,7 +492,7 @@ test.describe("cancelling", () => {
     await expect(page).toHaveURL(/\/dashboard$/);
   });
 
-  test("when the form was opened directly, goes to the Songs page", async ({
+  test("when the form was opened directly, goes to the dashboard", async ({
     as,
   }) => {
     const page = await as("admin");
@@ -511,6 +500,6 @@ test.describe("cancelling", () => {
 
     await page.getByRole("button", { name: "Cancel" }).click();
 
-    await expect(page).toHaveURL(/\/songs$/);
+    await expect(page).toHaveURL(/\/dashboard$/);
   });
 });

@@ -51,7 +51,7 @@ test.describe("staying signed in", () => {
     await first.getByRole("menuitem", { name: "Log Out" }).click();
     await expect(first).toHaveURL(/\/sign-in$/);
 
-    await second.goto("/songs");
+    await second.goto("/lists");
     await expect(second).toHaveURL(/\/sign-in$/);
   });
 });
@@ -76,7 +76,6 @@ test.describe("on a phone", () => {
       "/lists",
       "/lists/1",
       "/lists/3",
-      "/songs",
       "/songs/new",
       "/users",
       `/song/${String(song)}`,

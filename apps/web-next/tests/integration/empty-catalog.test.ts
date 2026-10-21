@@ -82,8 +82,7 @@ describe("the queries when the catalog has no songs yet", () => {
   });
 
   describe("the catalog", () => {
-    it("should have no songs to browse, search, or compare a new one with", async () => {
-      expect(await songs.getSongs()).toEqual([]);
+    it("should have no songs to search or compare a new one with", async () => {
       expect(await songs.searchSongs("love")).toEqual([]);
       expect(
         await songs.findExistingSong(await artistId(pool, "Beck"), "Hotwax"),

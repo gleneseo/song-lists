@@ -124,27 +124,6 @@ describe("searching and looking up the catalog, against the real database", () =
     });
   });
 
-  describe("the Songs page", () => {
-    it("should order songs by title ignoring a leading article, like the lists do", async () => {
-      const all = await songs.getSongs();
-      const { rows } = await pool.query<{ id: number }>(
-        `select id from song_lists.songs
-         order by lower(regexp_replace(regexp_replace(regexp_replace(title, '\\$(?!\\d)', 's', 'g'), '!(?=\\w)', 'i', 'g'), '^(the|an|a|tha)\\s+(.+)$', '\\2, \\1', 'i')), id
-         limit 200`,
-      );
-
-      expect(all.slice(0, 200).map((song) => song.id)).toEqual(
-        rows.map((row) => row.id),
-      );
-      expect(all).toHaveLength(
-        Number(
-          (await pool.query("select count(*) n from song_lists.songs")).rows[0]
-            .n,
-        ),
-      );
-    });
-  });
-
   describe("checking for a song that already exists", () => {
     it("should call the same title, in any case, an exact match", async () => {
       const artist = await artistId(pool, "Joey Bada$$");

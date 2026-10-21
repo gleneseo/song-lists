@@ -32,8 +32,10 @@ export function SongSearch({ songs }: { songs: Song[] }) {
             key={song.id}
             className="flex items-baseline justify-between gap-4 py-2"
           >
-            <span className="flex items-center gap-1.5">
-              <span className="font-medium">{song.title}</span>
+            <span className="flex min-w-0 items-center gap-1.5">
+              <span className="min-w-0 font-medium wrap-anywhere">
+                {song.title}
+              </span>
               {song.coverOf.length > 0 && (
                 <span
                   role="img"
@@ -45,7 +47,7 @@ export function SongSearch({ songs }: { songs: Song[] }) {
                 </span>
               )}
             </span>
-            <div className="flex flex-col items-end">
+            <div className="flex min-w-0 flex-col items-end text-right wrap-anywhere">
               <span className="text-sm text-muted-foreground">
                 {song.artist.name}
               </span>

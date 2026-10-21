@@ -19,6 +19,7 @@ import {
   toProductionSelection,
 } from "@/lib/songs/build-create-song-selections";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { cameFromThisApp } from "@/lib/navigation/came-from-this-app";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -107,13 +108,20 @@ function AddSongForm({
         return;
       }
 
-      const result = await checkDuplicateSong({
-        artistId: artist.option.id,
-        title: debouncedTitle,
-      });
+      try {
+        const result = await checkDuplicateSong({
+          artistId: artist.option.id,
+          title: debouncedTitle,
+        });
 
-      if (!cancelled) {
-        setDuplicateCheck(result);
+        if (!cancelled) {
+          setDuplicateCheck(result);
+        }
+      } catch {
+        // The page moved on while this was out; there's nothing to show.
+        if (!cancelled) {
+          setDuplicateCheck(null);
+        }
       }
     }
 
@@ -126,7 +134,7 @@ function AddSongForm({
 
   /** Leaves the form for wherever the person came from, or the Songs page if they landed here directly. */
   function cancel() {
-    if (window.history.length > 1) {
+    if (cameFromThisApp(window)) {
       router.back();
     } else {
       router.push("/songs");

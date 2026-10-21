@@ -1,4 +1,6 @@
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
+import Link from "next/link";
+import { isValidElement } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 
@@ -45,9 +47,17 @@ function Button({
   size = "default",
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+  // A button drawn as a Next link is still a link: without this, Base UI marks
+  // it role="button", and assistive tech announces and lists it as a button.
+  const rendersLink =
+    props.nativeButton === false &&
+    isValidElement(props.render) &&
+    props.render.type === Link;
+
   return (
     <ButtonPrimitive
       data-slot="button"
+      {...(rendersLink && { role: "link" })}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />

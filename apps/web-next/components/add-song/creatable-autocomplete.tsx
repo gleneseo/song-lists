@@ -73,11 +73,19 @@ function CreatableAutocomplete<T extends CreatableOption>({
   useEffect(() => {
     let cancelled = false;
 
-    search(debouncedInput).then((matches) => {
-      if (!cancelled) {
-        setResults(matches);
-      }
-    });
+    search(debouncedInput)
+      .then((matches) => {
+        if (!cancelled) {
+          setResults(matches);
+        }
+      })
+      .catch(() => {
+        // The page moved on while this was out, or the search failed; either
+        // way there's nothing to offer, and it mustn't surface as an error.
+        if (!cancelled) {
+          setResults([]);
+        }
+      });
 
     return () => {
       cancelled = true;

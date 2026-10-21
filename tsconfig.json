@@ -5,6 +5,7 @@
     "composite": false
   },
   "include": ["tests"],
+  "exclude": ["tests/uat"],
   "references": [
     { "path": "./packages/db" },
     { "path": "./packages/auth" },

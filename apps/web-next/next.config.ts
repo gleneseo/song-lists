@@ -5,7 +5,11 @@ const nextConfig: NextConfig = {
   // them never touches the one a running dev server is using.
   distDir: process.env.NEXT_DIST_DIR ?? ".next",
   cacheComponents: true,
-  transpilePackages: ["@song-lists/db", "@song-lists/auth"],
+  transpilePackages: [
+    "@song-lists/db",
+    "@song-lists/auth",
+    "@song-lists/song-metadata",
+  ],
   // @song-lists/* packages are consumed as raw TypeScript (their `exports`
   // point at src/index.ts) and, like the rest of the monorepo, write
   // relative imports with an explicit ".js" extension resolving to a

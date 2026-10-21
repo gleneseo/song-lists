@@ -78,6 +78,9 @@ async function globalSetup(): Promise<() => Promise<void>> {
     // this server who is signed in -- not whichever one the repo's .env names.
     NEXT_PUBLIC_BETTER_AUTH_URL: BASE_URL,
     BETTER_AUTH_SECRET: "test-secret-used-only-in-uat-tests",
+    // Adding a song would otherwise look it up on iTunes, and the tests must
+    // not depend on (or call out to) the network.
+    SONG_METADATA_LOOKUP: "off",
     // Blank, so the app has its default name whatever the repo's .env files
     // (a developer's own .env.local, say) set it to; the tests look for it.
     NEXT_PUBLIC_APP_TITLE: "",

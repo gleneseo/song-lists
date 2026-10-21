@@ -1,8 +1,10 @@
 "use server";
 
 import { schema } from "@song-lists/db";
+import { after } from "next/server";
 import { getSession } from "@/lib/auth/auth";
 import { db } from "@/lib/queries/client";
+import { recordSongMetadata } from "@/lib/queries/song-metadata";
 import {
   findExistingSong,
   type DuplicateCheckResult,
@@ -102,8 +104,10 @@ async function createSong(input: CreateSongInput): Promise<CreateSongResult> {
     return { status: "style", issues: styleIssues };
   }
 
+  let songId: number;
+
   try {
-    return await db.transaction(async (tx) => {
+    songId = await db.transaction(async (tx) => {
       const newArtistsByName = new Map<string, number>();
       const artistId = await resolveArtist(
         tx,
@@ -206,7 +210,7 @@ async function createSong(input: CreateSongInput): Promise<CreateSongResult> {
         })),
       );
 
-      return { status: "created", songId: song.id };
+      return song.id;
     });
   } catch (error) {
     return {
@@ -215,6 +219,12 @@ async function createSong(input: CreateSongInput): Promise<CreateSongResult> {
         error instanceof Error ? error.message : "Failed to add the song.",
     };
   }
+
+  // Once the response is on its way, so the art and album never hold up
+  // adding a song (or fail it).
+  after(() => recordSongMetadata(songId));
+
+  return { status: "created", songId };
 }
 
 export { checkDuplicateSong, createSong };

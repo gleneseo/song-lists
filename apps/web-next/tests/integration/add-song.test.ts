@@ -15,6 +15,13 @@ vi.mock("@/lib/auth/auth", async (importOriginal) => ({
     session.userId ? { user: { id: session.userId } } : null,
 }));
 
+// `after` only works inside a request; these tests call the action directly,
+// and the lookup it schedules is covered by song-metadata.test.ts.
+vi.mock("next/server", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/server")>()),
+  after: () => undefined,
+}));
+
 type AddSong = typeof import("@/lib/actions/add-song");
 type CreateInput = Parameters<AddSong["createSong"]>[0];
 

@@ -29,6 +29,9 @@ const submit = (page: Page) =>
 const styleWarning = (page: Page) =>
   page.getByRole("alert").filter({ hasText: "written in our style" });
 
+const similarSongWarning = (page: Page) =>
+  page.getByRole("alert").filter({ hasText: "may already be here" });
+
 async function startNewSong(page: Page): Promise<void> {
   await page.goto("/songs/new");
   await expect(artistField(page)).toBeVisible();
@@ -331,7 +334,7 @@ test.describe("when it can't be added yet", () => {
     await expect(submit(page)).toBeDisabled();
   });
 
-  test("a title that differs only by a symbol is offered as a match, but can still go ahead", async ({
+  test("a title that differs only by a symbol is flagged as a likely match, but can still go ahead", async ({
     as,
   }) => {
     const page = await as("admin");
@@ -340,10 +343,44 @@ test.describe("when it can't be added yet", () => {
 
     await titleField(page).fill("Paper Trails");
 
-    await expect(
-      page.getByText(/Did you mean the existing song/),
-    ).toBeVisible();
+    await expect(similarSongWarning(page)).toBeVisible();
+    await expect(similarSongWarning(page)).toContainText(
+      "We already have “Paper Trail$” by Joey Bada$$",
+    );
     await expect(submit(page)).toBeEnabled();
+  });
+
+  test("the likely match can be looked at, in a tab of its own so the form is kept", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    await startNewSong(page);
+    await choose(artistField(page), "Joey Bada", /Joey Bada\$\$/);
+    await titleField(page).fill("Paper Trails");
+
+    const link = similarSongWarning(page).getByRole("link", {
+      name: /View “Paper Trail\$”/,
+    });
+
+    await expect(link).toHaveAttribute("href", /^\/song\/\d+$/);
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(titleField(page)).toHaveValue("Paper Trails");
+  });
+
+  test("the likely match offers a way out: it's already there, so cancel", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    await page.goto("/dashboard");
+    await page.getByRole("link", { name: "Add song" }).click();
+    await choose(artistField(page), "Joey Bada", /Joey Bada\$\$/);
+    await titleField(page).fill("Paper Trails");
+
+    await similarSongWarning(page)
+      .getByRole("button", { name: /already there/ })
+      .click();
+
+    await expect(page).toHaveURL(/\/dashboard$/);
   });
 
   test("the same title by a different artist is not a duplicate", async ({
@@ -501,5 +538,28 @@ test.describe("cancelling", () => {
     await page.getByRole("button", { name: "Cancel" }).click();
 
     await expect(page).toHaveURL(/\/dashboard$/);
+  });
+});
+
+test.describe("starting over", () => {
+  test("cancelling and opening the form again finds it empty", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    await page.goto("/dashboard");
+    await page.getByRole("link", { name: "Add song" }).click();
+    await expect(artistField(page)).toBeVisible();
+    await choose(artistField(page), "Joey Bada", /Joey Bada\$\$/);
+    await titleField(page).fill("Something half typed");
+    await page.getByLabel("Bio / notes (optional)").fill("Half a thought");
+
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expect(page).toHaveURL(/\/dashboard$/);
+    await page.getByRole("link", { name: "Add song" }).click();
+
+    await expect(artistField(page)).toBeVisible();
+    await expect(artistField(page)).toHaveValue("");
+    await expect(titleField(page)).toHaveValue("");
+    await expect(page.getByLabel("Bio / notes (optional)")).toHaveValue("");
   });
 });

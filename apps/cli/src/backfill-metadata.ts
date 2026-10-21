@@ -1,3 +1,4 @@
+import { writeFile } from "node:fs/promises";
 import { createDb } from "@song-lists/db";
 import { loadNearestEnv } from "@song-lists/db/load-env";
 import {
@@ -6,10 +7,12 @@ import {
   createItunesLookup,
   findSongsToBackfill,
   ITUNES_MIN_INTERVAL_MS,
+  listSongMetadataReport,
 } from "@song-lists/song-metadata";
 import {
   formatPlan,
   formatProgress,
+  formatReportCsv,
   formatSummary,
 } from "./backfill-report.js";
 
@@ -17,6 +20,8 @@ interface BackfillCommandOptions {
   limit: number | undefined;
   retryNotFound: boolean;
   dryRun: boolean;
+  /** Where to write every song's lookup result as CSV when the run ends. */
+  report: string | undefined;
 }
 
 /**
@@ -28,6 +33,7 @@ async function runBackfillMetadata({
   limit,
   retryNotFound,
   dryRun,
+  report,
 }: BackfillCommandOptions): Promise<void> {
   loadNearestEnv(process.cwd());
 
@@ -39,6 +45,16 @@ async function runBackfillMetadata({
 
   const { db, pool } = createDb({ connectionString: DATABASE_URL });
 
+  const writeReport = async () => {
+    if (report !== undefined) {
+      await writeFile(
+        report,
+        formatReportCsv(await listSongMetadataReport(db)),
+      );
+      console.log(`Wrote the results to ${report}.`);
+    }
+  };
+
   try {
     const which = { retryErrors: true, retryNotFound, limit };
 
@@ -46,6 +62,7 @@ async function runBackfillMetadata({
       const songs = await findSongsToBackfill(db, which);
 
       console.log(formatPlan(songs.length, ITUNES_MIN_INTERVAL_MS));
+      await writeReport();
 
       return;
     }
@@ -90,6 +107,7 @@ async function runBackfillMetadata({
     }
 
     console.log(formatSummary(summary).join("\n"));
+    await writeReport();
   } finally {
     await pool.end();
   }

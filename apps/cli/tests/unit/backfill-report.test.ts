@@ -4,6 +4,7 @@ import {
   formatDuration,
   formatPlan,
   formatProgress,
+  formatReportCsv,
   formatSummary,
 } from "../../src/backfill-report.js";
 
@@ -169,6 +170,62 @@ describe("backfill report", () => {
       expect(
         formatSummary({ ...base, processed: 5, ended: "too-many-errors" })[1],
       ).toMatch(/too many failures in a row/);
+    });
+  });
+
+  describe("results file", () => {
+    const row = {
+      songId: 7,
+      artistName: "Hum",
+      title: "Stars",
+      status: "matched",
+      albumName: "You'd Prefer an Astronaut",
+      releaseYear: 1995,
+      sourceTrackId: "42",
+      artworkUrl: "https://example.test/a/100x100bb.jpg",
+      fetchedAt: new Date("2026-10-21T11:02:59.000Z"),
+    };
+
+    it("should start with a line naming the columns", () => {
+      expect(formatReportCsv([]).split("\n")[0]).toBe(
+        "song_id,artist,title,status,album,year,source_track_id,artwork_url,fetched_at",
+      );
+    });
+
+    it("should write a line for each song", () => {
+      expect(formatReportCsv([row]).split("\n")[1]).toBe(
+        "7,Hum,Stars,matched,You'd Prefer an Astronaut,1995,42,https://example.test/a/100x100bb.jpg,2026-10-21T11:02:59.000Z",
+      );
+    });
+
+    it("should leave the details blank for a song never looked up or not found", () => {
+      const blank = {
+        ...row,
+        status: null,
+        albumName: null,
+        releaseYear: null,
+        sourceTrackId: null,
+        artworkUrl: null,
+        fetchedAt: null,
+      };
+
+      expect(formatReportCsv([blank]).split("\n")[1]).toBe("7,Hum,Stars,,,,,,");
+    });
+
+    it("should quote a name with a comma, a quote, or a line break", () => {
+      const awkward = {
+        ...row,
+        artistName: "Earth, Wind & Fire",
+        title: 'The "Hit"\nSong',
+      };
+
+      expect(formatReportCsv([awkward])).toContain(
+        '7,"Earth, Wind & Fire","The ""Hit""\nSong",matched',
+      );
+    });
+
+    it("should end with a line break", () => {
+      expect(formatReportCsv([row]).endsWith("\n")).toBe(true);
     });
   });
 });

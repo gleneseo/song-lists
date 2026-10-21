@@ -44,9 +44,16 @@ const dryRun = Flag.boolean("dry-run").pipe(
   Flag.withDefault(false),
 );
 
+const report = Flag.string("report").pipe(
+  Flag.withDescription(
+    "Write every song's lookup result to this file as CSV when the run ends",
+  ),
+  Flag.optional,
+);
+
 const backfillMetadata = Command.make(
   "backfill-metadata",
-  { limit, retryNotFound, dryRun },
+  { limit, retryNotFound, dryRun, report },
   (config) =>
     // Uninterruptible so that Ctrl-C (which would stop the whole program at
     // once) lets the run finish the song in hand and report; the run watches
@@ -62,6 +69,7 @@ const backfillMetadata = Command.make(
           limit: Option.getOrUndefined(config.limit),
           retryNotFound: config.retryNotFound,
           dryRun: config.dryRun,
+          report: Option.getOrUndefined(config.report),
         });
       }),
     ),

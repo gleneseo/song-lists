@@ -18,3 +18,5 @@ export { chooseMatch } from "./match.js";
 export type { Candidate, WantedSong } from "./match.js";
 export { createRateLimiter } from "./rate-limiter.js";
 export type { RateLimiter, RateLimiterOptions } from "./rate-limiter.js";
+export { listSongMetadataReport } from "./report.js";
+export type { SongMetadataReportRow } from "./report.js";

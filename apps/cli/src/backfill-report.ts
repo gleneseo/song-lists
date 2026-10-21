@@ -1,6 +1,7 @@
 import type {
   BackfillProgress,
   BackfillSummary,
+  SongMetadataReportRow,
 } from "@song-lists/song-metadata";
 
 /** "45s", "12m", "4h 40m": roughly how long, for someone deciding when to run it. */
@@ -80,4 +81,57 @@ function formatSummary(summary: BackfillSummary): string[] {
   return lines;
 }
 
-export { formatDuration, formatPlan, formatProgress, formatSummary };
+const REPORT_COLUMNS = [
+  "song_id",
+  "artist",
+  "title",
+  "status",
+  "album",
+  "year",
+  "source_track_id",
+  "artwork_url",
+  "fetched_at",
+] as const;
+
+function csvField(value: string | number | Date | null): string {
+  const text =
+    value === null
+      ? ""
+      : value instanceof Date
+        ? value.toISOString()
+        : String(value);
+
+  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
+/**
+ * The results as CSV, one line per song, for querying with a spreadsheet,
+ * sqlite, DuckDB and the like. A song never looked up has a blank status.
+ */
+function formatReportCsv(rows: SongMetadataReportRow[]): string {
+  const lines = rows.map((row) =>
+    [
+      row.songId,
+      row.artistName,
+      row.title,
+      row.status,
+      row.albumName,
+      row.releaseYear,
+      row.sourceTrackId,
+      row.artworkUrl,
+      row.fetchedAt,
+    ]
+      .map(csvField)
+      .join(","),
+  );
+
+  return [REPORT_COLUMNS.join(","), ...lines].join("\n") + "\n";
+}
+
+export {
+  formatDuration,
+  formatPlan,
+  formatProgress,
+  formatReportCsv,
+  formatSummary,
+};

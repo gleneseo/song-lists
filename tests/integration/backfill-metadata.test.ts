@@ -2,6 +2,7 @@ import { createDb, schema, SYSTEM_USER_ID } from "@song-lists/db";
 import {
   backfillSongMetadata,
   findSongsToBackfill,
+  listSongMetadataReport,
   recordSongMetadata,
   type SongLookup,
 } from "@song-lists/song-metadata";
@@ -453,6 +454,36 @@ describe("looking songs up and keeping the results, in the database", () => {
       });
 
       expect(summary).toMatchObject({ total: 2, processed: 2, matched: 1 });
+    });
+  });
+
+  describe("listing the results", () => {
+    it("should list every song with its artist and how its lookup went", async () => {
+      const [first, second] = songIds as [number, number];
+
+      await pool.query("delete from song_lists.song_metadata");
+      await recordSongMetadata(
+        { db, lookup: () => Promise.resolve(found) },
+        second,
+      );
+
+      const rows = await listSongMetadataReport(db);
+
+      const { rows: counted } = await pool.query<{ total: string }>(
+        "select count(*) as total from song_lists.songs",
+      );
+
+      expect(rows).toHaveLength(Number(counted[0]?.total));
+      expect(rows.find((row) => row.songId === first)).toMatchObject({
+        status: null,
+        albumName: null,
+      });
+      expect(rows.find((row) => row.songId === second)).toMatchObject({
+        status: "matched",
+        albumName: "An Album",
+        releaseYear: 1981,
+        artistName: expect.any(String) as string,
+      });
     });
   });
 });

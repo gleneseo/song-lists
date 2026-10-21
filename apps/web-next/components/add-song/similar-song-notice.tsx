@@ -1,13 +1,13 @@
-import Link from "next/link";
 import { TriangleAlert } from "lucide-react";
+import { EntityAnchor } from "@/components/entity-anchor";
 import { Button, buttonVariants } from "@/components/ui/button";
 import type { ExistingSongMatch } from "@/lib/queries/songs";
 
 /**
  * Warns that the song being typed in looks a lot like one we already have,
- * and gives the way out: look at the existing song (in a new tab, so the form
- * is kept), or give up on adding it. Carrying on is just pressing "Add song",
- * since a near match can be a different song.
+ * and gives the way out: look at the existing song (in the details modal over
+ * the form, so the form is kept), or give up on adding it. Carrying on is
+ * just pressing "Add song", since a near match can be a different song.
  */
 function SimilarSongNotice({
   match,
@@ -40,14 +40,12 @@ function SimilarSongNotice({
         </div>
       </div>
       <div className="flex flex-wrap gap-3">
-        <Link
+        <EntityAnchor
           href={`/song/${String(match.id)}`}
-          target="_blank"
-          rel="noopener noreferrer"
           className={buttonVariants({ variant: "outline" })}
         >
           View &ldquo;{match.title}&rdquo;
-        </Link>
+        </EntityAnchor>
         <Button
           type="button"
           variant="outline"

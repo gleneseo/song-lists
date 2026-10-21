@@ -350,24 +350,7 @@ test.describe("when it can't be added yet", () => {
     await expect(submit(page)).toBeEnabled();
   });
 
-  test("the likely match can be looked at, in a tab of its own so the form is kept", async ({
-    as,
-  }) => {
-    const page = await as("admin");
-    await startNewSong(page);
-    await choose(artistField(page), "Joey Bada", /Joey Bada\$\$/);
-    await titleField(page).fill("Paper Trails");
-
-    const link = similarSongWarning(page).getByRole("link", {
-      name: /View “Paper Trail\$”/,
-    });
-
-    await expect(link).toHaveAttribute("href", /^\/song\/\d+$/);
-    await expect(link).toHaveAttribute("target", "_blank");
-    await expect(titleField(page)).toHaveValue("Paper Trails");
-  });
-
-  test("looking at the likely match leaves the form as it was", async ({
+  test("the likely match opens in a modal over the form, which is kept", async ({
     as,
   }) => {
     const page = await as("admin");
@@ -379,18 +362,20 @@ test.describe("when it can't be added yet", () => {
       (window as unknown as { stillHere: boolean }).stillHere = true;
     });
 
-    const [opened] = await Promise.all([
-      page.context().waitForEvent("page"),
-      similarSongWarning(page)
-        .getByRole("link", { name: /View “Paper Trail\$”/ })
-        .click(),
-    ]);
-    await expect(
-      opened.getByRole("heading", { name: "Paper Trail$" }),
-    ).toBeVisible();
-    await page.bringToFront();
-    await page.waitForTimeout(1500);
+    await similarSongWarning(page)
+      .getByRole("link", { name: /View “Paper Trail\$”/ })
+      .click();
 
+    const modal = page.getByRole("dialog");
+    await expect(
+      modal.getByRole("heading", { name: "Paper Trail$", level: 2 }),
+    ).toBeVisible();
+    await expect(page).toHaveURL(/\/song\/\d+$/);
+
+    await page.keyboard.press("Escape");
+
+    await expect(modal).toHaveCount(0);
+    await expect(page).toHaveURL(/\/songs\/new$/);
     // Not reloaded: the marker set before the click is still there.
     expect(
       await page.evaluate(

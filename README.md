@@ -62,6 +62,7 @@ Run these from the repository root.
 | `npm run db:migrate`       | Apply pending migrations to the database at `DATABASE_URL`. Idempotent — already-applied migrations are skipped. |
 | `npm run db:reset`         | **Destructive.** Drop the app schema and re-apply every migration, leaving only migration data. Localhost only.  |
 | `npm run db:docs`          | Regenerate `packages/db/docs/schema.md` from the schema.                                                         |
+| `npm run db:studio`        | Open Drizzle Studio, a browser UI for the database at `DATABASE_URL`. It can edit rows: mind which database.     |
 
 Each app owns its own Docker scripts, e.g. `npm run docker:build -w @song-lists/cli`.
 

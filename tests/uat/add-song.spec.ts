@@ -367,6 +367,43 @@ test.describe("when it can't be added yet", () => {
     await expect(titleField(page)).toHaveValue("Paper Trails");
   });
 
+  test("looking at the likely match leaves the form as it was", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    await startNewSong(page);
+    await choose(artistField(page), "Joey Bada", /Joey Bada\$\$/);
+    await titleField(page).fill("Paper Trails");
+    await page.getByLabel("Bio / notes (optional)").fill("Half a thought");
+    await page.evaluate(() => {
+      (window as unknown as { stillHere: boolean }).stillHere = true;
+    });
+
+    const [opened] = await Promise.all([
+      page.context().waitForEvent("page"),
+      similarSongWarning(page)
+        .getByRole("link", { name: /View “Paper Trail\$”/ })
+        .click(),
+    ]);
+    await expect(
+      opened.getByRole("heading", { name: "Paper Trail$" }),
+    ).toBeVisible();
+    await page.bringToFront();
+    await page.waitForTimeout(1500);
+
+    // Not reloaded: the marker set before the click is still there.
+    expect(
+      await page.evaluate(
+        () => (window as unknown as { stillHere?: boolean }).stillHere,
+      ),
+    ).toBe(true);
+    await expect(titleField(page)).toHaveValue("Paper Trails");
+    await expect(page.getByLabel("Bio / notes (optional)")).toHaveValue(
+      "Half a thought",
+    );
+    await expect(artistField(page)).toHaveValue(/Joey Bada/);
+  });
+
   test("the likely match offers a way out: it's already there, so cancel", async ({
     as,
   }) => {

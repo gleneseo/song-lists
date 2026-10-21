@@ -4,6 +4,7 @@ import {
   afterAll,
   afterEach,
   beforeAll,
+  beforeEach,
   describe,
   expect,
   it,
@@ -61,6 +62,11 @@ describe("looking a song up when it is added, down to the database", () => {
     add = await import("@/lib/actions/add-song");
     metadata = await import("@/lib/queries/song-metadata");
     al = await userId(pool, "Al");
+  });
+
+  // The seed ships with lookup results; each test starts from none.
+  beforeEach(async () => {
+    await pool.query("delete from song_lists.song_metadata");
   });
 
   afterAll(async () => {

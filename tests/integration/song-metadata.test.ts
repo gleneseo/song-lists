@@ -19,8 +19,10 @@ describe("song metadata, in the database", () => {
     const artist = await pool.query<{ id: number }>(
       "select id from song_lists.artists limit 1",
     );
+    // The seed ships with lookup results, so start from songs it has none for.
+    await pool.query("delete from song_lists.song_metadata where song_id <= 2");
     const songs = await pool.query<{ id: number }>(
-      "select id from song_lists.songs limit 2",
+      "select id from song_lists.songs order by id limit 2",
     );
 
     expect(artist.rows).toHaveLength(1);
@@ -45,13 +47,20 @@ describe("song metadata, in the database", () => {
     updatedBy: SYSTEM_USER_ID,
   });
 
-  it("should leave the songs it ships with unlooked up", async () => {
-    const rows = await db
-      .select()
-      .from(schema.songMetadata)
-      .where(eq(schema.songMetadata.songId, songId));
+  it("should ship with the lookup results already in, for a song that was found and one that wasn't", async () => {
+    const counts = await pool.query<{ status: string; total: string }>(
+      `select status, count(*) as total
+         from song_lists.song_metadata
+        where song_id > 2
+        group by status`,
+    );
+    const total = Object.fromEntries(
+      counts.rows.map((row) => [row.status, Number(row.total)]),
+    );
 
-    expect(rows).toEqual([]);
+    expect(total["matched"]).toBeGreaterThan(0);
+    expect(total["not_found"]).toBeGreaterThan(0);
+    expect(total["error"]).toBeUndefined();
   });
 
   it("should save what a lookup found and give it back with the song", async () => {

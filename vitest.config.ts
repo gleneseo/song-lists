@@ -44,6 +44,7 @@ export default defineConfig({
         "packages/db/src/run-migrations.ts",
         "packages/db/src/studio.ts",
         "apps/cli/src/index.ts",
+        "apps/cli/src/backfill-metadata.ts",
         "apps/web-next/lib/queries/**",
         "apps/web-next/lib/actions/**",
         "apps/web-next/lib/utils.ts",

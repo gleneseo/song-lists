@@ -12,6 +12,10 @@
       "types": "./src/migrate.ts",
       "default": "./src/migrate.ts"
     },
+    "./load-env": {
+      "types": "./src/load-env.ts",
+      "default": "./src/load-env.ts"
+    },
     "./list-extra-column": {
       "types": "./src/list-extra-column.ts",
       "default": "./src/list-extra-column.ts"

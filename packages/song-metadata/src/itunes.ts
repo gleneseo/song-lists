@@ -150,5 +150,5 @@ function createItunesLookup({
   };
 }
 
-export { createItunesLookup };
+export { createItunesLookup, MIN_INTERVAL_MS as ITUNES_MIN_INTERVAL_MS };
 export type { ItunesLookupOptions, SongLookupResult };

@@ -52,13 +52,6 @@ function Navbar({
                 Dashboard
               </Button>
               {listsMenu}
-              <Button
-                variant="ghost"
-                nativeButton={false}
-                render={<Link href="/songs" />}
-              >
-                Songs
-              </Button>
               {adminMenu}
               <DropdownMenu>
                 <DropdownMenuTrigger

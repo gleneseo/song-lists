@@ -18,7 +18,7 @@ test.describe("the top bar", () => {
     const page = await as("admin");
     await page.goto("/dashboard");
 
-    for (const href of ["/dashboard", "/songs", "/users"]) {
+    for (const href of ["/dashboard", "/users"]) {
       await expect(navLink(page, href).first(), href).toBeVisible();
     }
     await expect(
@@ -31,9 +31,7 @@ test.describe("the top bar", () => {
       const page = await as(role);
       await page.goto("/dashboard");
 
-      for (const href of ["/dashboard", "/songs"]) {
-        await expect(navLink(page, href).first(), href).toBeVisible();
-      }
+      await expect(navLink(page, "/dashboard").first()).toBeVisible();
       await expect(navLink(page, "/users")).toHaveCount(0);
     });
   }
@@ -45,7 +43,7 @@ test.describe("the top bar", () => {
     await page.goto("/dashboard");
     const nav = page.locator("nav");
 
-    for (const name of ["Dashboard", "Songs", "Users"]) {
+    for (const name of ["Dashboard", "Users"]) {
       await expect(
         nav.getByRole("link", { name, exact: true }),
         name,
@@ -57,12 +55,6 @@ test.describe("the top bar", () => {
   test("each link goes where it says", async ({ as }) => {
     const page = await as("admin");
     await page.goto("/dashboard");
-
-    await navLink(page, "/songs").click();
-    await expect(page).toHaveURL(/\/songs$/);
-    await expect(
-      page.getByRole("heading", { name: "Songs", level: 1 }),
-    ).toBeVisible();
 
     await navLink(page, "/users").click();
     await expect(page).toHaveURL(/\/users$/);
@@ -78,7 +70,7 @@ test.describe("the top bar", () => {
     as,
   }) => {
     const page = await as("user");
-    await page.goto("/songs");
+    await page.goto("/lists");
 
     await page.getByRole("link", { name: "Song Lists" }).click();
 
@@ -132,7 +124,7 @@ test.describe("the Lists menu", () => {
 
   test("All lists goes to the lists page", async ({ as }) => {
     const page = await as("admin");
-    await page.goto("/songs");
+    await page.goto("/dashboard");
 
     await page.locator("nav").getByRole("button", { name: "Lists" }).hover();
     await page.getByRole("menuitem", { name: "All lists" }).click();
@@ -170,6 +162,18 @@ test.describe("pages that aren't there", () => {
   test("an unknown address shows the not-found page", async ({ as }) => {
     const page = await as("user");
     await page.goto("/no-such-page");
+
+    await expect(page.getByText("This page could not be found")).toBeVisible();
+  });
+
+  test("there is no longer a Songs page: the lists, and the Master List, are how songs are browsed", async ({
+    as,
+  }) => {
+    const page = await as("user");
+    await page.goto("/dashboard");
+    await expect(navLink(page, "/songs")).toHaveCount(0);
+
+    await page.goto("/songs");
 
     await expect(page.getByText("This page could not be found")).toBeVisible();
   });

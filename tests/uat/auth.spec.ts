@@ -19,7 +19,7 @@ test.describe("signing in", () => {
         name: `Welcome back, ${PEOPLE.manager.name}`,
       }),
     ).toBeVisible();
-    await expect(navLink(page, "/songs")).toBeVisible();
+    await expect(navLink(page, "/dashboard").first()).toBeVisible();
   });
 
   test("a wrong password is refused with a message, and they stay on the sign-in page", async ({
@@ -126,7 +126,7 @@ test.describe("signing up", () => {
       page.getByRole("heading", { name: "Welcome back, Newcomer" }),
     ).toBeVisible();
     // An ordinary user: none of the admin's links.
-    await expect(navLink(page, "/songs")).toBeVisible();
+    await expect(navLink(page, "/dashboard").first()).toBeVisible();
     await expect(navLink(page, "/users")).toHaveCount(0);
   });
 
@@ -212,7 +212,7 @@ test.describe("moving between the two forms and out of the app", () => {
     await page.getByRole("menuitem", { name: "Log Out" }).click();
 
     await expect(page).toHaveURL(/\/sign-in$/);
-    for (const path of ["/dashboard", "/lists", "/songs", "/songs/new"]) {
+    for (const path of ["/dashboard", "/lists", "/songs/new"]) {
       await page.goto(path);
       await expect(page).toHaveURL(/\/sign-in$/);
     }
@@ -225,7 +225,6 @@ test.describe("moving between the two forms and out of the app", () => {
       "/dashboard",
       "/lists",
       "/lists/1",
-      "/songs",
       "/songs/new",
       "/song/2",
       "/artist/1",

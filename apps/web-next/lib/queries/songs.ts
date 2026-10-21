@@ -1,9 +1,9 @@
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { schema } from "@song-lists/db";
 import { selectDuplicateMatches } from "@/lib/search/select-duplicate-matches";
 import { readSymbols } from "@/lib/text/read-symbols";
 import { db } from "./client";
-import { readSymbolsSql, sortKeySql } from "./sort-key";
+import { readSymbolsSql } from "./sort-key";
 
 interface FeaturedArtist {
   artist: { name: string };
@@ -65,14 +65,6 @@ interface DuplicateCheckResult {
   near: ExistingSongMatch | null;
 }
 
-async function getSongs(): Promise<Song[]> {
-  return db.query.songs.findMany({
-    columns: { id: true, title: true },
-    with: songWith,
-    orderBy: [sortKeySql(schema.songs.title), asc(schema.songs.id)],
-  });
-}
-
 /**
  * Finds existing songs whose title is a close (trigram) or substring match
  * for `query`, ordered by closeness -- used by the "cover of" picker.
@@ -132,5 +124,5 @@ async function findExistingSong(
   return selectDuplicateMatches(candidates, normalizedTitle);
 }
 
-export { getSongs, searchSongs, findExistingSong, songWith };
+export { searchSongs, findExistingSong, songWith };
 export type { Song, FeaturedArtist, ExistingSongMatch, DuplicateCheckResult };

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { Library, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardSkeleton } from "@/components/dashboard/card-skeleton";
 import {
@@ -59,14 +59,6 @@ async function Dashboard() {
           </Suspense>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            nativeButton={false}
-            render={<Link href="/songs" />}
-          >
-            <Library />
-            Browse songs
-          </Button>
           <Button nativeButton={false} render={<Link href="/songs/new" />}>
             <Plus />
             Add song

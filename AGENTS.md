@@ -174,7 +174,7 @@ link, a menu, a modal, a label, a sort or filter, a role's permissions, the
 layout on a phone -- take them into account in the same change:
 
 1. Find the spec that covers the area (`auth`, `navigation`, `dashboard`,
-   `lists`, `songs-page`, `modals`, `add-song`, `editing`, `users`,
+   `lists`, `modals`, `add-song`, `editing`, `users`, `account`,
    `full-pages`, `sessions-and-layout`) and update any test the change
    affects, so it still says what the app now does.
 2. Add tests for new behavior, including who can and can't do it (admin,
@@ -203,8 +203,6 @@ How they are written:
 - A real gap found by a test is fixed, or marked `test.fixme` with a comment
   saying what is wrong and when to remove the `fixme`. Never delete a test
   to make a run pass.
-- `songs-page.spec.ts` covers the Songs page only, so it can be deleted with
-  the page when that page is removed.
 
 ## Code documentation
 

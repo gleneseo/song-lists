@@ -107,16 +107,13 @@ test.describe("the dashboard", () => {
     await expect(page.getByText("Top contributors")).toBeVisible();
   });
 
-  test("the buttons at the top go to the Songs page and the Add song form", async ({
-    as,
-  }) => {
+  test("the button at the top goes to the Add song form", async ({ as }) => {
     const page = await as("admin");
     await page.goto("/dashboard");
 
-    await page.getByRole("link", { name: "Browse songs" }).click();
-    await expect(page).toHaveURL(/\/songs$/);
-
-    await page.goto("/dashboard");
+    await expect(page.getByRole("link", { name: "Browse songs" })).toHaveCount(
+      0,
+    );
     await page.getByRole("link", { name: "Add song" }).click();
     await expect(page).toHaveURL(/\/songs\/new$/);
   });

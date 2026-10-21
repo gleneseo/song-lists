@@ -5,7 +5,7 @@ import { createRateLimiter, type RateLimiter } from "./rate-limiter.js";
 const SEARCH_URL = "https://itunes.apple.com/search";
 
 /** How many results to ask for; the best of these is the one we may use. */
-const RESULT_LIMIT = 5;
+const RESULT_LIMIT = 15;
 
 const REQUEST_TIMEOUT_MS = 10_000;
 

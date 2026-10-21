@@ -41,7 +41,7 @@ describe("iTunes lookup", () => {
     });
   });
 
-  it("should ask iTunes for a handful of songs matching the artist and title", async () => {
+  it("should ask iTunes for a good number of songs matching the artist and title", async () => {
     const fetch = answering({ results: [] });
 
     await createItunesLookup({ fetch, limiter: passThrough })(wanted);
@@ -53,7 +53,7 @@ describe("iTunes lookup", () => {
       term: ".38 Special Hold On Loosely",
       media: "music",
       entity: "song",
-      limit: "5",
+      limit: "15",
     });
   });
 
@@ -66,6 +66,27 @@ describe("iTunes lookup", () => {
     });
 
     await expect(lookup(wanted)).resolves.toEqual({ status: "not_found" });
+  });
+
+  it("should prefer an album of its own to a compilation the song is also on", async () => {
+    const lookup = createItunesLookup({
+      fetch: answering({
+        results: [
+          {
+            ...track,
+            trackId: 1,
+            collectionName: "Greatest Hits",
+          },
+          { ...track, trackId: 2, collectionName: "Wild-Eyed Southern Boys" },
+        ],
+      }),
+      limiter: passThrough,
+    });
+
+    await expect(lookup(wanted)).resolves.toMatchObject({
+      sourceTrackId: "2",
+      albumName: "Wild-Eyed Southern Boys",
+    });
   });
 
   it("should leave out details iTunes didn't give", async () => {

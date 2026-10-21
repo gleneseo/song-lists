@@ -10,6 +10,8 @@ interface Candidate {
   artistName: string;
   /** The album, single or compilation it appears on, when the service says. */
   albumName?: string | null | undefined;
+  /** The year the song came out, when the service says. */
+  releaseYear?: number | null | undefined;
 }
 
 /** Below this, the titles are treated as different songs. */
@@ -22,6 +24,12 @@ const MIN_TITLE_SIMILARITY = 0.85;
 const MIN_ARTIST_SIMILARITY = 0.9;
 
 /**
+ * Matches this close to the best one count as equally good, so that a tiny
+ * difference in spelling doesn't outweigh a better album.
+ */
+const CLOSE_ENOUGH = 0.1;
+
+/**
  * Wording that gives away a tribute act, karaoke track, or soundalike
  * recording. Artists who keep their catalog off the big services (and the
  * services' tribute-band stand-ins that fill the gap) are better shown
@@ -29,6 +37,20 @@ const MIN_ARTIST_SIMILARITY = 0.9;
  */
 const IMITATION_PATTERN =
   /\b(tribute|karaoke|cover band|made famous|originally performed|in the style of|lullaby renditions|rockabye baby)\b/i;
+
+/**
+ * Wording that marks an album as a collection of an artist's songs rather
+ * than a record in its own right (including a box set named for the years it
+ * spans). Their art is a compilation's, not the song's, so an album that
+ * isn't one is preferred when a song is on both. A soundtrack isn't one: for
+ * a song written for a film it is the original release.
+ */
+const COMPILATION_PATTERN =
+  /\b(greatest hits|best of|the very best|anthology|collection|essentials?|definitive|complete|ultimate|number ones|hits|gold|platinum|classics|singles|compilation|retrospective|best|inspired by)\b|\b\d{4}\s*[–-]\s*\d{2,4}\b/i;
+
+/** Wording that marks an album as a recording of a concert. */
+const LIVE_ALBUM_PATTERN =
+  /^live$|[([][^)\]]*\blive\b[^)\]]*[)\]]|\blive (at|in|from)\b/i;
 
 /** Wording that marks a recording as a different take on the song itself. */
 const VERSION_PATTERN = /\b(instrumental|live|karaoke|acapella|a cappella)\b/i;
@@ -127,10 +149,25 @@ function isImitation(wanted: WantedSong, candidate: Candidate): boolean {
  * wasn't asked for. Their artwork belongs to a different release.
  */
 function versionPenalty(wanted: WantedSong, candidate: Candidate): number {
-  return VERSION_PATTERN.test(candidate.title) &&
-    !VERSION_PATTERN.test(wanted.title)
+  const asked = VERSION_PATTERN.test(wanted.title);
+
+  return !asked &&
+    (VERSION_PATTERN.test(candidate.title) ||
+      LIVE_ALBUM_PATTERN.test(candidate.albumName ?? ""))
     ? 1
     : 0;
+}
+
+/** 1 for a candidate on a compilation, 0 for one on an album of its own. */
+function compilationPenalty(candidate: Candidate): number {
+  return COMPILATION_PATTERN.test(candidate.albumName ?? "") ? 1 : 0;
+}
+
+/** Keeps only the entries with the lowest penalty. */
+function leastPenalized<T>(entries: T[], penalty: (entry: T) => number): T[] {
+  const lowest = Math.min(...entries.map(penalty));
+
+  return entries.filter((entry) => penalty(entry) === lowest);
 }
 
 /**
@@ -139,9 +176,11 @@ function versionPenalty(wanted: WantedSong, candidate: Candidate): number {
  * so this errs toward `null`.
  *
  * Candidates must agree on both title and artist, and tribute acts and
- * karaoke tracks are never chosen. Among those left, plain studio versions
- * come before instrumental or live ones, then the closest match wins, then
- * the service's own ordering.
+ * karaoke tracks are never chosen. Among those left, a plain studio version
+ * comes before an instrumental or live one; of those, only the closest
+ * matches (within {@link CLOSE_ENOUGH} of the best) are kept; of those, a
+ * song on an album of its own comes before one on a compilation; and of
+ * those, the earliest release wins, then the service's own ordering.
  */
 function chooseMatch<T extends Candidate>(
   wanted: WantedSong,
@@ -151,6 +190,7 @@ function chooseMatch<T extends Candidate>(
     .map((candidate, position) => ({
       candidate,
       position,
+      closeness: 0,
       score: scoreCandidate(wanted, candidate),
     }))
     .filter(
@@ -158,17 +198,30 @@ function chooseMatch<T extends Candidate>(
         score.title >= MIN_TITLE_SIMILARITY &&
         score.artist >= MIN_ARTIST_SIMILARITY &&
         !isImitation(wanted, candidate),
-    );
+    )
+    .map((entry) => ({
+      ...entry,
+      closeness: entry.score.title + entry.score.artist,
+    }));
 
-  acceptable.sort(
-    (a, b) =>
-      versionPenalty(wanted, a.candidate) -
-        versionPenalty(wanted, b.candidate) ||
-      b.score.title + b.score.artist - (a.score.title + a.score.artist) ||
-      a.position - b.position,
+  const studio = leastPenalized(acceptable, ({ candidate }) =>
+    versionPenalty(wanted, candidate),
+  );
+  const best = Math.max(...studio.map(({ closeness }) => closeness));
+  const closest = studio.filter(
+    ({ closeness }) => closeness >= best - CLOSE_ENOUGH,
+  );
+  const original = leastPenalized(closest, ({ candidate }) =>
+    compilationPenalty(candidate),
   );
 
-  return acceptable[0]?.candidate ?? null;
+  return (
+    original.toSorted(
+      (a, b) =>
+        (a.candidate.releaseYear ?? Infinity) -
+          (b.candidate.releaseYear ?? Infinity) || a.position - b.position,
+    )[0]?.candidate ?? null
+  );
 }
 
 export { chooseMatch, simplify };

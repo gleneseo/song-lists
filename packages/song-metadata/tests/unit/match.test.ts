@@ -1,12 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { chooseMatch, simplify, type Candidate } from "../../src/match.js";
-
-interface SampleSong {
-  title: string;
-  artistName: string;
-  results: (Candidate & { trackId: number; trackName: string })[];
-}
+import { chooseMatch, simplify } from "../../src/match.js";
 
 const sample = (
   JSON.parse(
@@ -14,19 +8,25 @@ const sample = (
       new URL("../fixtures/itunes-seed-sample.json", import.meta.url),
       "utf8",
     ),
-  ) as (Omit<SampleSong, "results"> & {
+  ) as {
+    title: string;
+    artistName: string;
     results: {
       trackName: string;
       artistName: string;
-      collectionName: string;
+      collectionName: string | null;
+      releaseDate: string | null;
     }[];
-  })[]
+  }[]
 ).map((song) => ({
   ...song,
   results: song.results.map((result) => ({
     title: result.trackName,
     artistName: result.artistName,
     albumName: result.collectionName,
+    releaseYear: result.releaseDate
+      ? Number(result.releaseDate.slice(0, 4))
+      : null,
   })),
 }));
 
@@ -170,6 +170,104 @@ describe("chooseMatch", () => {
     ).toBe(instrumental);
   });
 
+  it.each([
+    "Greatest Hits",
+    "The Best of Classic Rock",
+    "His Best",
+    "The Essential .38 Special",
+    "The Complete A & B Sides",
+    "Anthology: The Sounds of Science",
+    "Made in California (1962–2012)",
+    "The Chess Masters, 1955-1958",
+    "Music From and Inspired By the Motion Picture",
+  ])("should prefer a song on an album of its own to one on %s", (name) => {
+    const compilation = { ...exact, albumName: name };
+    const album = { ...exact, albumName: "Wild-Eyed Southern Boys" };
+
+    expect(chooseMatch(wanted, [compilation, album])).toBe(album);
+  });
+
+  it("should count a soundtrack as an album of its own, since it's where a film's song first came out", () => {
+    const compilation = { ...exact, albumName: "Greatest Hits" };
+    const soundtrack = {
+      ...exact,
+      albumName: "Back to the Future (Original Motion Picture Soundtrack)",
+    };
+
+    expect(chooseMatch(wanted, [compilation, soundtrack])).toBe(soundtrack);
+    expect(chooseMatch(wanted, [soundtrack, exact])).toBe(soundtrack);
+  });
+
+  it.each([
+    "Live",
+    "Drop the Bomb (Live)",
+    "Alive [Live in Paris]",
+    "Live at the Roxy",
+  ])("should prefer a studio album to %s", (name) => {
+    const concert = { ...exact, albumName: name };
+    const album = { ...exact, albumName: "Wild-Eyed Southern Boys" };
+
+    expect(chooseMatch(wanted, [concert, album])).toBe(album);
+  });
+
+  it("should not take an album with live in its name for a concert recording", () => {
+    const album = { ...exact, albumName: "Live Through This" };
+    const compilation = { ...exact, albumName: "Greatest Hits" };
+
+    expect(chooseMatch(wanted, [compilation, album])).toBe(album);
+  });
+
+  it("should not mind a live album when a live recording was asked for", () => {
+    const concert = { ...exact, albumName: "Live at the Roxy" };
+
+    expect(
+      chooseMatch({ ...wanted, title: "Hold On Loosely (Live)" }, [
+        concert,
+        { ...exact, albumName: "Wild-Eyed Southern Boys" },
+      ]),
+    ).toBe(concert);
+  });
+
+  it("should settle for a compilation when it is all there is", () => {
+    const compilation = { ...exact, albumName: "The Best of Classic Rock" };
+
+    expect(chooseMatch(wanted, [compilation])).toBe(compilation);
+  });
+
+  it("should not trade a clearly better match for a better album", () => {
+    const compilation = { ...exact, albumName: "Greatest Hits" };
+    const album = {
+      title: "Hold On Loosleyy",
+      artistName: ".38 Special",
+      albumName: "Wild-Eyed Southern Boys",
+    };
+
+    expect(chooseMatch(wanted, [album, compilation])).toBe(compilation);
+  });
+
+  it("should prefer a better album when the matches are about equally close", () => {
+    const compilation = { ...exact, albumName: "Greatest Hits" };
+    const album = {
+      title: "Hold On Loosel",
+      artistName: ".38 Special",
+      albumName: "Wild-Eyed Southern Boys",
+    };
+
+    expect(chooseMatch(wanted, [compilation, album])).toBe(album);
+  });
+
+  it("should prefer the earliest release, with an unknown year last", () => {
+    const reissue = { ...exact, releaseYear: 2015 };
+    const original = { ...exact, releaseYear: 1981 };
+    const unknown = { ...exact, releaseYear: null };
+    const unstated = { ...exact };
+
+    expect(chooseMatch(wanted, [unknown, reissue, original, unstated])).toBe(
+      original,
+    );
+    expect(chooseMatch(wanted, [unstated, unknown])).toBe(unstated);
+  });
+
   it("should prefer the closer match, then the service's own order", () => {
     const typo = { title: "Hold On Loosley", artistName: ".38 Special" };
     const twin = { ...exact };
@@ -197,6 +295,29 @@ describe("chooseMatch against real songs from the seed data", () => {
 
     expect(choices).toHaveLength(120);
     expect(matched.length).toBeGreaterThanOrEqual(105);
+  });
+
+  it("should choose the album a song first came out on, over a greatest-hits collection", () => {
+    const album = (artistName: string, title: string) =>
+      chosenFor(artistName, title)?.albumName;
+
+    expect(album("2Pac", "How Do U Want It")).toBe("All Eyez On Me");
+    expect(album("Black Flag", "Gimmie Gimmie Gimmie")).toBe("Damaged");
+    expect(album("Eagles", "In The City")).toBe("The Long Run");
+    expect(album("Morphine", "Thursday")).toBe("Cure for Pain");
+    expect(album("Bo Diddley", "Bo Diddley")).toBe("Bo Diddley");
+    expect(album("Cyndi Lauper", "The Goonies 'R' Good Enough")).toMatch(
+      /Goonies/,
+    );
+  });
+
+  it("should not end up on a compilation for any of the songs", () => {
+    const compilation =
+      /greatest hits|best of|anthology|essentials?|collection|\b\d{4}\s*[–-]\s*\d{2,4}\b/i;
+
+    expect(
+      choices.filter(({ chosen }) => compilation.test(chosen?.albumName ?? "")),
+    ).toEqual([]);
   });
 
   it("should match songs found under a slightly different spelling", () => {

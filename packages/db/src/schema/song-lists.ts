@@ -77,6 +77,12 @@ const usersRelations = relations(users, ({ one, many }) => ({
   updatedSongFeaturedArtists: many(songFeaturedArtists, {
     relationName: "songFeaturedArtistUpdater",
   }),
+  createdSongMetadata: many(songMetadata, {
+    relationName: "songMetadataCreator",
+  }),
+  updatedSongMetadata: many(songMetadata, {
+    relationName: "songMetadataUpdater",
+  }),
   createdSongCovers: many(songCovers, {
     relationName: "songCoverCreator",
   }),
@@ -170,6 +176,7 @@ const songsRelations = relations(songs, ({ one, many }) => ({
   productions: many(songProductions),
   advocates: many(songAdvocates),
   lists: many(listSongs),
+  metadata: one(songMetadata),
   creator: one(users, {
     fields: [songs.createdBy],
     references: [users.id],
@@ -179,6 +186,56 @@ const songsRelations = relations(songs, ({ one, many }) => ({
     fields: [songs.updatedBy],
     references: [users.id],
     relationName: "songUpdater",
+  }),
+}));
+
+/**
+ * What an outside music service knows about a song, looked up automatically.
+ * It lives apart from `songs` so what people write stays separate from what
+ * a machine fetched, and a song may have no row here at all (not looked up
+ * yet).
+ */
+const songMetadata = songListsSchema.table("song_metadata", {
+  id: serial().primaryKey(),
+  resource_id: uuidV7().notNull().unique(),
+  songId: integer()
+    .notNull()
+    .unique("song_metadata_song_id_unique")
+    .references(() => songs.id),
+  /** One of `SONG_METADATA_STATUS`. */
+  status: text().notNull(),
+  /** One of `SONG_METADATA_SOURCE`; `null` unless a source answered. */
+  source: text(),
+  /** The source's own ID for the track, so a refresh can ask for it exactly. */
+  sourceTrackId: text(),
+  /**
+   * Where the source serves the cover art. A base URL: the size is chosen
+   * where it's shown.
+   */
+  artworkUrl: text(),
+  albumName: text(),
+  releaseYear: integer(),
+  /** One of `SONG_METADATA_MATCHED_BY`. */
+  matchedBy: text().notNull(),
+  /** When the lookup last ran. */
+  fetchedAt: timestamp().notNull(),
+  ...auditColumns(),
+});
+
+const songMetadataRelations = relations(songMetadata, ({ one }) => ({
+  song: one(songs, {
+    fields: [songMetadata.songId],
+    references: [songs.id],
+  }),
+  creator: one(users, {
+    fields: [songMetadata.createdBy],
+    references: [users.id],
+    relationName: "songMetadataCreator",
+  }),
+  updater: one(users, {
+    fields: [songMetadata.updatedBy],
+    references: [users.id],
+    relationName: "songMetadataUpdater",
   }),
 }));
 
@@ -565,6 +622,8 @@ export {
   artistsRelations,
   songs,
   songsRelations,
+  songMetadata,
+  songMetadataRelations,
   songFeaturedArtists,
   songFeaturedArtistsRelations,
   songCovers,

@@ -16,7 +16,8 @@
     "paths": {
       "@song-lists/db": ["./packages/db/src/index.ts"],
       "@song-lists/db/migrate": ["./packages/db/src/migrate.ts"],
-      "@song-lists/auth": ["./packages/auth/src/index.ts"]
+      "@song-lists/auth": ["./packages/auth/src/index.ts"],
+      "@song-lists/song-metadata": ["./packages/song-metadata/src/index.ts"]
     }
   }
 }

@@ -18,6 +18,7 @@ import {
   songAdvocates,
   songCovers,
   songFeaturedArtists,
+  songMetadata,
   songProductions,
   songs,
   users,
@@ -106,6 +107,17 @@ describe("users", () => {
     expect(resolveRelation("users", "advocatedSongs")).toEqual({
       fields: [users.id],
       references: [songAdvocates.userId],
+    });
+  });
+
+  it("should distinguish the song metadata it created from the metadata it last updated", () => {
+    expect(resolveRelation("users", "createdSongMetadata")).toEqual({
+      fields: [users.id],
+      references: [songMetadata.createdBy],
+    });
+    expect(resolveRelation("users", "updatedSongMetadata")).toEqual({
+      fields: [users.id],
+      references: [songMetadata.updatedBy],
     });
   });
 
@@ -250,6 +262,13 @@ describe("songs", () => {
     });
   });
 
+  it("should resolve to the metadata looked up for it", () => {
+    expect(resolveRelation("songs", "metadata")).toEqual({
+      fields: [songs.id],
+      references: [songMetadata.songId],
+    });
+  });
+
   it("should distinguish who created it from who last updated it", () => {
     expect(resolveRelation("songs", "creator")).toEqual({
       fields: [songs.createdBy],
@@ -364,6 +383,30 @@ describe("songFeaturedArtists", () => {
       fields: [songFeaturedArtists.updatedBy],
       references: [users.id],
     });
+  });
+});
+
+describe("songMetadata", () => {
+  it("should resolve back to the song it describes", () => {
+    expect(resolveRelation("songMetadata", "song")).toEqual({
+      fields: [songMetadata.songId],
+      references: [songs.id],
+    });
+  });
+
+  it("should distinguish who created it from who last updated it", () => {
+    expect(resolveRelation("songMetadata", "creator")).toEqual({
+      fields: [songMetadata.createdBy],
+      references: [users.id],
+    });
+    expect(resolveRelation("songMetadata", "updater")).toEqual({
+      fields: [songMetadata.updatedBy],
+      references: [users.id],
+    });
+  });
+
+  it("should allow only one row per song", () => {
+    expect(songMetadata.songId.isUnique).toBe(true);
   });
 });
 
@@ -508,6 +551,8 @@ describe("foreign key wiring", () => {
       { table: songs, column: songs.updatedBy },
       { table: songFeaturedArtists, column: songFeaturedArtists.createdBy },
       { table: songFeaturedArtists, column: songFeaturedArtists.updatedBy },
+      { table: songMetadata, column: songMetadata.createdBy },
+      { table: songMetadata, column: songMetadata.updatedBy },
       { table: songCovers, column: songCovers.createdBy },
       { table: songCovers, column: songCovers.updatedBy },
       { table: songProductions, column: songProductions.createdBy },

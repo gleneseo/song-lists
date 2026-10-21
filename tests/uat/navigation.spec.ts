@@ -67,13 +67,16 @@ test.describe("the top bar", () => {
   });
 
   test("the app is called Song Lists in the top bar and the tab when no other title is configured", async ({
-    as,
+    page,
   }) => {
-    const page = await as("user");
-
     await page.goto("/");
+
     await expect(page).toHaveTitle("Song Lists");
     await expect(page.locator("nav").getByText("Song Lists")).toBeVisible();
+  });
+
+  test("each page's tab names the page, then the app", async ({ as }) => {
+    const page = await as("user");
 
     await page.goto("/dashboard");
     await expect(page).toHaveTitle("Dashboard · Song Lists");

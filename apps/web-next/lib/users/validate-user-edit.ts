@@ -1,5 +1,6 @@
 import { USER_ROLE } from "@song-lists/db/user-role";
 import { normalizeText } from "@/lib/text/normalize";
+import { validateEmail } from "./validate-email";
 
 interface UserEditInput {
   name: string;
@@ -23,7 +24,6 @@ type UserEditValidation =
   { ok: true; fields: UserEditFields } | { ok: false; message: string };
 
 const ROLES: readonly string[] = Object.values(USER_ROLE);
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Trims the optional fields to `null` when blank. */
 function optional(value: string): string | null {
@@ -38,10 +38,10 @@ function validateUserEdit(input: UserEditInput): UserEditValidation {
     return { ok: false, message: "Name is required." };
   }
 
-  const email = input.email.trim().toLowerCase();
+  const emailCheck = validateEmail(input.email);
 
-  if (!EMAIL_PATTERN.test(email)) {
-    return { ok: false, message: "Enter a valid email address." };
+  if (!emailCheck.ok) {
+    return emailCheck;
   }
 
   if (!ROLES.includes(input.role)) {
@@ -54,7 +54,7 @@ function validateUserEdit(input: UserEditInput): UserEditValidation {
       name,
       firstName: optional(input.firstName),
       lastName: optional(input.lastName),
-      email,
+      email: emailCheck.email,
       role: input.role,
       bio: input.bio.trim() || null,
     },

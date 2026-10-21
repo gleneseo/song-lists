@@ -9,6 +9,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -87,6 +88,9 @@ function Navbar({
                         </p>
                       </div>
                     </DropdownMenuLabel>
+                    <DropdownMenuItem render={<Link href="/account" />}>
+                      Account
+                    </DropdownMenuItem>
                     <SignOutButton />
                   </DropdownMenuGroup>
                 </DropdownMenuContent>

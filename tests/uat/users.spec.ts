@@ -1,8 +1,9 @@
-import type { Browser, Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import {
   createPerson,
+  signedInAs,
   signInThroughThePage,
-  withOwnAddress,
+  newPageOfTheirOwn,
   type Person,
   withDatabase,
 } from "./support/app.js";
@@ -10,17 +11,6 @@ import { PEOPLE } from "./support/people.js";
 import { expect, test } from "./support/test.js";
 
 const main = (page: Page) => page.getByRole("main");
-
-/** A browser of their own for a person who signs in through the page, as they would. */
-async function signedInAs(browser: Browser, person: Person): Promise<Page> {
-  const context = await browser.newContext();
-  await withOwnAddress(context);
-  const page = await context.newPage();
-  await signInThroughThePage(page, person.email, person.password);
-  await expect(page).toHaveURL(/\/dashboard$/);
-
-  return page;
-}
 
 async function openPerson(page: Page, person: Person): Promise<void> {
   await page.goto(`/users/${person.id}`);
@@ -270,9 +260,7 @@ test.describe("setting a new password", () => {
     await expect(main(page).getByText(/Password updated/)).toBeVisible();
     await signedInAs(browser, { ...person, password: "a brand new password" });
 
-    const stranger = await browser.newContext();
-    await withOwnAddress(stranger);
-    const attempt = await stranger.newPage();
+    const attempt = await newPageOfTheirOwn(browser);
     await signInThroughThePage(attempt, person.email, person.password);
     await expect(attempt.getByText(/invalid email or password/i)).toBeVisible();
   });

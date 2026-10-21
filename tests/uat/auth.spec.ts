@@ -231,6 +231,7 @@ test.describe("moving between the two forms and out of the app", () => {
       "/artist/1",
       "/production/1",
       "/users",
+      "/account",
     ]) {
       await page.goto(path);
       await expect(page, `visiting ${path}`).toHaveURL(/\/sign-in$/);

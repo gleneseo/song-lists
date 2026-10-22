@@ -37,7 +37,11 @@ const SAME_ACT_ARTIST_SIMILARITY = 0.95;
 /** For an artist who is only part of the credit, the title must be this close to be sure. */
 const MIN_COLLABORATION_TITLE_SIMILARITY = 0.95;
 
-/** With only concert recordings to go on, one this many years before the rest is taken for the original. */
+/**
+ * A concert recording is taken for the song's original release only when it
+ * came out this many years before the rest: a live album just ahead of the
+ * studio one is usually a band trying out new songs.
+ */
 const LIVE_DEBUT_GAP_YEARS = 5;
 
 /**
@@ -401,8 +405,8 @@ function leastPenalized<T>(entries: T[], penalty: (entry: T) => number): T[] {
  * of someone else's credit counts if the title is the very same, and one
  * with only a backing band added is the same act), and tribute acts and
  * karaoke tracks are never chosen, nor are instrumental, karaoke, or
- * re-recorded takes of a song that wasn't asked for as one, nor live ones unless they came out
- * before every other release found. Among those left, the act itself comes
+ * re-recorded takes of a song that wasn't asked for as one, nor live ones
+ * unless they came out long before every other release found. Among those left, the act itself comes
  * before a credit it is only part of; of those, only the closest matches
  * (within {@link CLOSE_ENOUGH} of the best) are kept; of those, a song on an
  * album of its own comes before one on a compilation or single (which is
@@ -446,13 +450,13 @@ function chooseMatch<T extends Candidate>(
   const liveYears = [
     ...new Set(live.flatMap(({ candidate }) => candidate.releaseYear ?? [])),
   ].toSorted((x, y) => x - y);
-  // A concert recording is the song's own release when it came out before
-  // every other one we know of -- or, when there is nothing but concert
-  // recordings, when it came out long before the rest.
+  // A concert recording is the song's own release when it came out long
+  // before every other one we know of -- or, when there is nothing but
+  // concert recordings, when it came out long before the rest.
   const [earliestLive, nextLive] = liveYears;
   const debut =
     studioYears.length > 0
-      ? Math.min(...studioYears)
+      ? Math.min(...studioYears) - LIVE_DEBUT_GAP_YEARS + 1
       : studio.length === 0 &&
           earliestLive !== undefined &&
           nextLive !== undefined &&
@@ -488,12 +492,15 @@ function chooseMatch<T extends Candidate>(
 }
 
 /**
- * Whether a candidate is on an album (or an EP) of its own, rather than on a
- * single, compilation, soundtrack, or an EP named for the song.
+ * Whether a candidate is the studio recording on an album (or an EP) of its
+ * own, rather than on a single, compilation, soundtrack, or an EP named for
+ * the song -- or a concert recording that was taken for the original.
  */
 function isProperAlbum(wanted: WantedSong, candidate: Candidate): boolean {
   return (
-    notAnAlbumPenalty(wanted, candidate) === 0 && releaseKind(candidate) !== 2
+    notAnAlbumPenalty(wanted, candidate) === 0 &&
+    releaseKind(candidate) !== 2 &&
+    versionOf(wanted, candidate) === "studio"
   );
 }
 

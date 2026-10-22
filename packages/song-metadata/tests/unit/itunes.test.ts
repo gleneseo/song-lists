@@ -90,6 +90,29 @@ describe("iTunes lookup", () => {
     });
   });
 
+  it("should not count a live recording taken for the original as an album of its own", async () => {
+    const lookup = createItunesLookup({
+      fetch: answering({
+        results: [
+          {
+            ...track,
+            trackId: 1,
+            trackName: "Hold On Loosely (Live)",
+            collectionName: "At the Roxy (Live)",
+            releaseDate: "1964-01-01T08:00:00Z",
+          },
+          { ...track, trackId: 2 },
+        ],
+      }),
+      limiter: passThrough,
+    });
+
+    await expect(lookup(wanted)).resolves.toMatchObject({
+      sourceTrackId: "1",
+      isAlbum: false,
+    });
+  });
+
   it("should leave out details iTunes didn't give", async () => {
     const lookup = createItunesLookup({
       fetch: answering({

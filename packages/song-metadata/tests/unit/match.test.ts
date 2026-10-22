@@ -200,7 +200,7 @@ describe("chooseMatch", () => {
     ).toBe(remake);
   });
 
-  it("should take a live recording that came out before any other release", () => {
+  it("should take a live recording that came out long before any other release", () => {
     const concert = {
       ...exact,
       albumName: "Live at the Roxy",
@@ -213,6 +213,25 @@ describe("chooseMatch", () => {
     };
 
     expect(chooseMatch(wanted, [studio, concert])).toBe(concert);
+  });
+
+  it("should not take a live recording that came out just ahead of the studio one", () => {
+    const concert = {
+      ...exact,
+      title: "Hold On Loosely (Live Night 4)",
+      albumName: "Four Nights Live in San Francisco",
+      releaseYear: 2022,
+    };
+    const studio = {
+      ...exact,
+      albumName: "Wild-Eyed Southern Boys",
+      releaseYear: 2024,
+    };
+    const long = { ...concert, releaseYear: 2019 };
+
+    expect(chooseMatch(wanted, [concert, studio])).toBe(studio);
+    expect(chooseMatch(wanted, [long, studio])).toBe(long);
+    expect(chooseMatch(wanted, [concert])).toBeNull();
   });
 
   it("should not take a live recording that came out after another release", () => {

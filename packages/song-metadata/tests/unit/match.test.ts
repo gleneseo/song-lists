@@ -268,6 +268,8 @@ describe("chooseMatch", () => {
     "Play & Play: B-Sides",
     "The Mercer St. Sessions 1972 (Demos)",
     "The Vault",
+    "Back to the 60's, Vol. 2 (Re-Recorded Versions)",
+    "Hip Hop of the '80s (Rerecorded)",
   ])("should prefer a song on an album of its own to one on %s", (name) => {
     const compilation = { ...exact, albumName: name };
     const album = { ...exact, albumName: "Wild-Eyed Southern Boys" };

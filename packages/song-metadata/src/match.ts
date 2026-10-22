@@ -50,12 +50,12 @@ const IMITATION_PATTERN =
 /**
  * Wording that marks an album as a collection of an artist's songs rather
  * than a record in its own right (including a box set named for the years it
- * spans), or a box set. Their art is a compilation's, not the song's, so an album that
+ * spans), a box set, or remakes recorded later. Their art is a compilation's, not the song's, so an album that
  * isn't one is preferred when a song is on both. A soundtrack isn't one: for
  * a song written for a film it is the original release.
  */
 const COMPILATION_PATTERN =
-  /\b(greatest hits|best of|the very best|anthology|collection|essentials?|definitive|complete|ultimate|number ones|hits|gold|platinum|classics|singles|compilation|retrospective|best|inspired by|box(ed)?|rarities|b-sides|demos|vault)\b|\b\d{4}\s*[–-]\s*\d{2,4}\b/i;
+  /\b(greatest hits|best of|the very best|anthology|collection|essentials?|definitive|complete|ultimate|number ones|hits|gold|platinum|classics|singles|compilation|retrospective|best|inspired by|box(ed)?|rarities|b-sides|demos|vault|re-?recorded)\b|\b\d{4}\s*[–-]\s*\d{2,4}\b/i;
 
 /**
  * How a service labels a release that is a single or an EP rather than an

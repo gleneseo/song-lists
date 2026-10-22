@@ -270,6 +270,8 @@ describe("chooseMatch", () => {
     "The Vault",
     "Back to the 60's, Vol. 2 (Re-Recorded Versions)",
     "Hip Hop of the '80s (Rerecorded)",
+    "Got the Life (Remixes) - EP",
+    "Ray of Light Remixed",
   ])("should prefer a song on an album of its own to one on %s", (name) => {
     const compilation = { ...exact, albumName: name };
     const album = { ...exact, albumName: "Wild-Eyed Southern Boys" };
@@ -282,10 +284,12 @@ describe("chooseMatch", () => {
     const soundtrack = {
       ...exact,
       albumName: "Back to the Future (Original Motion Picture Soundtrack)",
+      releaseYear: 1985,
     };
+    const later = { ...exact, releaseYear: 1990 };
 
     expect(chooseMatch(wanted, [compilation, soundtrack])).toBe(soundtrack);
-    expect(chooseMatch(wanted, [soundtrack, exact])).toBe(soundtrack);
+    expect(chooseMatch(wanted, [later, soundtrack])).toBe(soundtrack);
   });
 
   it.each([
@@ -550,13 +554,52 @@ describe("chooseMatch, for a single or EP", () => {
 
   it.each([
     "Hold On Loosely - Single",
-    "Hold On Loosely - EP",
+    "Hold On Loosely - single",
     "Hold On Loosely (Single)",
-    "Hold On Loosely [EP]",
   ])("should take %s only when there is nothing else", (name) => {
     const single = release(name, 1980);
 
     expect(chooseMatch(wanted, [single])).toBe(single);
+  });
+
+  it.each(["Hold On Loosely - EP", "Hold On Loosely [EP]"])(
+    "should rank %s with the singles, below an album",
+    (name) => {
+      const ep = release(name, 1980);
+      const album = release("Wild-Eyed Southern Boys", 1981);
+
+      expect(chooseMatch(wanted, [ep, album])).toBe(album);
+      expect(chooseMatch(wanted, [ep])).toBe(ep);
+    },
+  );
+
+  it("should put an EP ahead of a soundtrack of the same year", () => {
+    const soundtrack = release("Clerks (Music from the Motion Picture)", 1994);
+    const ep = release("Jar of Flies - EP", 1994);
+
+    expect(chooseMatch(wanted, [soundtrack, ep])).toBe(ep);
+  });
+
+  it("should leave a soundtrack ahead of an EP of another year", () => {
+    const soundtrack = release("Clerks (Music from the Motion Picture)", 1994);
+
+    expect(chooseMatch(wanted, [release("Sap - EP", 1992), soundtrack])).toBe(
+      soundtrack,
+    );
+    expect(chooseMatch(wanted, [release("Sap - EP", 1995), soundtrack])).toBe(
+      soundtrack,
+    );
+  });
+
+  it("should not let an EP hold back a soundtrack whose year isn't known", () => {
+    const soundtrack = {
+      ...exact,
+      albumName: "Clerks (Music from the Motion Picture)",
+    };
+
+    expect(
+      chooseMatch(wanted, [release("Jar of Flies - EP", 1994), soundtrack]),
+    ).toBe(soundtrack);
   });
 
   it("should not take an album with single or ep in its name for a single", () => {

@@ -50,18 +50,25 @@ const IMITATION_PATTERN =
 /**
  * Wording that marks an album as a collection of an artist's songs rather
  * than a record in its own right (including a box set named for the years it
- * spans), a box set, or remakes recorded later. Their art is a compilation's, not the song's, so an album that
+ * spans), a box set, remakes recorded later, or remixes. Their art is a compilation's, not the song's, so an album that
  * isn't one is preferred when a song is on both. A soundtrack isn't one: for
  * a song written for a film it is the original release.
  */
 const COMPILATION_PATTERN =
-  /\b(greatest hits|best of|the very best|anthology|collection|essentials?|definitive|complete|ultimate|number ones|hits|gold|platinum|classics|singles|compilation|retrospective|best|inspired by|box(ed)?|rarities|b-sides|demos|vault|re-?recorded)\b|\b\d{4}\s*[–-]\s*\d{2,4}\b/i;
+  /\b(greatest hits|best of|the very best|anthology|collection|essentials?|definitive|complete|ultimate|number ones|hits|gold|platinum|classics|singles|compilation|retrospective|best|inspired by|box(ed)?|rarities|b-sides|demos|vault|re-?recorded|remix(es|ed)?)\b|\b\d{4}\s*[–-]\s*\d{2,4}\b/i;
 
 /**
  * How a service labels a release that is a single or an EP rather than an
  * album: "7 (E Flat Version) - Single", "Lost - EP".
  */
-const SINGLE_PATTERN = /\s-\s(single|ep)$|[([](single|ep)[)\]]$/i;
+const SINGLE_PATTERN = /\s-\s*(single|ep)$|[([](single|ep)[)\]]$/i;
+
+/** How a service labels an EP, which is sometimes a mini-album and sometimes a single with extras. */
+const EP_PATTERN = /\s-\s*ep$|[([]ep[)\]]$/i;
+
+/** Wording that marks an album as the music of a film, show, or cast. */
+const SOUNDTRACK_PATTERN =
+  /\b(soundtrack|motion picture|music from|original (cast|score))\b/i;
 
 /** Wording that marks an album as a recording of a concert. */
 const LIVE_ALBUM_PATTERN =
@@ -284,6 +291,11 @@ function notAnAlbumPenalty(candidate: Candidate): number {
   return COMPILATION_PATTERN.test(album) || SINGLE_PATTERN.test(album) ? 1 : 0;
 }
 
+/** 1 for a candidate on a soundtrack, which comes after other releases of the same year. */
+function soundtrackPenalty(candidate: Candidate): number {
+  return SOUNDTRACK_PATTERN.test(candidate.albumName ?? "") ? 1 : 0;
+}
+
 /** Keeps only the entries with the lowest penalty. */
 function leastPenalized<T>(entries: T[], penalty: (entry: T) => number): T[] {
   const lowest = Math.min(...entries.map(penalty));
@@ -305,8 +317,9 @@ function leastPenalized<T>(entries: T[], penalty: (entry: T) => number): T[] {
  * before a credit it is only part of; of those, only the closest matches
  * (within {@link CLOSE_ENOUGH} of the best) are kept; of those, a song on an
  * album of its own comes before one on a compilation, single, or EP (which
- * is still better than nothing); and of those, the earliest release wins,
- * then the service's own ordering.
+ * is still better than nothing); and of those, the earliest release wins
+ * (a soundtrack comes after an EP of its own year), then the service's own
+ * ordering.
  */
 function chooseMatch<T extends Candidate>(
   wanted: WantedSong,
@@ -368,15 +381,32 @@ function chooseMatch<T extends Candidate>(
   const closest = whole.filter(
     ({ closeness }) => closeness >= best - CLOSE_ENOUGH,
   );
-  const original = leastPenalized(closest, ({ candidate }) =>
-    notAnAlbumPenalty(candidate),
+  // A soundtrack is an album of its own, unless an EP came out the same year:
+  // then the two are alike, and the EP is taken first.
+  const epYears = new Set(
+    closest.flatMap(({ candidate }) =>
+      EP_PATTERN.test(candidate.albumName ?? "")
+        ? (candidate.releaseYear ?? [])
+        : [],
+    ),
+  );
+  const original = leastPenalized(
+    closest,
+    ({ candidate }) =>
+      notAnAlbumPenalty(candidate) ||
+      (soundtrackPenalty(candidate) === 1 &&
+      epYears.has(candidate.releaseYear ?? NaN)
+        ? 1
+        : 0),
   );
 
   return (
     original.toSorted(
       (a, b) =>
         (a.candidate.releaseYear ?? Infinity) -
-          (b.candidate.releaseYear ?? Infinity) || a.position - b.position,
+          (b.candidate.releaseYear ?? Infinity) ||
+        soundtrackPenalty(a.candidate) - soundtrackPenalty(b.candidate) ||
+        a.position - b.position,
     )[0]?.candidate ?? null
   );
 }

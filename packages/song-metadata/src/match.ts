@@ -330,11 +330,10 @@ function isMisdated(candidate: Candidate): boolean {
 function isSongNamedEp(wanted: WantedSong, candidate: Candidate): boolean {
   const album = candidate.albumName ?? "";
 
+  // A service that says outright what a release is has told a single from an
+  // EP already.
   if (candidate.kind !== undefined) {
-    return (
-      candidate.kind === "ep" &&
-      simplify(album).startsWith(simplify(wanted.title))
-    );
+    return false;
   }
 
   return (

@@ -424,4 +424,29 @@ describe("MusicBrainz lookup", () => {
       ),
     ).toHaveLength(2);
   });
+
+  it("should take an EP named for the song when it came out before the album", async () => {
+    const lookup = lookupWith(
+      service({
+        groupDate: "1980",
+        recordings: [
+          recording([
+            release(
+              "Hold On Loosely",
+              "g1",
+              { primary: "EP" },
+              { date: "1980" },
+            ),
+            release("Wild-Eyed Southern Boys", "g2", {}, { date: "1981" }),
+          ]),
+        ],
+      }),
+    );
+
+    await expect(lookup(wanted)).resolves.toMatchObject({
+      albumName: "Hold On Loosely",
+      releaseYear: 1980,
+      isAlbum: true,
+    });
+  });
 });

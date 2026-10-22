@@ -55,15 +55,19 @@ const IMITATION_PATTERN =
  * a song written for a film it is the original release.
  */
 const COMPILATION_PATTERN =
-  /\b(greatest hits|best of|the very best|anthology|collection|essentials?|definitive|complete|ultimate|number ones|hits|gold|platinum|classics|singles|compilation|retrospective|best|inspired by|box(ed)?|rarities|b-sides|demos|vault|re-?recorded|remix(es|ed)?)\b|\b\d{4}\s*[–-]\s*\d{2,4}\b/i;
+  /\b(greatest hits|best of|the very best|anthology|collection|essentials?|definitive|complete|ultimate|number ones|hits|gold|platinum|classics|singles|compilation|retrospective|best|inspired by|box(ed)?|rarities|b-sides|demos|vault|re-?recorded|remix(es|ed)?|mixes)\b|\b\d{4}\s*[–-]\s*\d{2,4}\b/i;
 
 /**
- * How a service labels a release that is a single or an EP rather than an
- * album: "7 (E Flat Version) - Single", "Lost - EP".
+ * How a service labels a release that is a single rather than an album: "7 (E
+ * Flat Version) - Single".
  */
-const SINGLE_PATTERN = /\s-\s*(single|ep)$|[([](single|ep)[)\]]$/i;
+const SINGLE_PATTERN = /\s-\s*single$|[([]single[)\]]$/i;
 
-/** How a service labels an EP, which is sometimes a mini-album and sometimes a single with extras. */
+/**
+ * How a service labels an EP, which is sometimes a mini-album and sometimes
+ * a single with extras. It's judged by its year like an album, but comes
+ * after an album of the same year.
+ */
 const EP_PATTERN = /\s-\s*ep$|[([]ep[)\]]$/i;
 
 /** Wording that marks an album as the music of a film, show, or cast. */
@@ -284,16 +288,38 @@ function versionOf(
     : "studio";
 }
 
-/** 1 for a candidate on a compilation, single, or EP, 0 for one on an album of its own. */
-function notAnAlbumPenalty(candidate: Candidate): number {
+/**
+ * Whether a candidate is on an EP named for the song itself ("One - EP" for
+ * "One"), which is a single by another name.
+ */
+function isSongNamedEp(wanted: WantedSong, candidate: Candidate): boolean {
   const album = candidate.albumName ?? "";
 
-  return COMPILATION_PATTERN.test(album) || SINGLE_PATTERN.test(album) ? 1 : 0;
+  return (
+    EP_PATTERN.test(album) &&
+    simplify(album.replace(EP_PATTERN, "")).startsWith(simplify(wanted.title))
+  );
 }
 
-/** 1 for a candidate on a soundtrack, which comes after other releases of the same year. */
-function soundtrackPenalty(candidate: Candidate): number {
-  return SOUNDTRACK_PATTERN.test(candidate.albumName ?? "") ? 1 : 0;
+/** 1 for a candidate on a compilation, single, or an EP that is a single in disguise, 0 for one on an album of its own. */
+function notAnAlbumPenalty(wanted: WantedSong, candidate: Candidate): number {
+  const album = candidate.albumName ?? "";
+
+  return COMPILATION_PATTERN.test(album) ||
+    SINGLE_PATTERN.test(album) ||
+    isSongNamedEp(wanted, candidate)
+    ? 1
+    : 0;
+}
+
+/**
+ * Which kind of release a candidate is, for choosing between ones of the same
+ * year: an album (0), then an EP (1), then a soundtrack (2).
+ */
+function releaseKind(candidate: Candidate): number {
+  const album = candidate.albumName ?? "";
+
+  return SOUNDTRACK_PATTERN.test(album) ? 2 : EP_PATTERN.test(album) ? 1 : 0;
 }
 
 /** Keeps only the entries with the lowest penalty. */
@@ -316,9 +342,9 @@ function leastPenalized<T>(entries: T[], penalty: (entry: T) => number): T[] {
  * before every other release found. Among those left, the act itself comes
  * before a credit it is only part of; of those, only the closest matches
  * (within {@link CLOSE_ENOUGH} of the best) are kept; of those, a song on an
- * album of its own comes before one on a compilation, single, or EP (which
- * is still better than nothing); and of those, the earliest release wins
- * (a soundtrack comes after an EP of its own year), then the service's own
+ * album of its own comes before one on a compilation or single (which is
+ * still better than nothing); and of those, the earliest release wins (of
+ * one year, an album, then an EP, then a soundtrack), then the service's own
  * ordering.
  */
 function chooseMatch<T extends Candidate>(
@@ -381,23 +407,8 @@ function chooseMatch<T extends Candidate>(
   const closest = whole.filter(
     ({ closeness }) => closeness >= best - CLOSE_ENOUGH,
   );
-  // A soundtrack is an album of its own, unless an EP came out the same year:
-  // then the two are alike, and the EP is taken first.
-  const epYears = new Set(
-    closest.flatMap(({ candidate }) =>
-      EP_PATTERN.test(candidate.albumName ?? "")
-        ? (candidate.releaseYear ?? [])
-        : [],
-    ),
-  );
-  const original = leastPenalized(
-    closest,
-    ({ candidate }) =>
-      notAnAlbumPenalty(candidate) ||
-      (soundtrackPenalty(candidate) === 1 &&
-      epYears.has(candidate.releaseYear ?? NaN)
-        ? 1
-        : 0),
+  const original = leastPenalized(closest, ({ candidate }) =>
+    notAnAlbumPenalty(wanted, candidate),
   );
 
   return (
@@ -405,7 +416,7 @@ function chooseMatch<T extends Candidate>(
       (a, b) =>
         (a.candidate.releaseYear ?? Infinity) -
           (b.candidate.releaseYear ?? Infinity) ||
-        soundtrackPenalty(a.candidate) - soundtrackPenalty(b.candidate) ||
+        releaseKind(a.candidate) - releaseKind(b.candidate) ||
         a.position - b.position,
     )[0]?.candidate ?? null
   );

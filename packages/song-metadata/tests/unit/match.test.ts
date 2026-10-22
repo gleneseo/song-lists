@@ -258,6 +258,7 @@ describe("chooseMatch", () => {
     ["Dick's Picks Vol. 3: 5/22/77 (Hollywood Sportatorium)", 1977],
     ["Cornell 5/8/1977 (Live)", 1977],
     ["Live 1987-10-31 (Live)", 1987],
+    ["To Terrapin: May 28, 1977 Hartford, CT (Live)", 1977],
   ])(
     "should not take a live recording dated before the studio one when its date is the night it was recorded or a later year: %s",
     (albumName, releaseYear) => {

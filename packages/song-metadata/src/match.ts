@@ -98,9 +98,9 @@ const NAMED_YEAR_PATTERN = /\b(?:19|20)\d{2}\b|\b\d{1,2}\/\d{1,2}\/(\d{2})\b/g;
 const RERECORDED_WORDING =
   "re-?record(ed|ing)s?|taylor['’]s version|\\d+(st|nd|rd|th) anniversary (version|mix|recording)";
 
-/** A date of a concert in an album's name: 5/22/77, 2003.06.21, 1987-10-31. */
+/** A date of a concert in an album's name: 5/22/77, 2003.06.21, 1987-10-31, May 28, 1977. */
 const CONCERT_DATE_PATTERN =
-  /\b\d{1,2}\/\d{1,2}\/(?:\d{2}|\d{4})\b|\b\d{4}[./-]\d{1,2}[./-]\d{1,2}\b/;
+  /\b\d{1,2}\/\d{1,2}\/(?:\d{2}|\d{4})\b|\b\d{4}[./-]\d{1,2}[./-]\d{1,2}\b|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.? \d{1,2},? \d{4}\b/i;
 
 /** Wording that marks a recording as a different take on the song itself. */
 const VERSION_PATTERN = new RegExp(

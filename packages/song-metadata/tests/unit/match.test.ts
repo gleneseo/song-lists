@@ -166,6 +166,40 @@ describe("chooseMatch", () => {
     expect(chooseMatch(wanted, [album])).toBeNull();
   });
 
+  it.each([
+    ["Hold On Loosely (40th Anniversary Version)", "XL"],
+    ["Hold On Loosely (Rerecorded)", "Greatest Hits Revisited"],
+    ["Hold On Loosely (Re-Recorded)", "Wild-Eyed Southern Boys"],
+    ["Hold On Loosely (Taylor's Version)", "Wild-Eyed Southern Boys"],
+    ["Hold On Loosely", "Wild-Eyed Southern Boys (Re-Recorded Version)"],
+    ["Hold On Loosely", "Morning View XXIII (Rerecorded Version)"],
+  ])("should refuse a re-recorded take: %s on %s", (title, albumName) => {
+    const remake = { ...exact, title, albumName, releaseYear: 2022 };
+    const original = { ...exact, releaseYear: 1981 };
+
+    expect(chooseMatch(wanted, [remake, original])).toBe(original);
+    expect(chooseMatch(wanted, [remake])).toBeNull();
+  });
+
+  it("should not take an anniversary reissue of the album for a remake", () => {
+    const reissue = {
+      ...exact,
+      albumName: "Wild-Eyed Southern Boys (40th Anniversary Deluxe Edition)",
+    };
+
+    expect(chooseMatch(wanted, [reissue])).toBe(reissue);
+  });
+
+  it("should not mind a re-recorded take when one was asked for", () => {
+    const remake = { ...exact, title: "Hold On Loosely (Re-Recorded)" };
+
+    expect(
+      chooseMatch({ ...wanted, title: "Hold On Loosely (Re-Recorded)" }, [
+        remake,
+      ]),
+    ).toBe(remake);
+  });
+
   it("should take a live recording that came out before any other release", () => {
     const concert = {
       ...exact,

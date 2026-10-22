@@ -89,11 +89,24 @@ const LIVE_ALBUM_PATTERN =
 /** A four-digit year, or the two-digit one at the end of a date like 4/26/08. */
 const NAMED_YEAR_PATTERN = /\b(?:19|20)\d{2}\b|\b\d{1,2}\/\d{1,2}\/(\d{2})\b/g;
 
-/** Wording that marks a recording as a different take on the song itself. */
-const VERSION_PATTERN = /\b(instrumental|live|karaoke|acapella|a cappella)\b/i;
+/** Wording that marks a song as a remake the artist recorded later, in the title or the album's name. */
+const RERECORDED_WORDING =
+  "re-?record(ed|ing)s?|taylor['’]s version|\\d+(st|nd|rd|th) anniversary (version|mix|recording)";
 
-/** Wording that marks an instrumental, karaoke, or a cappella take. */
-const BACKING_PATTERN = /\b(instrumentals?|karaoke|acapella|a cappella)\b/i;
+/** Wording that marks a recording as a different take on the song itself. */
+const VERSION_PATTERN = new RegExp(
+  `\\b(instrumental|live|karaoke|acapella|a cappella|${RERECORDED_WORDING})\\b`,
+  "i",
+);
+
+/**
+ * Wording that marks an instrumental, karaoke, a cappella, or re-recorded
+ * take: never the song people mean, and with art of a release it wasn't on.
+ */
+const BACKING_PATTERN = new RegExp(
+  `\\b(instrumentals?|karaoke|acapella|a cappella|${RERECORDED_WORDING})\\b`,
+  "i",
+);
 
 /** Wording that marks a track as a live recording. */
 const LIVE_PATTERN = /\blive\b/i;
@@ -386,8 +399,8 @@ function leastPenalized<T>(entries: T[], penalty: (entry: T) => number): T[] {
  * Candidates must agree on both title and artist (an artist who is only part
  * of someone else's credit counts if the title is the very same, and one
  * with only a backing band added is the same act), and tribute acts and
- * karaoke tracks are never chosen, nor are instrumental or karaoke takes of a
- * song that wasn't asked for as one, nor live ones unless they came out
+ * karaoke tracks are never chosen, nor are instrumental, karaoke, or
+ * re-recorded takes of a song that wasn't asked for as one, nor live ones unless they came out
  * before every other release found. Among those left, the act itself comes
  * before a credit it is only part of; of those, only the closest matches
  * (within {@link CLOSE_ENOUGH} of the best) are kept; of those, a song on an

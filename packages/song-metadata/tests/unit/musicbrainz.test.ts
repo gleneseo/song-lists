@@ -42,12 +42,14 @@ function service({
   recordings = [recording([release("Wild-Eyed Southern Boys", "g1")])],
   search = 200,
   groupDate = "1981-04-14",
+  groupTitle = null,
   group = 200,
   covers = {},
 }: {
   recordings?: unknown;
   search?: number;
   groupDate?: string | null;
+  groupTitle?: string | null;
   group?: number;
   covers?: Record<string, number>;
 } = {}) {
@@ -62,9 +64,13 @@ function service({
 
     if (url.pathname.includes("release-group")) {
       return Promise.resolve(
-        new Response(JSON.stringify({ "first-release-date": groupDate }), {
-          status: group,
-        }),
+        new Response(
+          JSON.stringify({
+            "first-release-date": groupDate,
+            title: groupTitle,
+          }),
+          { status: group },
+        ),
       );
     }
 
@@ -469,6 +475,30 @@ describe("MusicBrainz lookup", () => {
     await expect(lookup(wanted)).resolves.toMatchObject({
       albumName: "Wild-Eyed Southern Boys",
       releaseYear: 1981,
+    });
+  });
+
+  it("should name the album as MusicBrainz does, not by a later edition's title", async () => {
+    const lookup = lookupWith(
+      service({
+        groupDate: "1991",
+        groupTitle: "Full Length L.P.",
+        recordings: [
+          recording([
+            release(
+              "The Album Formerly Known as Full Length LP",
+              "g1",
+              {},
+              { date: "1996-07-30" },
+            ),
+          ]),
+        ],
+      }),
+    );
+
+    await expect(lookup(wanted)).resolves.toMatchObject({
+      albumName: "Full Length L.P.",
+      releaseYear: 1991,
     });
   });
 });

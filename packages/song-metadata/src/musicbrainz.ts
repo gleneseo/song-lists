@@ -251,16 +251,25 @@ function createMusicBrainzLookup({
 
     return asked;
   };
-  const years = new Map<string, Promise<number | null>>();
+  const groups = new Map<
+    string,
+    Promise<{ year: number | null; title: string | null }>
+  >();
   const covers = new Map<string, Promise<boolean>>();
 
-  /** The year the album first came out, or `null` when MusicBrainz won't say. */
-  const askFirstReleaseYear = async (groupId: string) => {
+  /**
+   * The album's own name and the year it first came out, as far as
+   * MusicBrainz will say: a later edition may carry another name ("The Album
+   * Formerly Known as Full Length LP" is "Full Length L.P.", of 1991).
+   */
+  const askGroup = async (groupId: string) => {
     const response = await send(`${RELEASE_GROUP_URL}/${groupId}?fmt=json`);
+    const group = response.ok ? asRecord(await response.json()) : null;
 
-    return response.ok
-      ? yearOrNull(asRecord(await response.json())?.["first-release-date"])
-      : null;
+    return {
+      year: yearOrNull(group?.["first-release-date"]),
+      title: textOrNull(group?.["title"]),
+    };
   };
 
   /** Whether the Cover Art Archive has a front cover for the album. */
@@ -283,8 +292,7 @@ function createMusicBrainzLookup({
     return true;
   };
 
-  const firstReleaseYear = (groupId: string) =>
-    remembered(years, groupId, askFirstReleaseYear);
+  const group = (groupId: string) => remembered(groups, groupId, askGroup);
   const hasCover = (groupId: string) =>
     remembered(covers, groupId, askHasCover);
 
@@ -317,18 +325,15 @@ function createMusicBrainzLookup({
         }
 
         if (await hasCover(match.releaseGroupId)) {
-          const year =
-            (await firstReleaseYear(match.releaseGroupId)) ??
-            match.releaseYear ??
-            null;
+          const album = await group(match.releaseGroupId);
 
           return {
             status: SONG_METADATA_STATUS.MATCHED,
             source: SONG_METADATA_SOURCE.MUSICBRAINZ,
             sourceTrackId: match.recordingId,
             artworkUrl: `${COVER_ART_URL}/${match.releaseGroupId}/front`,
-            albumName: match.albumName,
-            releaseYear: year,
+            albumName: album.title ?? match.albumName,
+            releaseYear: album.year ?? match.releaseYear ?? null,
             isAlbum: isProperAlbum(wanted, match),
           };
         }

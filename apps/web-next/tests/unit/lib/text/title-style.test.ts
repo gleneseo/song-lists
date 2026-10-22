@@ -28,6 +28,8 @@ describe("checkStyle", () => {
     "Quannum MCs",
     "Kramer vs. Kramer",
     "Dan Le Sac vs. Scroobius Pip",
+    "School Anthem (aka Senioritis)",
+    "School Anthem (Aka Senioritis)",
     "KRAMER VS KRAMER",
     "Most People Are DJs",
   ])("should accept %s", (text) => {
@@ -99,6 +101,13 @@ describe("checkStyle", () => {
     ["Vs Battles", "vs Battles"],
   ])("should always write vs in lowercase: %s", (text, suggestion) => {
     expect(checkStyle(text)).toEqual({ ok: false, suggestion });
+  });
+
+  it("should still fix an aka written with odd capitals", () => {
+    expect(checkStyle("School Anthem (aKa Senioritis)")).toEqual({
+      ok: false,
+      suggestion: "School Anthem (Aka Senioritis)",
+    });
   });
 
   it("should capitalize the right word when an emoji comes first", () => {

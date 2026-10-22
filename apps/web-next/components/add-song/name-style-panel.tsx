@@ -51,7 +51,8 @@ function NameStylePanel({
           <p className="text-sm text-muted-foreground">
             We start every word with a capital letter, even short ones like
             &ldquo;The&rdquo; and &ldquo;A&rdquo; (only &ldquo;vs.&rdquo; stays
-            lowercase). A word in ALL CAPS is fine as an acronym.
+            lowercase, and &ldquo;aka&rdquo; may). A word in ALL CAPS is fine as
+            an acronym.
           </p>
         </div>
       </div>

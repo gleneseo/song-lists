@@ -23,6 +23,12 @@ const NAME_PREFIX = /^(Mc|Mac|De|La|Le|Di)\p{Lu}\p{Ll}*$/u;
  */
 const ALWAYS_LOWERCASE = new Set(["vs"]);
 
+/**
+ * Words that may be written in lowercase, as in "School Anthem (aka
+ * Senioritis)", but needn't be: "Aka" is as good.
+ */
+const MAY_BE_LOWERCASE = new Set(["aka"]);
+
 /** The lowercase endings that follow an apostrophe, as in "Don't" and "M.D.'s". */
 const CONTRACTION_ENDINGS = new Set(["s", "t", "d", "m", "ll", "re", "ve"]);
 
@@ -119,9 +125,11 @@ function checkStyle(text: string): StyleCheck {
         ? piece === piece.toLowerCase()
           ? "ok"
           : "lowercase"
-        : afterApostrophe && !joined && CONTRACTION_ENDINGS.has(piece)
+        : !joined && !allCaps && MAY_BE_LOWERCASE.has(piece)
           ? "ok"
-          : checkPiece(piece, joined);
+          : afterApostrophe && !joined && CONTRACTION_ENDINGS.has(piece)
+            ? "ok"
+            : checkPiece(piece, joined);
       const original = text.slice(index, index + piece.length);
 
       if (status === "lowercase") {

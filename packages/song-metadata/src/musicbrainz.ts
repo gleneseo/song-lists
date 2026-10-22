@@ -160,7 +160,11 @@ function readCandidates(raw: unknown): ReleaseCandidate[] {
         continue;
       }
 
-      const releaseYear = yearOrNull(release["date"]);
+      // A release with no date of its own is no later than the recording's
+      // first release, which is the best guess there is for its year.
+      const releaseYear =
+        yearOrNull(release["date"]) ??
+        yearOrNull(recording?.["first-release-date"]);
       const have = found.get(groupId);
 
       if (have && (have.releaseYear ?? Infinity) <= (releaseYear ?? Infinity)) {

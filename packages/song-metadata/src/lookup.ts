@@ -10,9 +10,10 @@ import type { SongLookupResult } from "./result.js";
 
 type Matched = Extract<SongLookupResult, { status: "matched" }>;
 
-/** An album's name with edition notes, punctuation, and capitals set aside, to tell whether two services mean the same one. */
+/** An album's name with edition notes, an "- EP" mark, punctuation, and capitals set aside, to tell whether two services mean the same one. */
 function sameAlbumKey(name: string | null): string {
   return cleanAlbumName(name ?? "")
+    .replace(/\s-\s*(ep|single)$/i, "")
     .toLowerCase()
     .replaceAll(/[^\p{L}\p{N}]/gu, "");
 }

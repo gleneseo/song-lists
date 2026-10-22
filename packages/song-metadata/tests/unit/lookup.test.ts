@@ -104,6 +104,27 @@ describe("combining lookups", () => {
     ).toMatchObject({ source: "itunes", releaseYear: 1981 });
   });
 
+  it("should treat an iTunes EP and MusicBrainz's name for it as the same album", () => {
+    expect(
+      combineLookups(
+        {
+          ...itunes,
+          albumName: "Crackers International - EP",
+          releaseYear: 1989,
+        },
+        {
+          ...musicbrainz,
+          albumName: "Crackers International",
+          releaseYear: 1988,
+        },
+      ),
+    ).toMatchObject({
+      source: "itunes",
+      albumName: "Crackers International - EP",
+      releaseYear: 1988,
+    });
+  });
+
   it("should not take the other service's year for a different album", () => {
     expect(
       combineLookups(

@@ -87,9 +87,13 @@ const EP_PATTERN = /\s-\s*ep$|[([]ep[)\]]$/i;
 const SOUNDTRACK_PATTERN =
   /\b(soundtrack|motion picture|music from|original (cast|score))\b/i;
 
-/** Wording that marks an album as a recording of a concert. */
+/**
+ * Wording that marks an album as a recording of a concert, including a
+ * series of archive concerts named for the one who picked them (Dick's Picks,
+ * Dave's Picks).
+ */
 const LIVE_ALBUM_PATTERN =
-  /^live$|[([][^)\]]*\blive\b[^)\]]*[)\]]|\blive (at|in)\b/i;
+  /^live$|[([][^)\]]*\blive\b[^)\]]*[)\]]|\blive (at|in)\b|['’]s picks\b/i;
 
 /** A four-digit year, or the two-digit one at the end of a date like 4/26/08. */
 const NAMED_YEAR_PATTERN = /\b(?:19|20)\d{2}\b|\b\d{1,2}\/\d{1,2}\/(\d{2})\b/g;

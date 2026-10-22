@@ -412,6 +412,8 @@ describe("chooseMatch", () => {
     "Drop the Bomb (Live)",
     "Alive [Live in Paris]",
     "Live at the Roxy",
+    "Dick's Picks Vol. 12",
+    "Dave’s Picks Volume 3",
   ])("should prefer a studio album to %s", (name) => {
     const concert = { ...exact, albumName: name };
     const album = { ...exact, albumName: "Wild-Eyed Southern Boys" };

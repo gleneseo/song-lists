@@ -78,6 +78,9 @@ const SOUNDTRACK_PATTERN =
 const LIVE_ALBUM_PATTERN =
   /^live$|[([][^)\]]*\blive\b[^)\]]*[)\]]|\blive (at|in)\b/i;
 
+/** A four-digit year, or the two-digit one at the end of a date like 4/26/08. */
+const NAMED_YEAR_PATTERN = /\b(?:19|20)\d{2}\b|\b\d{1,2}\/\d{1,2}\/(\d{2})\b/g;
+
 /** Wording that marks a recording as a different take on the song itself. */
 const VERSION_PATTERN = /\b(instrumental|live|karaoke|acapella|a cappella)\b/i;
 
@@ -289,6 +292,30 @@ function versionOf(
 }
 
 /**
+ * Whether a concert recording's year can't be right, because its title names
+ * a later one ("Live in Malaysia 2004", dated 1983): services leave a wrong
+ * date on some, and one dated before the studio original would pass for it.
+ */
+function isMisdated(candidate: Candidate): boolean {
+  const { releaseYear } = candidate;
+
+  if (releaseYear === null || releaseYear === undefined) {
+    return false;
+  }
+
+  const text = `${candidate.title} ${candidate.albumName ?? ""}`;
+
+  return [...text.matchAll(NAMED_YEAR_PATTERN)].some(([whole, short]) => {
+    const named =
+      short === undefined
+        ? Number(whole)
+        : Number(short) + (Number(short) <= 30 ? 2000 : 1900);
+
+    return named > releaseYear;
+  });
+}
+
+/**
  * Whether a candidate is on an EP named for the song itself ("One - EP" for
  * "One"), which is a single by another name.
  */
@@ -377,7 +404,9 @@ function chooseMatch<T extends Candidate>(
   const studioYears = studio.flatMap(
     ({ candidate }) => candidate.releaseYear ?? [],
   );
-  const live = versions.filter(({ version }) => version === "live");
+  const live = versions.filter(
+    ({ version, candidate }) => version === "live" && !isMisdated(candidate),
+  );
   const liveYears = [
     ...new Set(live.flatMap(({ candidate }) => candidate.releaseYear ?? [])),
   ].toSorted((x, y) => x - y);

@@ -198,6 +198,60 @@ describe("chooseMatch", () => {
     expect(chooseMatch(wanted, [concert, unknown])).toBe(unknown);
   });
 
+  it.each([
+    ["Live in Malaysia 2004", 1983],
+    ["2003.06.21 - East Troy, Wisconsin (Live)", 2001],
+    ["Live Widespread Panic: 4/26/08 Raleigh, NC", 1991],
+  ])(
+    "should not take a live recording dated before the studio one when it names a later year: %s",
+    (albumName, releaseYear) => {
+      const concert = {
+        ...exact,
+        title: "Hold On Loosely (Live)",
+        albumName,
+        releaseYear,
+      };
+      const studio = {
+        ...exact,
+        albumName: "Wild-Eyed Southern Boys",
+        releaseYear: 1999,
+      };
+
+      expect(chooseMatch(wanted, [concert, studio])).toBe(studio);
+    },
+  );
+
+  it("should not take a live recording dated before the studio one when its song title names a later year", () => {
+    const concert = {
+      title: "Hold On Loosely (Live 2004)",
+      artistName: exact.artistName,
+      releaseYear: 1983,
+    };
+    const studio = {
+      ...exact,
+      albumName: "Wild-Eyed Southern Boys",
+      releaseYear: 1999,
+    };
+
+    expect(chooseMatch(wanted, [concert, studio])).toBe(studio);
+  });
+
+  it("should still take a live recording that names a year no later than its own", () => {
+    const concert = {
+      ...exact,
+      albumName: "Live in 1964",
+      releaseYear: 1964,
+    };
+    const old = { ...exact, albumName: "Live 12/31/69", releaseYear: 1970 };
+    const studio = {
+      ...exact,
+      albumName: "Wild-Eyed Southern Boys",
+      releaseYear: 1981,
+    };
+
+    expect(chooseMatch(wanted, [studio, concert, old])).toBe(concert);
+  });
+
   it("should take the earliest of several live recordings when it came out long before the rest", () => {
     const original = {
       ...exact,

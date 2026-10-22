@@ -147,13 +147,95 @@ describe("chooseMatch", () => {
     expect(chooseMatch(wanted, [instrumental, live, exact])).toBe(exact);
   });
 
-  it("should settle for an instrumental when it is all there is", () => {
+  it("should refuse an instrumental or live take when that is all there is", () => {
     const instrumental = {
       title: "Hold On Loosely (Instrumental)",
       artistName: ".38 Special",
     };
+    const live = { title: "Hold On Loosely - Live", artistName: ".38 Special" };
+    const concert = { ...exact, albumName: "Live at the Roxy" };
 
-    expect(chooseMatch(wanted, [instrumental])).toBe(instrumental);
+    expect(chooseMatch(wanted, [instrumental])).toBeNull();
+    expect(chooseMatch(wanted, [live])).toBeNull();
+    expect(chooseMatch(wanted, [concert])).toBeNull();
+  });
+
+  it("should refuse a track on an instrumentals album", () => {
+    const album = { ...exact, albumName: "Wild-Eyed (Instrumentals)" };
+
+    expect(chooseMatch(wanted, [album])).toBeNull();
+  });
+
+  it("should take a live recording that came out before any other release", () => {
+    const concert = {
+      ...exact,
+      albumName: "Live at the Roxy",
+      releaseYear: 1964,
+    };
+    const studio = {
+      ...exact,
+      albumName: "Wild-Eyed Southern Boys",
+      releaseYear: 1981,
+    };
+
+    expect(chooseMatch(wanted, [studio, concert])).toBe(concert);
+  });
+
+  it("should not take a live recording that came out after another release", () => {
+    const concert = {
+      ...exact,
+      albumName: "Live at the Roxy",
+      releaseYear: 2006,
+    };
+    const studio = {
+      ...exact,
+      albumName: "Wild-Eyed Southern Boys",
+      releaseYear: 1981,
+    };
+    const unknown = { ...exact, albumName: "Wild-Eyed Southern Boys" };
+
+    expect(chooseMatch(wanted, [concert, studio])).toBe(studio);
+    expect(chooseMatch(wanted, [concert, unknown])).toBe(unknown);
+  });
+
+  it("should take the earliest of several live recordings when it came out long before the rest", () => {
+    const original = {
+      ...exact,
+      albumName: "At the Roxy (Live)",
+      releaseYear: 1964,
+    };
+    const reissue = { ...exact, albumName: "Live in Paris", releaseYear: 1995 };
+
+    expect(chooseMatch(wanted, [reissue, original])).toBe(original);
+  });
+
+  it("should not prefer an old live recording to a studio one whose year isn't known", () => {
+    const studio = { ...exact, albumName: "Wild-Eyed Southern Boys" };
+    const old = {
+      ...exact,
+      albumName: "At the Roxy (Live)",
+      releaseYear: 1964,
+    };
+    const later = { ...exact, albumName: "Live in Paris", releaseYear: 1995 };
+
+    expect(chooseMatch(wanted, [old, later, studio])).toBe(studio);
+  });
+
+  it("should refuse live recordings that came out around the same time, or alone", () => {
+    const first = { ...exact, albumName: "Live in Chicago", releaseYear: 2004 };
+    const second = { ...exact, albumName: "Live in Dallas", releaseYear: 2006 };
+    const unknown = { ...exact, albumName: "Live in Paris" };
+
+    expect(chooseMatch(wanted, [first, second])).toBeNull();
+    expect(chooseMatch(wanted, [first])).toBeNull();
+    expect(chooseMatch(wanted, [first, unknown])).toBeNull();
+  });
+
+  it("should not take a live recording whose year isn't known against one that is", () => {
+    const concert = { ...exact, albumName: "Live at the Roxy" };
+    const studio = { ...exact, albumName: "Wild-Eyed", releaseYear: 1981 };
+
+    expect(chooseMatch(wanted, [concert, studio])).toBe(studio);
   });
 
   it("should accept an instrumental when an instrumental was asked for", () => {
@@ -180,6 +262,12 @@ describe("chooseMatch", () => {
     "Made in California (1962–2012)",
     "The Chess Masters, 1955-1958",
     "Music From and Inspired By the Motion Picture",
+    "Permanent Record: Al In The Box",
+    "Master of Puppets (Deluxe Box Set)",
+    "Behind Closed Doors: The Rarities",
+    "Play & Play: B-Sides",
+    "The Mercer St. Sessions 1972 (Demos)",
+    "The Vault",
   ])("should prefer a song on an album of its own to one on %s", (name) => {
     const compilation = { ...exact, albumName: name };
     const album = { ...exact, albumName: "Wild-Eyed Southern Boys" };
@@ -208,6 +296,12 @@ describe("chooseMatch", () => {
     const album = { ...exact, albumName: "Wild-Eyed Southern Boys" };
 
     expect(chooseMatch(wanted, [concert, album])).toBe(album);
+  });
+
+  it("should not take a studio album called Live From somewhere for a concert recording", () => {
+    const album = { ...exact, albumName: "Live from the End of the World" };
+
+    expect(chooseMatch(wanted, [album])).toBe(album);
   });
 
   it("should not take an album with live in its name for a concert recording", () => {
@@ -274,6 +368,116 @@ describe("chooseMatch", () => {
 
     expect(chooseMatch(wanted, [typo, exact])).toBe(exact);
     expect(chooseMatch(wanted, [twin, exact])).toBe(twin);
+  });
+});
+
+describe("chooseMatch, for the same act written another way", () => {
+  const song = (artistName: string, title = "Move") => ({ title, artistName });
+
+  it("should ignore a nickname in quotes", () => {
+    const candidate = song('Damian "Jr. Gong" Marley');
+
+    expect(chooseMatch(song("Damian Marley"), [candidate])).toBe(candidate);
+    expect(
+      chooseMatch(song('"Weird Al" Yankovic'), [song("Weird Al Yankovic")]),
+    ).not.toBeNull();
+    expect(
+      chooseMatch(song('"Weird Al" Yankovic'), [song('"Weird Al" Yankovic')]),
+    ).not.toBeNull();
+  });
+
+  it("should not mind a missing or added the, anywhere in the name", () => {
+    const candidate = song("Frankie Lymon & The Teenagers");
+
+    expect(chooseMatch(song("Frankie Lymon & Teenagers"), [candidate])).toBe(
+      candidate,
+    );
+  });
+
+  it("should not mind a trailing band", () => {
+    const candidate = song("Kenny Wayne Shepherd");
+
+    expect(chooseMatch(song("Kenny Wayne Shepherd Band"), [candidate])).toBe(
+      candidate,
+    );
+    expect(
+      chooseMatch(song("Steve Miller Band"), [song("Steve Miller")]),
+    ).not.toBeNull();
+  });
+
+  it("should keep a name that is only band", () => {
+    expect(chooseMatch(song("Band"), [song("Band")])).not.toBeNull();
+  });
+
+  it("should still refuse a different act that shares a word with it", () => {
+    expect(
+      chooseMatch(song("The Miller Band"), [song("Steve Miller Band")]),
+    ).toBeNull();
+    expect(chooseMatch(song("Prince"), [song("Eden Prince")])).toBeNull();
+  });
+
+  it("should treat n and 'n' as and, in a title", () => {
+    const candidate = song("Snoop Dogg", "Gin and Juice");
+
+    expect(chooseMatch(song("Snoop Dogg", "Gin N Juice"), [candidate])).toBe(
+      candidate,
+    );
+    expect(
+      chooseMatch(song("Snoop Dogg", "Rock 'n' Roll"), [
+        song("Snoop Dogg", "Rock & Roll"),
+      ]),
+    ).not.toBeNull();
+  });
+});
+
+describe("chooseMatch, for a song by an act together with others", () => {
+  const song = (artistName: string, title = "Skate") => ({
+    title,
+    artistName,
+  });
+
+  it("should accept a solo name that is part of the credit", () => {
+    const credit = song("Silk Sonic, Bruno Mars & Anderson .Paak");
+
+    expect(chooseMatch(song("Silk Sonic"), [credit])).toBe(credit);
+    expect(
+      chooseMatch(song("Orville Peck & Willie Nelson"), [
+        song("Willie Nelson"),
+      ]),
+    ).not.toBeNull();
+    expect(
+      chooseMatch(song("Primus"), [song("Primus & Beavis and Butt-Head")]),
+    ).not.toBeNull();
+  });
+
+  it("should accept a credit made of the same acts in another order or style", () => {
+    expect(
+      chooseMatch(song("Anderson .Paak x Silk Sonic"), [
+        song("Silk Sonic & Anderson .Paak"),
+      ]),
+    ).not.toBeNull();
+  });
+
+  it("should want the title to be the same, not just close", () => {
+    const credit = song("Silk Sonic & Bruno Mars", "Smoking Out the Windows");
+
+    expect(
+      chooseMatch(song("Silk Sonic", "Smokin Out the Window"), [credit]),
+    ).toBeNull();
+  });
+
+  it("should refuse a credit that shares no act", () => {
+    expect(
+      chooseMatch(song("Silk Sonic"), [song("Bruno Mars & Anderson .Paak")]),
+    ).toBeNull();
+  });
+
+  it("should prefer the act itself to one credited with others", () => {
+    const alone = song("Silk Sonic");
+
+    expect(
+      chooseMatch(song("Silk Sonic"), [song("Silk Sonic & Bruno Mars"), alone]),
+    ).toBe(alone);
   });
 });
 

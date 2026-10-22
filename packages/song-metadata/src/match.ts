@@ -23,6 +23,12 @@ const MIN_TITLE_SIMILARITY = 0.85;
  */
 const MIN_ARTIST_SIMILARITY = 0.9;
 
+/** For an artist who is only part of the credit, the title must be this close to be sure. */
+const MIN_COLLABORATION_TITLE_SIMILARITY = 0.95;
+
+/** With only concert recordings to go on, one this many years before the rest is taken for the original. */
+const LIVE_DEBUT_GAP_YEARS = 5;
+
 /**
  * Matches this close to the best one count as equally good, so that a tiny
  * difference in spelling doesn't outweigh a better album.
@@ -41,19 +47,25 @@ const IMITATION_PATTERN =
 /**
  * Wording that marks an album as a collection of an artist's songs rather
  * than a record in its own right (including a box set named for the years it
- * spans). Their art is a compilation's, not the song's, so an album that
+ * spans), or a box set. Their art is a compilation's, not the song's, so an album that
  * isn't one is preferred when a song is on both. A soundtrack isn't one: for
  * a song written for a film it is the original release.
  */
 const COMPILATION_PATTERN =
-  /\b(greatest hits|best of|the very best|anthology|collection|essentials?|definitive|complete|ultimate|number ones|hits|gold|platinum|classics|singles|compilation|retrospective|best|inspired by)\b|\b\d{4}\s*[–-]\s*\d{2,4}\b/i;
+  /\b(greatest hits|best of|the very best|anthology|collection|essentials?|definitive|complete|ultimate|number ones|hits|gold|platinum|classics|singles|compilation|retrospective|best|inspired by|box(ed)?|rarities|b-sides|demos|vault)\b|\b\d{4}\s*[–-]\s*\d{2,4}\b/i;
 
 /** Wording that marks an album as a recording of a concert. */
 const LIVE_ALBUM_PATTERN =
-  /^live$|[([][^)\]]*\blive\b[^)\]]*[)\]]|\blive (at|in|from)\b/i;
+  /^live$|[([][^)\]]*\blive\b[^)\]]*[)\]]|\blive (at|in)\b/i;
 
 /** Wording that marks a recording as a different take on the song itself. */
 const VERSION_PATTERN = /\b(instrumental|live|karaoke|acapella|a cappella)\b/i;
+
+/** Wording that marks an instrumental, karaoke, or a cappella take. */
+const BACKING_PATTERN = /\b(instrumentals?|karaoke|acapella|a cappella)\b/i;
+
+/** Wording that marks a track as a live recording. */
+const LIVE_PATTERN = /\blive\b/i;
 
 function stripAccents(text: string): string {
   return text.normalize("NFKD").replace(/[̀-ͯ]/g, "");
@@ -73,6 +85,7 @@ function simplify(text: string): string {
   const words = (value: string) =>
     value
       .replace(/&/g, " and ")
+      .replace(/(^|\s)['’]?n['’]?(?=\s|$)/g, "$1and")
       .replace(/[^\p{L}\p{N} ]/gu, " ")
       .replace(/\s+/g, " ")
       .trim();
@@ -82,8 +95,66 @@ function simplify(text: string): string {
   return words(withoutVersion) || words(plain) || plain;
 }
 
-function simplifyArtist(name: string): string {
-  return simplify(name).replace(/^the /, "");
+/** Words that join the names of acts that appear together. */
+const ACT_SEPARATOR =
+  /\s*(?:,|&|\+|\band\b|\bx\b|\bfeat\.?|\bfeaturing\b|\bwith\b|\bvs\.?)\s*/i;
+
+/** Drops a leading "the" and a trailing "band", which sources add or leave off freely. */
+function plainAct(act: string): string {
+  return act
+    .replace(/^the /, "")
+    .replace(/(.) band$/, "$1")
+    .trim();
+}
+
+/**
+ * The ways a name can be read for comparison: as written, and without a
+ * nickname in quotes (`Damian "Jr. Gong" Marley` is just Damian Marley to
+ * most sources).
+ */
+function artistReadings(name: string): string[] {
+  const readings = [plainAct(simplify(name))];
+  const withoutNickname = name.replace(/["“”][^"“”]*["“”]/g, " ");
+
+  if (withoutNickname !== name) {
+    readings.push(plainAct(simplify(withoutNickname)));
+  }
+
+  return readings;
+}
+
+function artistSimilarity(a: string, b: string): number {
+  return Math.max(
+    ...artistReadings(a).flatMap((reading) =>
+      artistReadings(b).map((other) => similarity(reading, other)),
+    ),
+  );
+}
+
+/** The separate acts named in an artist credit. */
+function actsOf(name: string): string[] {
+  return name
+    .split(ACT_SEPARATOR)
+    .map((act) => plainAct(simplify(act)))
+    .filter((act) => act !== "");
+}
+
+/**
+ * Whether one credit names only acts that the other names too -- a duo's
+ * song credited to just one of them, or a track "with" a guest -- so that a
+ * solo name matches the collaboration it is part of.
+ */
+function sharesActs(a: string, b: string): boolean {
+  const [fewer, more] = [actsOf(a), actsOf(b)].toSorted(
+    (x, y) => x.length - y.length,
+  ) as [string[], string[]];
+
+  return (
+    fewer.length > 0 &&
+    fewer.every((act) =>
+      more.some((other) => similarity(act, other) >= MIN_ARTIST_SIMILARITY),
+    )
+  );
 }
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion -- every index is bounded by the lengths the loops run to */
@@ -118,13 +189,21 @@ function similarity(a: string, b: string): number {
 function scoreCandidate(
   wanted: WantedSong,
   candidate: Candidate,
-): { title: number; artist: number } {
+): { title: number; artist: number; partial: boolean } {
+  const title = similarity(simplify(wanted.title), simplify(candidate.title));
+  const artist = artistSimilarity(wanted.artistName, candidate.artistName);
+
+  // The artists only partly overlap (one is part of the other's credit), which
+  // is good enough only when the song is plainly the same one.
+  const partial =
+    artist < MIN_ARTIST_SIMILARITY &&
+    title >= MIN_COLLABORATION_TITLE_SIMILARITY &&
+    sharesActs(wanted.artistName, candidate.artistName);
+
   return {
-    title: similarity(simplify(wanted.title), simplify(candidate.title)),
-    artist: similarity(
-      simplifyArtist(wanted.artistName),
-      simplifyArtist(candidate.artistName),
-    ),
+    title,
+    artist: partial ? MIN_ARTIST_SIMILARITY : artist,
+    partial,
   };
 }
 
@@ -144,18 +223,29 @@ function isImitation(wanted: WantedSong, candidate: Candidate): boolean {
 }
 
 /**
- * How far a candidate's version of the song is from the plain studio
- * recording: 0 for it, 1 for an instrumental, live, or karaoke take that
- * wasn't asked for. Their artwork belongs to a different release.
+ * Which recording of the song a candidate is, when it isn't the one asked
+ * for: an instrumental or karaoke take (`backing`), or a concert recording
+ * (`live`). Their artwork belongs to a different release.
  */
-function versionPenalty(wanted: WantedSong, candidate: Candidate): number {
-  const asked = VERSION_PATTERN.test(wanted.title);
+function versionOf(
+  wanted: WantedSong,
+  candidate: Candidate,
+): "studio" | "backing" | "live" {
+  if (VERSION_PATTERN.test(wanted.title)) {
+    return "studio";
+  }
 
-  return !asked &&
-    (VERSION_PATTERN.test(candidate.title) ||
-      LIVE_ALBUM_PATTERN.test(candidate.albumName ?? ""))
-    ? 1
-    : 0;
+  if (
+    BACKING_PATTERN.test(candidate.title) ||
+    BACKING_PATTERN.test(candidate.albumName ?? "")
+  ) {
+    return "backing";
+  }
+
+  return LIVE_PATTERN.test(candidate.title) ||
+    LIVE_ALBUM_PATTERN.test(candidate.albumName ?? "")
+    ? "live"
+    : "studio";
 }
 
 /** 1 for a candidate on a compilation, 0 for one on an album of its own. */
@@ -175,12 +265,16 @@ function leastPenalized<T>(entries: T[], penalty: (entry: T) => number): T[] {
  * is close enough to be sure. Showing nothing beats showing the wrong song,
  * so this errs toward `null`.
  *
- * Candidates must agree on both title and artist, and tribute acts and
- * karaoke tracks are never chosen. Among those left, a plain studio version
- * comes before an instrumental or live one; of those, only the closest
- * matches (within {@link CLOSE_ENOUGH} of the best) are kept; of those, a
- * song on an album of its own comes before one on a compilation; and of
- * those, the earliest release wins, then the service's own ordering.
+ * Candidates must agree on both title and artist (an artist who is only part
+ * of the credit counts if the title is the very same), and tribute acts and
+ * karaoke tracks are never chosen, nor are instrumental or karaoke takes of a
+ * song that wasn't asked for as one, nor live ones unless they came out
+ * before every other release found. Among those left, the act itself comes
+ * before a credit it is only part of; of those, only the closest matches
+ * (within {@link CLOSE_ENOUGH} of the best) are kept; of those, a song on an
+ * album of its own comes before one on a compilation (which is still better
+ * than nothing); and of those, the earliest release wins, then the service's
+ * own ordering.
  */
 function chooseMatch<T extends Candidate>(
   wanted: WantedSong,
@@ -204,11 +298,42 @@ function chooseMatch<T extends Candidate>(
       closeness: entry.score.title + entry.score.artist,
     }));
 
-  const studio = leastPenalized(acceptable, ({ candidate }) =>
-    versionPenalty(wanted, candidate),
+  const versions = acceptable.map((entry) => ({
+    ...entry,
+    version: versionOf(wanted, entry.candidate),
+  }));
+  const studio = versions.filter(({ version }) => version === "studio");
+  const studioYears = studio.flatMap(
+    ({ candidate }) => candidate.releaseYear ?? [],
   );
-  const best = Math.max(...studio.map(({ closeness }) => closeness));
-  const closest = studio.filter(
+  const live = versions.filter(({ version }) => version === "live");
+  const liveYears = [
+    ...new Set(live.flatMap(({ candidate }) => candidate.releaseYear ?? [])),
+  ].toSorted((x, y) => x - y);
+  // A concert recording is the song's own release when it came out before
+  // every other one we know of -- or, when there is nothing but concert
+  // recordings, when it came out long before the rest.
+  const [earliestLive, nextLive] = liveYears;
+  const debut =
+    studioYears.length > 0
+      ? Math.min(...studioYears)
+      : studio.length === 0 &&
+          earliestLive !== undefined &&
+          nextLive !== undefined &&
+          nextLive - earliestLive >= LIVE_DEBUT_GAP_YEARS
+        ? nextLive
+        : null;
+  const debutLive = live.filter(
+    ({ candidate }) =>
+      debut !== null && (candidate.releaseYear ?? Infinity) < debut,
+  );
+  // The act itself, rather than a credit it is only part of, is the better
+  // answer whenever there is one.
+  const whole = leastPenalized([...studio, ...debutLive], ({ score }) =>
+    score.partial ? 1 : 0,
+  );
+  const best = Math.max(...whole.map(({ closeness }) => closeness));
+  const closest = whole.filter(
     ({ closeness }) => closeness >= best - CLOSE_ENOUGH,
   );
   const original = leastPenalized(closest, ({ candidate }) =>

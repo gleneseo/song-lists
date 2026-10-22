@@ -23,6 +23,9 @@ const MIN_TITLE_SIMILARITY = 0.85;
  */
 const MIN_ARTIST_SIMILARITY = 0.9;
 
+/** How close the artist counts as being when the credit is the same act with a backing band. */
+const SAME_ACT_ARTIST_SIMILARITY = 0.95;
+
 /** For an artist who is only part of the credit, the title must be this close to be sure. */
 const MIN_COLLABORATION_TITLE_SIMILARITY = 0.95;
 
@@ -53,6 +56,12 @@ const IMITATION_PATTERN =
  */
 const COMPILATION_PATTERN =
   /\b(greatest hits|best of|the very best|anthology|collection|essentials?|definitive|complete|ultimate|number ones|hits|gold|platinum|classics|singles|compilation|retrospective|best|inspired by|box(ed)?|rarities|b-sides|demos|vault)\b|\b\d{4}\s*[–-]\s*\d{2,4}\b/i;
+
+/**
+ * How a service labels a release that is a single or an EP rather than an
+ * album: "7 (E Flat Version) - Single", "Lost - EP".
+ */
+const SINGLE_PATTERN = /\s-\s(single|ep)$|[([](single|ep)[)\]]$/i;
 
 /** Wording that marks an album as a recording of a concert. */
 const LIVE_ALBUM_PATTERN =
@@ -131,30 +140,44 @@ function artistSimilarity(a: string, b: string): number {
   );
 }
 
-/** The separate acts named in an artist credit. */
-function actsOf(name: string): string[] {
+/** The separate acts named in an artist credit, as written. */
+function rawActsOf(name: string): string[] {
   return name
     .split(ACT_SEPARATOR)
-    .map((act) => plainAct(simplify(act)))
+    .map((act) => act.trim())
     .filter((act) => act !== "");
 }
 
 /**
- * Whether one credit names only acts that the other names too -- a duo's
- * song credited to just one of them, or a track "with" a guest -- so that a
- * solo name matches the collaboration it is part of.
+ * How two credits that aren't the same name relate, when one names only acts
+ * that the other names too:
+ *
+ * - `same`: the other credit adds nothing but a backing band ("Prince & The
+ *   New Power Generation", "Elvis Costello & The Attractions"), so it is the
+ *   same act under another name.
+ * - `partial`: it adds other people, as a duo's song credited to just one of
+ *   them, or a track "with" a guest.
+ *
+ * `null` when neither credit is part of the other.
  */
-function sharesActs(a: string, b: string): boolean {
-  const [fewer, more] = [actsOf(a), actsOf(b)].toSorted(
+function sharedActs(a: string, b: string): "same" | "partial" | null {
+  const [fewer, more] = [rawActsOf(a), rawActsOf(b)].toSorted(
     (x, y) => x.length - y.length,
   ) as [string[], string[]];
+  const named = (acts: string[]) => acts.map((act) => plainAct(simplify(act)));
+  const includes = (acts: string[], act: string) =>
+    named(acts).some(
+      (other) =>
+        similarity(plainAct(simplify(act)), other) >= MIN_ARTIST_SIMILARITY,
+    );
 
-  return (
-    fewer.length > 0 &&
-    fewer.every((act) =>
-      more.some((other) => similarity(act, other) >= MIN_ARTIST_SIMILARITY),
-    )
-  );
+  if (fewer.length === 0 || !fewer.every((act) => includes(more, act))) {
+    return null;
+  }
+
+  const added = more.filter((act) => !includes(fewer, act));
+
+  return added.every((act) => /^the\s/i.test(act)) ? "same" : "partial";
 }
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion -- every index is bounded by the lengths the loops run to */
@@ -192,13 +215,19 @@ function scoreCandidate(
 ): { title: number; artist: number; partial: boolean } {
   const title = similarity(simplify(wanted.title), simplify(candidate.title));
   const artist = artistSimilarity(wanted.artistName, candidate.artistName);
+  const shared =
+    artist < MIN_ARTIST_SIMILARITY
+      ? sharedActs(wanted.artistName, candidate.artistName)
+      : null;
+
+  if (shared === "same") {
+    return { title, artist: SAME_ACT_ARTIST_SIMILARITY, partial: false };
+  }
 
   // The artists only partly overlap (one is part of the other's credit), which
   // is good enough only when the song is plainly the same one.
   const partial =
-    artist < MIN_ARTIST_SIMILARITY &&
-    title >= MIN_COLLABORATION_TITLE_SIMILARITY &&
-    sharesActs(wanted.artistName, candidate.artistName);
+    shared === "partial" && title >= MIN_COLLABORATION_TITLE_SIMILARITY;
 
   return {
     title,
@@ -248,9 +277,11 @@ function versionOf(
     : "studio";
 }
 
-/** 1 for a candidate on a compilation, 0 for one on an album of its own. */
-function compilationPenalty(candidate: Candidate): number {
-  return COMPILATION_PATTERN.test(candidate.albumName ?? "") ? 1 : 0;
+/** 1 for a candidate on a compilation, single, or EP, 0 for one on an album of its own. */
+function notAnAlbumPenalty(candidate: Candidate): number {
+  const album = candidate.albumName ?? "";
+
+  return COMPILATION_PATTERN.test(album) || SINGLE_PATTERN.test(album) ? 1 : 0;
 }
 
 /** Keeps only the entries with the lowest penalty. */
@@ -266,15 +297,16 @@ function leastPenalized<T>(entries: T[], penalty: (entry: T) => number): T[] {
  * so this errs toward `null`.
  *
  * Candidates must agree on both title and artist (an artist who is only part
- * of the credit counts if the title is the very same), and tribute acts and
+ * of someone else's credit counts if the title is the very same, and one
+ * with only a backing band added is the same act), and tribute acts and
  * karaoke tracks are never chosen, nor are instrumental or karaoke takes of a
  * song that wasn't asked for as one, nor live ones unless they came out
  * before every other release found. Among those left, the act itself comes
  * before a credit it is only part of; of those, only the closest matches
  * (within {@link CLOSE_ENOUGH} of the best) are kept; of those, a song on an
- * album of its own comes before one on a compilation (which is still better
- * than nothing); and of those, the earliest release wins, then the service's
- * own ordering.
+ * album of its own comes before one on a compilation, single, or EP (which
+ * is still better than nothing); and of those, the earliest release wins,
+ * then the service's own ordering.
  */
 function chooseMatch<T extends Candidate>(
   wanted: WantedSong,
@@ -337,7 +369,7 @@ function chooseMatch<T extends Candidate>(
     ({ closeness }) => closeness >= best - CLOSE_ENOUGH,
   );
   const original = leastPenalized(closest, ({ candidate }) =>
-    compilationPenalty(candidate),
+    notAnAlbumPenalty(candidate),
   );
 
   return (

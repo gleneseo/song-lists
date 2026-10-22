@@ -481,6 +481,97 @@ describe("chooseMatch, for a song by an act together with others", () => {
   });
 });
 
+describe("chooseMatch, for an act credited with its backing band", () => {
+  const song = (artistName: string, extra = {}) => ({
+    title: "7",
+    artistName,
+    ...extra,
+  });
+
+  it("should count the act with its band as the act itself, so the earlier album wins over a later single", () => {
+    const single = song("Prince", {
+      albumName: "7 (E Flat Version) - Single",
+      releaseYear: 2023,
+    });
+    const album = song("Prince & The New Power Generation", {
+      albumName: "[Love Symbol]",
+      releaseYear: 1992,
+    });
+
+    expect(chooseMatch(song("Prince"), [single, album])).toBe(album);
+  });
+
+  it("should accept the band's name for the act in either direction", () => {
+    const withBand = song("Prince and the Revolution");
+
+    expect(chooseMatch(song("Prince"), [withBand])).toBe(withBand);
+    expect(
+      chooseMatch(song("Prince & The Revolution"), [song("Prince")]),
+    ).not.toBeNull();
+  });
+
+  it("should not hold the band's name to the near-identical title that a guest credit needs", () => {
+    const withBand = {
+      title: "Raspberry Beret",
+      artistName: "Prince & The Revolution",
+    };
+
+    expect(
+      chooseMatch({ title: "Raspberry Beretz", artistName: "Prince" }, [
+        withBand,
+      ]),
+    ).toBe(withBand);
+  });
+
+  it("should still rank a guest credit below the act on its own", () => {
+    const guest = song("Prince & Tevin Campbell", { releaseYear: 1990 });
+    const alone = song("Prince", { releaseYear: 2010 });
+
+    expect(chooseMatch(song("Prince"), [guest, alone])).toBe(alone);
+  });
+});
+
+describe("chooseMatch, for a single or EP", () => {
+  const release = (albumName: string, releaseYear: number) => ({
+    ...exact,
+    albumName,
+    releaseYear,
+  });
+
+  it("should prefer an album to an earlier single of the song", () => {
+    const album = release("Wild-Eyed Southern Boys", 1981);
+
+    expect(
+      chooseMatch(wanted, [release("Hold On Loosely - Single", 1980), album]),
+    ).toBe(album);
+  });
+
+  it.each([
+    "Hold On Loosely - Single",
+    "Hold On Loosely - EP",
+    "Hold On Loosely (Single)",
+    "Hold On Loosely [EP]",
+  ])("should take %s only when there is nothing else", (name) => {
+    const single = release(name, 1980);
+
+    expect(chooseMatch(wanted, [single])).toBe(single);
+  });
+
+  it("should not take an album with single or ep in its name for a single", () => {
+    const album = release("The Single Life", 1990);
+    const later = release("Wild-Eyed Southern Boys", 1995);
+
+    expect(chooseMatch(wanted, [later, album])).toBe(album);
+  });
+
+  it("should rank a single with the compilations, the earliest of them winning", () => {
+    const single = release("Hold On Loosely - Single", 1980);
+    const compilation = release("Greatest Hits", 1990);
+
+    expect(chooseMatch(wanted, [compilation, single])).toBe(single);
+  });
+});
+
 describe("chooseMatch against real songs from the seed data", () => {
   const choices = sample.map((song) => ({
     song,

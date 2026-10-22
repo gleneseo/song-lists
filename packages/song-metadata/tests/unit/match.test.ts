@@ -255,8 +255,11 @@ describe("chooseMatch", () => {
     ["Live in Malaysia 2004", 1983],
     ["2003.06.21 - East Troy, Wisconsin (Live)", 2001],
     ["Live Widespread Panic: 4/26/08 Raleigh, NC", 1991],
+    ["Dick's Picks Vol. 3: 5/22/77 (Hollywood Sportatorium)", 1977],
+    ["Cornell 5/8/1977 (Live)", 1977],
+    ["Live 1987-10-31 (Live)", 1987],
   ])(
-    "should not take a live recording dated before the studio one when it names a later year: %s",
+    "should not take a live recording dated before the studio one when its date is the night it was recorded or a later year: %s",
     (albumName, releaseYear) => {
       const concert = {
         ...exact,

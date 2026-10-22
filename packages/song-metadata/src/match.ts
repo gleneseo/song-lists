@@ -98,6 +98,10 @@ const NAMED_YEAR_PATTERN = /\b(?:19|20)\d{2}\b|\b\d{1,2}\/\d{1,2}\/(\d{2})\b/g;
 const RERECORDED_WORDING =
   "re-?record(ed|ing)s?|taylor['’]s version|\\d+(st|nd|rd|th) anniversary (version|mix|recording)";
 
+/** A date of a concert in an album's name: 5/22/77, 2003.06.21, 1987-10-31. */
+const CONCERT_DATE_PATTERN =
+  /\b\d{1,2}\/\d{1,2}\/(?:\d{2}|\d{4})\b|\b\d{4}[./-]\d{1,2}[./-]\d{1,2}\b/;
+
 /** Wording that marks a recording as a different take on the song itself. */
 const VERSION_PATTERN = new RegExp(
   `\\b(instrumental|live|karaoke|acapella|a cappella|${RERECORDED_WORDING})\\b`,
@@ -318,9 +322,12 @@ function versionOf(
 }
 
 /**
- * Whether a concert recording's year can't be right, because its title names
- * a later one ("Live in Malaysia 2004", dated 1983): services leave a wrong
- * date on some, and one dated before the studio original would pass for it.
+ * Whether a concert recording's year can't be trusted as the year it came
+ * out. Services leave a wrong date on some: its title names a later year
+ * ("Live in Malaysia 2004", dated 1983), or it is named for the night it was
+ * recorded ("Dick's Picks Vol. 3: 5/22/77") and dated for that night, though
+ * the album came out decades later. One dated before the studio original
+ * would pass for it.
  */
 function isMisdated(candidate: Candidate): boolean {
   const { releaseYear } = candidate;
@@ -330,6 +337,10 @@ function isMisdated(candidate: Candidate): boolean {
   }
 
   const text = `${candidate.title} ${candidate.albumName ?? ""}`;
+
+  if (CONCERT_DATE_PATTERN.test(text)) {
+    return true;
+  }
 
   return [...text.matchAll(NAMED_YEAR_PATTERN)].some(([whole, short]) => {
     const named =

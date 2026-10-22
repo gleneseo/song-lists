@@ -1,5 +1,6 @@
 import { SONG_METADATA_SOURCE, SONG_METADATA_STATUS } from "@song-lists/db";
-import { chooseMatch, type WantedSong } from "./match.js";
+import { chooseMatch, isProperAlbum, type WantedSong } from "./match.js";
+import type { SongLookupResult } from "./result.js";
 import { createRateLimiter, type RateLimiter } from "./rate-limiter.js";
 
 const SEARCH_URL = "https://itunes.apple.com/search";
@@ -11,19 +12,6 @@ const REQUEST_TIMEOUT_MS = 10_000;
 
 /** Apple turns away callers past roughly 20 requests a minute. */
 const MIN_INTERVAL_MS = 3000;
-
-/** What a lookup found out about a song. */
-type SongLookupResult =
-  | {
-      status: typeof SONG_METADATA_STATUS.MATCHED;
-      source: typeof SONG_METADATA_SOURCE.ITUNES;
-      sourceTrackId: string;
-      artworkUrl: string | null;
-      albumName: string | null;
-      releaseYear: number | null;
-    }
-  | { status: typeof SONG_METADATA_STATUS.NOT_FOUND }
-  | { status: typeof SONG_METADATA_STATUS.ERROR; message: string };
 
 interface ItunesLookupOptions {
   /** Replaceable so tests never reach the network. */
@@ -138,6 +126,7 @@ function createItunesLookup({
             artworkUrl: match.artworkUrl,
             albumName: match.albumName,
             releaseYear: match.releaseYear,
+            isAlbum: isProperAlbum(wanted, match),
           }
         : { status: SONG_METADATA_STATUS.NOT_FOUND };
     } catch (error) {
@@ -151,4 +140,4 @@ function createItunesLookup({
 }
 
 export { createItunesLookup, MIN_INTERVAL_MS as ITUNES_MIN_INTERVAL_MS };
-export type { ItunesLookupOptions, SongLookupResult };
+export type { ItunesLookupOptions };

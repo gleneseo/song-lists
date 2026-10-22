@@ -18,6 +18,7 @@ const found = {
   artworkUrl: "https://example.test/art/100x100bb.jpg",
   albumName: "An Album",
   releaseYear: 1981,
+  isAlbum: true,
 } as const;
 
 describe("looking songs up and keeping the results, in the database", () => {

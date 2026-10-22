@@ -24,6 +24,10 @@
       "types": "./src/user-role.ts",
       "default": "./src/user-role.ts"
     },
+    "./song-metadata": {
+      "types": "./src/song-metadata.ts",
+      "default": "./src/song-metadata.ts"
+    },
     "./migrations": "./migrations"
   },
   "main": "./src/index.ts",

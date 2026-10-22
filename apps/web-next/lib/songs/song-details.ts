@@ -39,6 +39,7 @@ interface SongDetailsRow {
   /** What the automatic lookup found, or `null` if it hasn't run for this song. */
   metadata: {
     status: string;
+    source: string | null;
     artworkUrl: string | null;
     albumName: string | null;
     releaseYear: number | null;
@@ -47,6 +48,8 @@ interface SongDetailsRow {
 
 /** What an outside music service shows for a song that it matched. */
 interface SongMetadataDetails {
+  /** Who answered: one of `SONG_METADATA_SOURCE`. */
+  source: string | null;
   artworkUrl: string | null;
   albumName: string | null;
   releaseYear: number | null;
@@ -142,6 +145,7 @@ function toSongDetails(row: SongDetailsRow): SongDetails {
     metadata:
       row.metadata?.status === SONG_METADATA_STATUS.MATCHED
         ? {
+            source: row.metadata.source,
             artworkUrl: row.metadata.artworkUrl,
             albumName: row.metadata.albumName,
             releaseYear: row.metadata.releaseYear,

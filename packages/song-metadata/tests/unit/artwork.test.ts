@@ -19,4 +19,22 @@ describe("artwork url", () => {
       "https://example.test/art/cover.jpg",
     );
   });
+
+  it.each([
+    [100, "front-250"],
+    [250, "front-250"],
+    [400, "front-500"],
+    [900, "front-1200"],
+    [5000, "front-1200"],
+  ])(
+    "should ask the Cover Art Archive for a cover at %s pixels",
+    (pixels, name) => {
+      expect(
+        artworkUrlAtSize(
+          "https://coverartarchive.org/release-group/g1/front",
+          pixels,
+        ),
+      ).toBe(`https://coverartarchive.org/release-group/g1/${name}`);
+    },
+  );
 });

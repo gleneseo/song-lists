@@ -36,10 +36,10 @@ vi.mock("next/server", async (importOriginal) => ({
   },
 }));
 
-// Never reaches iTunes: the lookup answers whatever the test says it does.
+// Never reaches iTunes or MusicBrainz: the lookup answers whatever the test says it does.
 vi.mock("@song-lists/song-metadata", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@song-lists/song-metadata")>()),
-  createItunesLookup: () => background.lookup,
+  createSongLookup: () => background.lookup,
 }));
 
 const found: SongLookupResult = {
@@ -49,6 +49,7 @@ const found: SongLookupResult = {
   artworkUrl: "https://example.test/art/100x100bb.jpg",
   albumName: "An Album",
   releaseYear: 1981,
+  isAlbum: true,
 };
 
 describe("looking a song up when it is added, down to the database", () => {

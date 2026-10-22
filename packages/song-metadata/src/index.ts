@@ -13,7 +13,20 @@ export type {
   RecordOutcome,
   SongLookup,
 } from "./record.js";
-export type { ItunesLookupOptions, SongLookupResult } from "./itunes.js";
+export type { ItunesLookupOptions } from "./itunes.js";
+export {
+  createMusicBrainzLookup,
+  MUSICBRAINZ_MIN_INTERVAL_MS,
+} from "./musicbrainz.js";
+export type { MusicBrainzLookupOptions } from "./musicbrainz.js";
+export {
+  combineLookups,
+  createSongLookup,
+  SONG_LOOKUP_MIN_INTERVAL_MS,
+} from "./lookup.js";
+export type { SongLookupOptions } from "./lookup.js";
+export { cleanAlbumName } from "./album-name.js";
+export type { SongLookupResult } from "./result.js";
 export { chooseMatch } from "./match.js";
 export type { Candidate, WantedSong } from "./match.js";
 export { createRateLimiter } from "./rate-limiter.js";

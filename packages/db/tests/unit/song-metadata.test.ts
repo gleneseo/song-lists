@@ -31,6 +31,7 @@ describe("song metadata", () => {
 
     expect(Object.values(SONG_METADATA_SOURCE).map((v) => decode(v))).toEqual([
       "itunes",
+      "musicbrainz",
     ]);
   });
 

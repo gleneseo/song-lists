@@ -4,6 +4,9 @@ interface WantedSong {
   artistName: string;
 }
 
+/** What sort of release a service says a candidate is on, when it says. */
+type ReleaseKind = "album" | "ep" | "single" | "soundtrack" | "compilation";
+
 /** A song as an outside service described it. */
 interface Candidate {
   title: string;
@@ -12,6 +15,11 @@ interface Candidate {
   albumName?: string | null | undefined;
   /** The year the song came out, when the service says. */
   releaseYear?: number | null | undefined;
+  /**
+   * What sort of release it is, for a service that says so outright. Without
+   * it, the sort is read from the album's name.
+   */
+  kind?: ReleaseKind | undefined;
 }
 
 /** Below this, the titles are treated as different songs. */
@@ -322,6 +330,13 @@ function isMisdated(candidate: Candidate): boolean {
 function isSongNamedEp(wanted: WantedSong, candidate: Candidate): boolean {
   const album = candidate.albumName ?? "";
 
+  if (candidate.kind !== undefined) {
+    return (
+      candidate.kind === "ep" &&
+      simplify(album).startsWith(simplify(wanted.title))
+    );
+  }
+
   return (
     EP_PATTERN.test(album) &&
     simplify(album.replace(EP_PATTERN, "")).startsWith(simplify(wanted.title))
@@ -331,12 +346,12 @@ function isSongNamedEp(wanted: WantedSong, candidate: Candidate): boolean {
 /** 1 for a candidate on a compilation, single, or an EP that is a single in disguise, 0 for one on an album of its own. */
 function notAnAlbumPenalty(wanted: WantedSong, candidate: Candidate): number {
   const album = candidate.albumName ?? "";
+  const named =
+    candidate.kind === undefined
+      ? COMPILATION_PATTERN.test(album) || SINGLE_PATTERN.test(album)
+      : candidate.kind === "compilation" || candidate.kind === "single";
 
-  return COMPILATION_PATTERN.test(album) ||
-    SINGLE_PATTERN.test(album) ||
-    isSongNamedEp(wanted, candidate)
-    ? 1
-    : 0;
+  return named || isSongNamedEp(wanted, candidate) ? 1 : 0;
 }
 
 /**
@@ -344,6 +359,14 @@ function notAnAlbumPenalty(wanted: WantedSong, candidate: Candidate): number {
  * year: an album (0), then an EP (1), then a soundtrack (2).
  */
 function releaseKind(candidate: Candidate): number {
+  if (candidate.kind !== undefined) {
+    return candidate.kind === "soundtrack"
+      ? 2
+      : candidate.kind === "ep"
+        ? 1
+        : 0;
+  }
+
   const album = candidate.albumName ?? "";
 
   return SOUNDTRACK_PATTERN.test(album) ? 2 : EP_PATTERN.test(album) ? 1 : 0;
@@ -451,5 +474,15 @@ function chooseMatch<T extends Candidate>(
   );
 }
 
-export { chooseMatch, simplify };
-export type { Candidate, WantedSong };
+/**
+ * Whether a candidate is on an album (or an EP) of its own, rather than on a
+ * single, compilation, soundtrack, or an EP named for the song.
+ */
+function isProperAlbum(wanted: WantedSong, candidate: Candidate): boolean {
+  return (
+    notAnAlbumPenalty(wanted, candidate) === 0 && releaseKind(candidate) !== 2
+  );
+}
+
+export { chooseMatch, isProperAlbum, simplify };
+export type { Candidate, ReleaseKind, WantedSong };

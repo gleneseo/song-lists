@@ -6,7 +6,7 @@ import {
   schema,
 } from "@song-lists/db";
 import { eq } from "drizzle-orm";
-import type { SongLookupResult } from "./itunes.js";
+import type { SongLookupResult } from "./result.js";
 import type { WantedSong } from "./match.js";
 
 /** Looks a song up by title and artist; see {@link createItunesLookup}. */

@@ -447,6 +447,27 @@ test.describe("a song's art, album, and where to hear it", () => {
     ).toBeGreaterThan(0);
   });
 
+  test("a song found on MusicBrainz credits it and the Cover Art Archive", async ({
+    as,
+  }) => {
+    const song = await arrangeSong();
+    await arrangeSongDetails(song, {
+      source: "musicbrainz",
+      artworkUrl: ownArtwork,
+      albumName: "The Acceptance Album",
+      releaseYear: 1997,
+    });
+    const page = await as("user");
+
+    await openSongInModal(page, song);
+
+    await expect(
+      dialog(page).getByText(
+        /Album details via MusicBrainz and the Cover Art Archive/,
+      ),
+    ).toBeVisible();
+  });
+
   test("the full page shows them too", async ({ as }) => {
     const song = await arrangeSong();
     await arrangeSongDetails(song, {

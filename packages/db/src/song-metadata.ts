@@ -26,9 +26,13 @@ type SongMetadataStatus = Schema.Schema.Type<typeof SongMetadataStatus>;
 /** The outside services song metadata can come from. */
 const SONG_METADATA_SOURCE = {
   ITUNES: "itunes",
+  MUSICBRAINZ: "musicbrainz",
 } as const;
 
-const SongMetadataSource = Schema.Literals([SONG_METADATA_SOURCE.ITUNES]);
+const SongMetadataSource = Schema.Literals([
+  SONG_METADATA_SOURCE.ITUNES,
+  SONG_METADATA_SOURCE.MUSICBRAINZ,
+]);
 
 type SongMetadataSource = Schema.Schema.Type<typeof SongMetadataSource>;
 

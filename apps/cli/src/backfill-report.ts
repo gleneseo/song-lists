@@ -62,7 +62,7 @@ function formatSummary(summary: BackfillSummary): string[] {
       ? "Done."
       : summary.ended === "interrupted"
         ? "Stopped early; run it again to carry on from here."
-        : "Stopped early after too many failures in a row (is iTunes turning us away?). Try again later.",
+        : "Stopped early after too many failures in a row (are iTunes or MusicBrainz turning us away?). Try again later.",
     `Looked up ${String(summary.processed)} of ${String(summary.total)}: ${String(summary.matched)} matched, ${String(summary.notFound.length)} not found, ${String(summary.errors)} failed.`,
   ];
 

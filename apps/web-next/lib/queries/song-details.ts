@@ -18,6 +18,7 @@ async function getSongDetails(songId: number): Promise<SongDetails | null> {
       metadata: {
         columns: {
           status: true,
+          source: true,
           artworkUrl: true,
           albumName: true,
           releaseYear: true,

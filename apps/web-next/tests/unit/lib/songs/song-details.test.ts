@@ -42,6 +42,7 @@ describe("toSongDetails", () => {
       ...bareRow,
       metadata: {
         status: "matched",
+        source: "itunes",
         artworkUrl: "https://example.test/art/100x100bb.jpg",
         albumName: "Summer Breeze",
         releaseYear: 1974,
@@ -49,6 +50,7 @@ describe("toSongDetails", () => {
     });
 
     expect(actual.metadata).toEqual({
+      source: "itunes",
       artworkUrl: "https://example.test/art/100x100bb.jpg",
       albumName: "Summer Breeze",
       releaseYear: 1974,
@@ -62,6 +64,7 @@ describe("toSongDetails", () => {
         ...bareRow,
         metadata: {
           status,
+          source: null,
           artworkUrl: null,
           albumName: null,
           releaseYear: null,

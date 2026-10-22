@@ -9,6 +9,7 @@ import {
   SongLink,
 } from "@/components/entity-links";
 import { NoteLines } from "@/components/songs/note-lines";
+import { metadataCredit } from "@/lib/songs/metadata-credit";
 import { SongArtwork } from "@/components/songs/song-artwork";
 import { ListPill } from "@/components/lists/list-pill";
 import type { SongDetails } from "@/lib/songs/song-details";
@@ -179,7 +180,8 @@ function SongDetailsView({
       <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
         <p className="text-xs text-muted-foreground">
           Added to the catalog {formatDate(details.addedAt)}
-          {details.metadata && " · Album details via iTunes"}
+          {details.metadata &&
+            ` · Album details via ${metadataCredit(details.metadata.source)}`}
         </p>
         {footerAction}
       </div>

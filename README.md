@@ -44,7 +44,7 @@ Open [http://localhost:3000](http://localhost:3000). `npm run build -w @song-lis
 
 ### Song art and album lookups
 
-A song's details show its album art, album, year, and a YouTube link. The art, album, and year come from iTunes' free search, by title and artist, and are stored in the `song_metadata` table. A song gets its lookup automatically when it is added, in the background, so adding a song never waits on iTunes or fails because of it. Tribute and karaoke acts are never taken for the real artist; a song with no confident match shows nothing rather than the wrong art.
+A song's details show its album art, album, year, and a YouTube link. The art, album, and year come from two free services, asked together by title and artist: iTunes, and MusicBrainz with the Cover Art Archive (which knows records iTunes doesn't sell). They are stored in the `song_metadata` table. A song on an album of its own beats one on a single or compilation; of two albums, the one that came out first wins, and a tie goes to iTunes. MusicBrainz judges a release by its own type, so live albums, remixes and DJ mixes are never taken for it, and its year is the album's true first release. An album's name is saved without its edition ("Insomniac", not "Insomniac (25th Anniversary Deluxe Edition)"). A song gets its lookup automatically when it is added, in the background, so adding a song never waits on either service or fails because of them. Tribute and karaoke acts are never taken for the real artist; a song with no confident match shows nothing rather than the wrong art.
 
 The seed data ships with the results already in (`0004_seed_song_details.sql`), so a fresh `npm run db:reset` needs no lookup. Use the `backfill-metadata` command to look up songs that have none, such as songs added in bulk since:
 
@@ -61,7 +61,7 @@ npm start -w @song-lists/cli -- backfill-metadata --report results.csv
 | `--retry-not-found` | Also look up again the songs nothing was found for (after tuning the matching in `song-metadata`).   |
 | `--report <path>`   | When the run ends, write every song's lookup result to `path` as CSV, for spreadsheets or `sqlite3`. |
 
-- **Pace:** it makes one request every 3 seconds to stay within iTunes' limits, so about 4¾ hours for the whole catalog. Each result is saved as it arrives.
+- **Pace:** about one song every 3.3 seconds, to stay within iTunes' and MusicBrainz's limits (about 5¼ hours for the whole catalog). Each result is saved as it arrives.
 - **Stopping:** Ctrl-C finishes the song in hand and prints a summary, including the songs nothing was found for; Ctrl-C again stops at once. Running it again carries on from where it stopped. It also stops by itself after 5 failures in a row, and songs that failed are tried again on the next run.
 - **Needs** `DATABASE_URL` (read from the nearest `.env`). It runs from a checkout, not the CLI's Docker image, which doesn't include the database packages.
 - **Switching it off:** set `SONG_METADATA_LOOKUP=off` to skip the automatic lookup when songs are added (the UAT suite does this).

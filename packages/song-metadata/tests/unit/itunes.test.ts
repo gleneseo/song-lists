@@ -38,6 +38,7 @@ describe("iTunes lookup", () => {
       artworkUrl: "https://example.test/art/100x100bb.jpg",
       albumName: "Wild-Eyed Southern Boys",
       releaseYear: 1981,
+      isAlbum: true,
     });
   });
 
@@ -112,6 +113,7 @@ describe("iTunes lookup", () => {
       artworkUrl: null,
       albumName: null,
       releaseYear: null,
+      isAlbum: true,
     });
   });
 

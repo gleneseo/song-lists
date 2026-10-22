@@ -4,10 +4,10 @@ import { loadNearestEnv } from "@song-lists/db/load-env";
 import {
   type BackfillSummary,
   backfillSongMetadata,
-  createItunesLookup,
+  createSongLookup,
   findSongsToBackfill,
-  ITUNES_MIN_INTERVAL_MS,
   listSongMetadataReport,
+  SONG_LOOKUP_MIN_INTERVAL_MS,
 } from "@song-lists/song-metadata";
 import {
   formatPlan,
@@ -61,7 +61,7 @@ async function runBackfillMetadata({
     if (dryRun) {
       const songs = await findSongsToBackfill(db, which);
 
-      console.log(formatPlan(songs.length, ITUNES_MIN_INTERVAL_MS));
+      console.log(formatPlan(songs.length, SONG_LOOKUP_MIN_INTERVAL_MS));
       await writeReport();
 
       return;
@@ -91,12 +91,14 @@ async function runBackfillMetadata({
     try {
       summary = await backfillSongMetadata({
         db,
-        lookup: createItunesLookup(),
+        lookup: createSongLookup(),
         ...which,
         shouldStop: () => interrupted,
         onProgress: (progress) => {
           if (progress.position === 1) {
-            console.log(formatPlan(progress.total, ITUNES_MIN_INTERVAL_MS));
+            console.log(
+              formatPlan(progress.total, SONG_LOOKUP_MIN_INTERVAL_MS),
+            );
           }
 
           console.log(formatProgress(progress));

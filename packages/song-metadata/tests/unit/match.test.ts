@@ -759,6 +759,28 @@ describe("chooseMatch", () => {
     expect(chooseMatch(song, [history, album])).toBe(album);
   });
 
+  it("should take a film's soundtrack over its score, of the same year", () => {
+    const song = {
+      title: "The Goonies 'R' Good Enough",
+      artistName: "Cyndi Lauper",
+    };
+    const score = {
+      ...song,
+      albumName: "The Goonies: Original Motion Picture Score",
+      kind: "soundtrack" as const,
+      releaseYear: 1985,
+    };
+    const soundtrack = {
+      ...song,
+      albumName: "The Goonies (Original Motion Picture Soundtrack)",
+      kind: "soundtrack" as const,
+      releaseYear: 1985,
+    };
+
+    expect(chooseMatch(song, [score, soundtrack])).toBe(soundtrack);
+    expect(chooseMatch(song, [score])).toBe(score);
+  });
+
   it("should count an album just called Love Songs as a compilation", () => {
     const compilation = {
       ...exact,

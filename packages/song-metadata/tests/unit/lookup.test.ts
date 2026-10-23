@@ -144,6 +144,37 @@ describe("combining lookups", () => {
     expect(combineLookups(numbered, plain)).toEqual(plain);
   });
 
+  it("should take an album over a soundtrack of the same year, whichever service has which", () => {
+    const album = {
+      ...itunes,
+      albumName: "It Takes a Nation of Millions to Hold Us Back",
+      releaseYear: 1987,
+      releaseRank: 0,
+    };
+    const soundtrack = {
+      ...musicbrainz,
+      albumName: "Less Than Zero",
+      releaseYear: 1987,
+      releaseRank: 2,
+    };
+
+    expect(combineLookups(album, soundtrack)).toMatchObject({
+      source: "itunes",
+    });
+    expect(
+      combineLookups(
+        { ...album, releaseRank: 2 },
+        { ...soundtrack, releaseRank: 0 },
+      ),
+    ).toMatchObject({ source: "musicbrainz" });
+    expect(
+      combineLookups(
+        { ...itunes, albumName: album.albumName, releaseYear: 1987 },
+        { ...musicbrainz, albumName: soundtrack.albumName, releaseYear: 1987 },
+      ),
+    ).toMatchObject({ source: "musicbrainz" });
+  });
+
   it("should not believe MusicBrainz on a tie when its album is named for the song", () => {
     const song = { title: "More Than A Woman", artistName: "Bee Gees" };
     const soundtrack = { ...itunes, albumName: "Saturday Night Fever" };

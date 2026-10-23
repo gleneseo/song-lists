@@ -3,6 +3,7 @@ import type { SongLookupResult } from "./result.js";
 import {
   chooseMatch,
   isProperAlbum,
+  releaseKind,
   simplify,
   type Candidate,
   type ReleaseKind,
@@ -545,6 +546,7 @@ function createMusicBrainzLookup({
             albumName: album.title ?? match.albumName,
             releaseYear: album.year ?? match.releaseYear,
             isAlbum: isProperAlbum(wanted, match),
+            releaseRank: releaseKind(match),
           };
         }
 

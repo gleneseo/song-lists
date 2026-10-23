@@ -127,6 +127,7 @@ describe("MusicBrainz lookup", () => {
       albumName: "Wild-Eyed Southern Boys",
       releaseYear: 1981,
       isAlbum: true,
+      releaseRank: 0,
     });
   });
 
@@ -295,6 +296,7 @@ describe("MusicBrainz lookup", () => {
     await expect(lookup(wanted)).resolves.toMatchObject({
       albumName: "Wild-Eyed Southern Boys",
       isAlbum: true,
+      releaseRank: 0,
     });
   });
 
@@ -495,6 +497,7 @@ describe("MusicBrainz lookup", () => {
     await expect(lookup(wanted)).resolves.toMatchObject({
       albumName: "Footloose",
       isAlbum: true,
+      releaseRank: 2,
     });
   });
 
@@ -523,6 +526,7 @@ describe("MusicBrainz lookup", () => {
     await expect(lookup(wanted)).resolves.toMatchObject({
       albumName: "Footloose",
       isAlbum: true,
+      releaseRank: 2,
     });
   });
 
@@ -573,6 +577,7 @@ describe("MusicBrainz lookup", () => {
     await expect(lookup(wanted)).resolves.toMatchObject({
       albumName: "Four Songs",
       isAlbum: true,
+      releaseRank: 1,
     });
   });
 
@@ -786,6 +791,7 @@ describe("MusicBrainz lookup", () => {
       albumName: "Hold On Loosely",
       releaseYear: 1980,
       isAlbum: true,
+      releaseRank: 1,
     });
   });
 

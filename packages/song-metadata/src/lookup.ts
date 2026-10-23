@@ -73,7 +73,8 @@ function better(
   // The earlier release is the original; a later one is a reissue or a
   // collection of it. Of two albums of the same year MusicBrainz is believed,
   // since it knows a compilation by its type and iTunes only by its name --
-  // unless its album is named for the song, which is more likely a single.
+  // unless its album is named for the song, which is more likely a single, or
+  // is a soundtrack where iTunes has an album of its own the same year.
   if (itunes.releaseYear === null) {
     // An album that comes with no year is no better than one that does.
     return musicbrainz.releaseYear === null ? itunes : musicbrainz;
@@ -83,6 +84,7 @@ function better(
     (musicbrainz.releaseYear < itunes.releaseYear ||
       (musicbrainz.releaseYear === itunes.releaseYear &&
         musicbrainz.isAlbum &&
+        (itunes.releaseRank ?? 0) >= (musicbrainz.releaseRank ?? 0) &&
         !isNamedFor(wanted, musicbrainz.albumName)))
     ? musicbrainz
     : itunes;

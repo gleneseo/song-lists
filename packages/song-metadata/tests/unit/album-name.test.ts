@@ -58,6 +58,7 @@ describe("tidyAlbumName", () => {
     "AC/DC",
     "ScHoolboy Q",
     "iPhone Sessions",
+    "nWo Wolfpac",
     "McCartney II",
     "3rd Bass",
     "Sign “☮︎” The Times",

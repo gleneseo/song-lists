@@ -611,6 +611,21 @@ describe("chooseMatch", () => {
     ).toMatchObject({ albumName: "Year Only" });
   });
 
+  it("should count an album named for its number ones as a collection", () => {
+    const song = {
+      title: "One Thing Leads To Another",
+      artistName: "The Fixx",
+    };
+    const collection = {
+      ...song,
+      albumName: "20 #1's (80's Rock)",
+      releaseYear: 1983,
+    };
+    const album = { ...song, albumName: "Reach the Beach", releaseYear: 1984 };
+
+    expect(chooseMatch(song, [collection, album])).toBe(album);
+  });
+
   it("should count an album just called Love Songs as a compilation", () => {
     const compilation = {
       ...exact,

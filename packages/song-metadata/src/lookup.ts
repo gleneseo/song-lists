@@ -18,10 +18,23 @@ function sameAlbumKey(name: string | null): string {
     .replaceAll(/[^\p{L}\p{N}]/gu, "");
 }
 
+/** How much later than another release an album must be to be taken for a collection of it. */
+const LATER_ALBUM_YEARS = 10;
+
 /** Which of two matches describes the song's own record better. */
 function better(itunes: Matched, musicbrainz: Matched): Matched {
   if (itunes.isAlbum !== musicbrainz.isAlbum) {
-    return itunes.isAlbum ? itunes : musicbrainz;
+    const [album, other] = itunes.isAlbum
+      ? [itunes, musicbrainz]
+      : [musicbrainz, itunes];
+
+    // An album that came out decades after the song's other release is a
+    // collection of it, whatever it is called.
+    return album.releaseYear !== null &&
+      other.releaseYear !== null &&
+      album.releaseYear - other.releaseYear >= LATER_ALBUM_YEARS
+      ? other
+      : album;
   }
 
   if (sameAlbumKey(itunes.albumName) === sameAlbumKey(musicbrainz.albumName)) {

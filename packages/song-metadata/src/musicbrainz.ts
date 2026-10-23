@@ -85,6 +85,20 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
+/** Whether a release is credited to Various Artists, as a compilation is. */
+function isByVariousArtists(release: Record<string, unknown> | null) {
+  const credit = release?.["artist-credit"];
+
+  return (
+    Array.isArray(credit) &&
+    credit
+      .map(asRecord)
+      .some((part) =>
+        /^various( artists)?$/i.test(textOrNull(part?.["name"]) ?? ""),
+      )
+  );
+}
+
 /** Whether a release states a status other than official; one that states none is let through. */
 function isUnofficial(release: Record<string, unknown> | null) {
   const status = release?.["status"];
@@ -164,7 +178,13 @@ function readCandidates(raw: unknown): ReleaseCandidate[] {
       const group = asRecord(release?.["release-group"]);
       const groupId = textOrNull(group?.["id"]);
       const albumName = textOrNull(release?.["title"]);
-      const kind = group ? kindOf(group) : null;
+      const stated = group ? kindOf(group) : null;
+      // An album credited to Various Artists is a compilation, whatever type
+      // it was entered as.
+      const kind =
+        stated === "album" && isByVariousArtists(release)
+          ? "compilation"
+          : stated;
 
       if (
         release === null ||

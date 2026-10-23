@@ -266,6 +266,28 @@ describe("MusicBrainz lookup", () => {
     },
   );
 
+  it("should treat an album credited to Various Artists as a compilation", async () => {
+    const credit = (name: string) => ({ "artist-credit": [{ name }] });
+    const lookup = lookupWith(
+      service({
+        recordings: [
+          recording([
+            release("Neue Hits 90", "g2", {}, credit("Various Artists")),
+            release("Wild-Eyed Southern Boys", "g1", {}, credit(".38 Special")),
+          ]),
+          recording([
+            release("Another", "g3", {}, { "artist-credit": "none" }),
+          ]),
+          recording([release("Third", "g4", {}, { "artist-credit": [{}] })]),
+        ],
+      }),
+    );
+
+    await expect(lookup(wanted)).resolves.toMatchObject({
+      albumName: "Wild-Eyed Southern Boys",
+    });
+  });
+
   it("should take a soundtrack as an album", async () => {
     const lookup = lookupWith(
       service({

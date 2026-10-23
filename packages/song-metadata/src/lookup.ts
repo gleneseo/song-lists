@@ -19,12 +19,15 @@ function sameAlbumKey(name: string | null): string {
 }
 
 /**
- * An album's key without a number at the end of its name, as a band numbers
- * its albums of the same name: "The Bronx (III)" is the key of "The Bronx".
+ * An album's key without a qualifier at the end of its name: a number, as a
+ * band numbers its albums of the same name ("The Bronx (III)"), or a note in
+ * parentheses ("Weezer (Green Album)").
  */
-function numberlessAlbumKey(name: string | null): string {
+function unqualifiedAlbumKey(name: string | null): string {
   return sameAlbumKey(
-    (name ?? "").replace(/[\s(]+(?:[ivxlc]+|\d+)\)?\s*$/i, ""),
+    (name ?? "")
+      .replace(/\s*\([^)]*\)\s*$/, "")
+      .replace(/\s+(?:[ivxlc]+|\d+)\s*$/i, ""),
   );
 }
 
@@ -38,17 +41,18 @@ function better(itunes: Matched, musicbrainz: Matched): Matched {
     return itunes;
   }
 
-  // Of one year, a numbered album is the same as its unnumbered name, and
-  // whichever service says which of a band's albums called "The Bronx" it is
-  // has the better name.
+  // Of one year, an album with a number or a note on its name ("The Bronx
+  // (III)", "Weezer (Green Album)") is the same as the plain name, and
+  // whichever service says which of a band's albums of that name it is has
+  // the better name.
   if (
     itunes.releaseYear === musicbrainz.releaseYear &&
-    numberlessAlbumKey(itunes.albumName) ===
-      numberlessAlbumKey(musicbrainz.albumName)
+    unqualifiedAlbumKey(itunes.albumName) ===
+      unqualifiedAlbumKey(musicbrainz.albumName)
   ) {
     return sameAlbumKey(musicbrainz.albumName) !==
-      numberlessAlbumKey(musicbrainz.albumName) &&
-      sameAlbumKey(itunes.albumName) === numberlessAlbumKey(itunes.albumName)
+      unqualifiedAlbumKey(musicbrainz.albumName) &&
+      sameAlbumKey(itunes.albumName) === unqualifiedAlbumKey(itunes.albumName)
       ? musicbrainz
       : itunes;
   }

@@ -114,6 +114,20 @@ describe("combining lookups", () => {
     expect(combineLookups(itunesNumbered, mbNumbered)).toEqual(itunesNumbered);
   });
 
+  it("should keep the note on the name of a band's self-titled albums", () => {
+    const year = { releaseYear: 2001 };
+    const noted = { ...itunes, albumName: "Weezer (Green Album)", ...year };
+    const plain = { ...musicbrainz, albumName: "Weezer", ...year };
+
+    expect(combineLookups(noted, plain)).toEqual(noted);
+    expect(
+      combineLookups(
+        { ...noted, albumName: "Weezer" },
+        { ...plain, albumName: "Weezer (Green Album)" },
+      ),
+    ).toEqual({ ...plain, albumName: "Weezer (Green Album)" });
+  });
+
   it("should not match a numbered album to a plain name of another year", () => {
     const numbered = {
       ...itunes,

@@ -17,6 +17,9 @@ const COVER_ART_URL = "https://coverartarchive.org/release-group";
 /** How many recordings to ask for; the best of these is the one we may use. */
 const RESULT_LIMIT = 30;
 
+/** How many more to ask for, past the first, when those had no album of the song's own. */
+const MORE_RESULTS = 70;
+
 const REQUEST_TIMEOUT_MS = 10_000;
 
 /** MusicBrainz asks callers to stay at about one request a second. */
@@ -177,6 +180,12 @@ function kindOf(group: Record<string, unknown>): ReleaseKind | null {
   }
 
   return primary === "Single" ? "single" : primary === "EP" ? "ep" : "album";
+}
+
+function recordingsOf(raw: unknown): unknown[] {
+  const recordings = asRecord(raw)?.["recordings"];
+
+  return Array.isArray(recordings) ? recordings : [];
 }
 
 /**
@@ -447,17 +456,39 @@ function createMusicBrainzLookup({
       );
   };
 
-  return async (wanted) => {
+  const searchUrl = (wanted: WantedSong, offset: number, limit: number) => {
     const url = new URL(SEARCH_URL);
 
     url.search = new URLSearchParams({
       query: `recording:"${wanted.title.replaceAll('"', " ")}" AND ${artistQuery(wanted.artistName)}`,
       fmt: "json",
-      limit: String(RESULT_LIMIT),
+      limit: String(limit),
+      ...(offset > 0 ? { offset: String(offset) } : {}),
     }).toString();
 
+    return url;
+  };
+
+  /**
+   * The recordings after the first page, for a song whose first page had only
+   * singles and collections: on a song with many recordings the album's own
+   * can be further down. A page that can't be had counts as no more.
+   */
+  const askMore = async (wanted: WantedSong): Promise<unknown[]> => {
     try {
-      const response = await send(url);
+      const response = await send(
+        searchUrl(wanted, RESULT_LIMIT, MORE_RESULTS),
+      );
+
+      return response.ok ? recordingsOf(await response.json()) : [];
+    } catch {
+      return [];
+    }
+  };
+
+  return async (wanted) => {
+    try {
+      const response = await send(searchUrl(wanted, 0, RESULT_LIMIT));
 
       if (!response.ok) {
         return {
@@ -466,9 +497,22 @@ function createMusicBrainzLookup({
         };
       }
 
-      let candidates = await dateByAlbums(
-        readCandidates(await response.json(), wanted),
-      );
+      const first = await response.json();
+      let candidates = await dateByAlbums(readCandidates(first, wanted));
+      const early = chooseRelease(wanted, candidates);
+
+      if (!early || !isProperAlbum(wanted, early)) {
+        const more = await askMore(wanted);
+
+        if (more.length > 0) {
+          candidates = await dateByAlbums(
+            readCandidates(
+              { recordings: [...recordingsOf(first), ...more] },
+              wanted,
+            ),
+          );
+        }
+      }
 
       for (let tries = 0; tries < MAX_COVER_CHECKS; tries += 1) {
         const match = chooseRelease(wanted, candidates);

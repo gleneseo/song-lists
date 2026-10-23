@@ -46,6 +46,9 @@ function service({
   groupTitle = null,
   group = 200,
   covers = {},
+  more = [],
+  moreStatus = 200,
+  moreThrows = false,
 }: {
   recordings?: unknown;
   search?: number;
@@ -55,6 +58,10 @@ function service({
   groupTitle?: string | null;
   group?: number;
   covers?: Record<string, number>;
+  /** The recordings the second page of the search holds. */
+  more?: unknown;
+  moreStatus?: number;
+  moreThrows?: boolean;
 } = {}) {
   return vi.fn<typeof fetch>((input) => {
     const url = urlOf(input);
@@ -80,6 +87,16 @@ function service({
           { status: group },
         ),
       );
+    }
+
+    if (url.searchParams.has("offset")) {
+      return moreThrows
+        ? Promise.reject(new Error("the second page timed out"))
+        : Promise.resolve(
+            new Response(JSON.stringify({ recordings: more }), {
+              status: moreStatus,
+            }),
+          );
     }
 
     return Promise.resolve(
@@ -357,6 +374,67 @@ describe("MusicBrainz lookup", () => {
     await expect(lookup(song)).resolves.toMatchObject({
       albumName: "Anything",
     });
+  });
+
+  describe("when the first page has no album of the song's own", () => {
+    const single = recording(
+      [release("Hold On Loosely", "g2", { primary: "Single" })],
+      { id: "rec-single" },
+    );
+    const album = recording([release("Wild-Eyed Southern Boys", "g1")], {
+      id: "rec-album",
+    });
+
+    it("should look further down for the album", async () => {
+      const fetch = service({ recordings: [single], more: [album] });
+
+      await expect(lookupWith(fetch)(wanted)).resolves.toMatchObject({
+        albumName: "Wild-Eyed Southern Boys",
+        sourceTrackId: "rec-album",
+        isAlbum: true,
+      });
+
+      const asked = fetch.mock.calls
+        .map(([input]) => urlOf(input))
+        .find((url) => url.searchParams.has("offset"));
+
+      expect(asked?.searchParams.get("offset")).toBe("30");
+      expect(asked?.searchParams.get("limit")).toBe("70");
+    });
+
+    it.each([
+      ["a page that can't be had", { moreStatus: 503 }],
+      ["a page that times out", { moreThrows: true }],
+      ["a page with nothing more", { more: [] }],
+      ["a page that isn't a list", { more: "nonsense" }],
+    ])("should make do with the first page for %s", async (_n, extra) => {
+      const fetch = service({ recordings: [single], ...extra });
+
+      await expect(lookupWith(fetch)(wanted)).resolves.toMatchObject({
+        albumName: "Hold On Loosely",
+        isAlbum: false,
+      });
+    });
+
+    it("should look further down when the first page has nothing at all", async () => {
+      const fetch = service({ recordings: [], more: [album] });
+
+      await expect(lookupWith(fetch)(wanted)).resolves.toMatchObject({
+        albumName: "Wild-Eyed Southern Boys",
+      });
+    });
+  });
+
+  it("should not look further when the first page has an album", async () => {
+    const fetch = service();
+
+    await lookupWith(fetch)(wanted);
+
+    expect(
+      fetch.mock.calls.some(([input]) =>
+        urlOf(input).searchParams.has("offset"),
+      ),
+    ).toBe(false);
   });
 
   it("should take a soundtrack as an album", async () => {

@@ -49,6 +49,7 @@ function service({
   more = [],
   moreStatus = 200,
   moreThrows = false,
+  official = [],
 }: {
   recordings?: unknown;
   search?: number;
@@ -62,6 +63,8 @@ function service({
   more?: unknown;
   moreStatus?: number;
   moreThrows?: boolean;
+  /** The recordings the search for official albums alone holds. */
+  official?: unknown;
 } = {}) {
   return vi.fn<typeof fetch>((input) => {
     const url = urlOf(input);
@@ -86,6 +89,12 @@ function service({
           }),
           { status: group },
         ),
+      );
+    }
+
+    if (url.searchParams.get("query")?.includes("primarytype:album")) {
+      return Promise.resolve(
+        new Response(JSON.stringify({ recordings: official }), { status: 200 }),
       );
     }
 
@@ -414,6 +423,41 @@ describe("MusicBrainz lookup", () => {
         albumName: "Hold On Loosely",
         isAlbum: false,
       });
+    });
+
+    it("should look at the official albums alone when the next results have none", async () => {
+      const fetch = service({
+        recordings: [single],
+        more: [single],
+        official: [album],
+      });
+
+      await expect(lookupWith(fetch)(wanted)).resolves.toMatchObject({
+        albumName: "Wild-Eyed Southern Boys",
+        sourceTrackId: "rec-album",
+      });
+
+      const queries = fetch.mock.calls
+        .map(([input]) => urlOf(input).searchParams.get("query") ?? "")
+        .filter((query) => query.startsWith("recording:"));
+
+      expect(queries.at(-1)).toContain(
+        "AND status:official AND primarytype:album AND NOT secondarytype:live",
+      );
+    });
+
+    it("should not ask for the official albums when the next results had one", async () => {
+      const fetch = service({ recordings: [single], more: [album] });
+
+      await lookupWith(fetch)(wanted);
+
+      expect(
+        fetch.mock.calls.some(([input]) =>
+          (urlOf(input).searchParams.get("query") ?? "").includes(
+            "primarytype:album",
+          ),
+        ),
+      ).toBe(false);
     });
 
     it("should look further down when the first page has nothing at all", async () => {

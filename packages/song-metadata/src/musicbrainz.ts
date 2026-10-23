@@ -17,6 +17,14 @@ const COVER_ART_URL = "https://coverartarchive.org/release-group";
 /** How many recordings to ask for; the best of these is the one we may use. */
 const RESULT_LIMIT = 30;
 
+/**
+ * Narrows a search to the song on official albums that aren't concerts. A song
+ * with hundreds of live and bootleg recordings has its studio one far down an
+ * ordinary search, however many results are asked for.
+ */
+const OFFICIAL_ALBUMS_ONLY =
+  " AND status:official AND primarytype:album AND NOT secondarytype:live";
+
 /** How many more to ask for, past the first, when those had no album of the song's own. */
 const MORE_RESULTS = 70;
 
@@ -192,13 +200,10 @@ function recordingsOf(raw: unknown): unknown[] {
  * The songs on each album, from a recording search: one candidate for each
  * release group, taken from its earliest official release.
  */
-function readCandidates(raw: unknown, wanted: WantedSong): ReleaseCandidate[] {
-  const recordings = asRecord(raw)?.["recordings"];
-
-  if (!Array.isArray(recordings)) {
-    return [];
-  }
-
+function readCandidates(
+  recordings: unknown[],
+  wanted: WantedSong,
+): ReleaseCandidate[] {
   const found = new Map<string, ReleaseCandidate>();
 
   for (const recording of recordings.map(asRecord)) {
@@ -456,11 +461,16 @@ function createMusicBrainzLookup({
       );
   };
 
-  const searchUrl = (wanted: WantedSong, offset: number, limit: number) => {
+  const searchUrl = (
+    wanted: WantedSong,
+    offset: number,
+    limit: number,
+    officialAlbumsOnly = false,
+  ) => {
     const url = new URL(SEARCH_URL);
 
     url.search = new URLSearchParams({
-      query: `recording:"${wanted.title.replaceAll('"', " ")}" AND ${artistQuery(wanted.artistName)}`,
+      query: `recording:"${wanted.title.replaceAll('"', " ")}" AND ${artistQuery(wanted.artistName)}${officialAlbumsOnly ? OFFICIAL_ALBUMS_ONLY : ""}`,
       fmt: "json",
       limit: String(limit),
       ...(offset > 0 ? { offset: String(offset) } : {}),
@@ -470,15 +480,12 @@ function createMusicBrainzLookup({
   };
 
   /**
-   * The recordings after the first page, for a song whose first page had only
-   * singles and collections: on a song with many recordings the album's own
-   * can be further down. A page that can't be had counts as no more.
+   * More recordings for a song whose results had only singles and collections.
+   * A search that can't be had counts as no more.
    */
-  const askMore = async (wanted: WantedSong): Promise<unknown[]> => {
+  const askRecordings = async (url: URL): Promise<unknown[]> => {
     try {
-      const response = await send(
-        searchUrl(wanted, RESULT_LIMIT, MORE_RESULTS),
-      );
+      const response = await send(url);
 
       return response.ok ? recordingsOf(await response.json()) : [];
     } catch {
@@ -497,20 +504,26 @@ function createMusicBrainzLookup({
         };
       }
 
-      const first = await response.json();
-      let candidates = await dateByAlbums(readCandidates(first, wanted));
-      const early = chooseRelease(wanted, candidates);
+      let recordings = recordingsOf(await response.json());
+      let candidates = await dateByAlbums(readCandidates(recordings, wanted));
 
-      if (!early || !isProperAlbum(wanted, early)) {
-        const more = await askMore(wanted);
+      // With no album of the song's own yet, look further: first at the next
+      // results, then at the official albums alone.
+      for (const next of [
+        searchUrl(wanted, RESULT_LIMIT, MORE_RESULTS),
+        searchUrl(wanted, 0, RESULT_LIMIT, true),
+      ]) {
+        const early = chooseRelease(wanted, candidates);
+
+        if (early && isProperAlbum(wanted, early)) {
+          break;
+        }
+
+        const more = await askRecordings(next);
 
         if (more.length > 0) {
-          candidates = await dateByAlbums(
-            readCandidates(
-              { recordings: [...recordingsOf(first), ...more] },
-              wanted,
-            ),
-          );
+          recordings = [...recordings, ...more];
+          candidates = await dateByAlbums(readCandidates(recordings, wanted));
         }
       }
 

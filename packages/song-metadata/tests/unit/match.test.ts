@@ -492,6 +492,19 @@ describe("chooseMatch", () => {
     expect(chooseMatch(song, [originals, album])).toBe(album);
   });
 
+  it("should rank a digital 45 as a single, behind the album of a later year", () => {
+    const song = { title: "Apache", artistName: "The Sugarhill Gang" };
+    const forty5 = {
+      ...song,
+      albumName: "Apache / Rapper's Delight [Digital 45]",
+      releaseYear: 1979,
+    };
+    const album = { ...song, albumName: "8th Wonder", releaseYear: 1981 };
+
+    expect(chooseMatch(song, [forty5, album])).toBe(album);
+    expect(chooseMatch(song, [forty5])).toBe(forty5);
+  });
+
   it("should count an album just called Love Songs as a compilation", () => {
     const compilation = {
       ...exact,

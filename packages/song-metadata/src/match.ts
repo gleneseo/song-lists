@@ -79,9 +79,9 @@ const HITS_PATTERN =
 
 /**
  * How a service labels a release that is a single rather than an album: "7 (E
- * Flat Version) - Single".
+ * Flat Version) - Single", "Apache / Rapper's Delight [Digital 45]".
  */
-const SINGLE_PATTERN = /\s-\s*single$|[([]single[)\]]$/i;
+const SINGLE_PATTERN = /\s-\s*single$|[([]single[)\]]$|[([]digital 45[)\]]$/i;
 
 /**
  * How a service labels an EP, which is sometimes a mini-album and sometimes

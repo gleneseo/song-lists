@@ -3,6 +3,7 @@ import type { SongLookupResult } from "./result.js";
 import {
   chooseMatch,
   isProperAlbum,
+  simplify,
   type Candidate,
   type ReleaseKind,
   type WantedSong,
@@ -99,6 +100,40 @@ function isByVariousArtists(release: Record<string, unknown> | null) {
   );
 }
 
+/** The words of a name that tell one act from another. */
+function namingWords(name: string): string[] {
+  return simplify(name)
+    .split(" ")
+    .filter((word) => word.length > 2 && word !== "the" && word !== "and");
+}
+
+/**
+ * Whether a release is credited to some other act than the one wanted, as a
+ * cover or a sample of the song on someone else's album is: it names no word
+ * of the act and isn't a Various Artists compilation.
+ */
+function isCreditedElsewhere(
+  release: Record<string, unknown> | null,
+  wantedArtist: string,
+): boolean {
+  const credit = release?.["artist-credit"];
+
+  if (!Array.isArray(credit) || isByVariousArtists(release)) {
+    return false;
+  }
+
+  const named = credit
+    .map(asRecord)
+    .flatMap((part) => namingWords(textOrNull(part?.["name"]) ?? ""));
+  const wanted = namingWords(wantedArtist);
+
+  return (
+    named.length > 0 &&
+    wanted.length > 0 &&
+    !wanted.some((word) => named.includes(word))
+  );
+}
+
 /** Whether a release states a status other than official; one that states none is let through. */
 function isUnofficial(release: Record<string, unknown> | null) {
   const status = release?.["status"];
@@ -143,7 +178,7 @@ function kindOf(group: Record<string, unknown>): ReleaseKind | null {
  * The songs on each album, from a recording search: one candidate for each
  * release group, taken from its earliest official release.
  */
-function readCandidates(raw: unknown): ReleaseCandidate[] {
+function readCandidates(raw: unknown, wanted: WantedSong): ReleaseCandidate[] {
   const recordings = asRecord(raw)?.["recordings"];
 
   if (!Array.isArray(recordings)) {
@@ -191,6 +226,9 @@ function readCandidates(raw: unknown): ReleaseCandidate[] {
       if (
         release === null ||
         isUnofficial(release) ||
+        (stated !== "soundtrack" &&
+          kind !== "compilation" &&
+          isCreditedElsewhere(release, wanted.artistName)) ||
         groupId === null ||
         albumName === null ||
         kind === null
@@ -404,7 +442,7 @@ function createMusicBrainzLookup({
       }
 
       let candidates = await dateByAlbums(
-        readCandidates(await response.json()),
+        readCandidates(await response.json(), wanted),
       );
 
       for (let tries = 0; tries < MAX_COVER_CHECKS; tries += 1) {

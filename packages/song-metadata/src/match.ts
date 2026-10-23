@@ -68,7 +68,7 @@ const IMITATION_PATTERN =
  * a song written for a film it is the original release.
  */
 const COMPILATION_PATTERN =
-  /\b(greatest hits|best of|the very best|anthology|collection|essentials?|definitive|complete|ultimate|number ones|hits|gold|platinum|classics|singles|compilation|retrospective|best|inspired by|box(ed)?|rarities|b-sides|demos|rehearsals?|sessions?|outtakes?|vault|re-?recorded|remix(es|ed)?|mixes)\b|\b\d{4}\s*[–-]\s*\d{2,4}\b|^(greatest|love songs)$/i;
+  /\b(greatest hits|best of|the very best|anthology|collection|essentials?|definitive|complete|ultimate|number ones|hits|gold|platinum|classics|singles|compilation|retrospective|best|inspired by|box(ed)?|rarities|b-sides|demos|one[- ]hit wonders?|rehearsals?|sessions?|outtakes?|vault|re-?recorded|remix(es|ed)?|mixes)\b|\b\d{4}\s*[–-]\s*\d{2,4}\b|^(greatest|love songs)$/i;
 
 /**
  * Wording that makes a release a collection of hits even where a service
@@ -422,17 +422,28 @@ function isSongNamedEp(wanted: WantedSong, candidate: Candidate): boolean {
   );
 }
 
-/** 1 for a candidate on a compilation, single, or an EP that is a single in disguise, 0 for one on an album of its own. */
+/**
+ * How far a candidate is from being on an album of its own: 0 for one on an
+ * album, 1 for one on a single (or an EP that is a single in disguise), 2 for
+ * one on a compilation. A song that never was on an album is better taken from
+ * its single than from a collection.
+ */
 function notAnAlbumPenalty(wanted: WantedSong, candidate: Candidate): number {
   const album = candidate.albumName ?? "";
-  const named =
+  const isCompilation =
     candidate.kind === undefined
-      ? COMPILATION_PATTERN.test(album) || SINGLE_PATTERN.test(album)
-      : candidate.kind === "compilation" ||
-        candidate.kind === "single" ||
-        HITS_PATTERN.test(album);
+      ? COMPILATION_PATTERN.test(album)
+      : candidate.kind === "compilation" || HITS_PATTERN.test(album);
+  const isSingle =
+    candidate.kind === undefined
+      ? SINGLE_PATTERN.test(album)
+      : candidate.kind === "single";
 
-  return named || isSongNamedEp(wanted, candidate) ? 1 : 0;
+  if (isCompilation) {
+    return 2;
+  }
+
+  return isSingle || isSongNamedEp(wanted, candidate) ? 1 : 0;
 }
 
 /** Whether the album is named for the song, as an album is for its title track. */

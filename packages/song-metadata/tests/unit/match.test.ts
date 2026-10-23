@@ -445,6 +445,24 @@ describe("chooseMatch", () => {
     },
   );
 
+  it("should take a song's single over a collection when it never was on an album", () => {
+    const song = { title: "Liar, Liar", artistName: "The Castaways" };
+    const single = {
+      ...song,
+      albumName: "Liar, Liar - Single",
+      releaseYear: 2023,
+    };
+    const collection = {
+      ...song,
+      albumName: "One Hit Wonders - Vol. 1",
+      releaseYear: 1994,
+    };
+    const hits = { ...song, albumName: "K-tel Classics", releaseYear: 1994 };
+
+    expect(chooseMatch(song, [collection, hits, single])).toBe(single);
+    expect(chooseMatch(song, [collection, hits])).toBe(collection);
+  });
+
   it("should count an album just called Love Songs as a compilation", () => {
     const compilation = {
       ...exact,

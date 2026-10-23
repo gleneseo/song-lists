@@ -288,6 +288,54 @@ describe("MusicBrainz lookup", () => {
     });
   });
 
+  it("should pass over an album credited to another act, as a cover or sample would be", async () => {
+    const credit = (name: string) => ({ "artist-credit": [{ name }] });
+    const lookup = lookupWith(
+      service({
+        recordings: [
+          recording([
+            release("Pitiless Censors", "g2", {}, credit("John Maus")),
+            release(
+              "Liar Liar",
+              "g1",
+              { primary: "Single" },
+              credit(".38 Special"),
+            ),
+          ]),
+        ],
+      }),
+    );
+
+    await expect(lookup(wanted)).resolves.toMatchObject({
+      albumName: "Liar Liar",
+      isAlbum: false,
+    });
+  });
+
+  it.each([
+    ["a credit with no names", { "artist-credit": [{}] }, wanted],
+    [
+      "an act with no words in its name",
+      { "artist-credit": [{ name: "John Maus" }] },
+      { title: "Hi", artistName: "AC/DC" },
+    ],
+  ])("should not hold %s against an album", async (_n, extra, song) => {
+    const lookup = lookupWith(
+      service({
+        recordings: [
+          recording([release("Anything", "g1", {}, extra)], {
+            title: song.title,
+            "artist-credit": [{ name: song.artistName }],
+          }),
+        ],
+      }),
+    );
+
+    await expect(lookup(song)).resolves.toMatchObject({
+      albumName: "Anything",
+    });
+  });
+
   it("should take a soundtrack as an album", async () => {
     const lookup = lookupWith(
       service({

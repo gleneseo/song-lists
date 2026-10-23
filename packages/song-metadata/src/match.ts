@@ -485,11 +485,12 @@ function sortableDate({ releaseDate, releaseYear }: Candidate): string {
 }
 
 /**
- * Notes in a title that say only which edition of the recording it is on, not
- * that it is a different version of the song.
+ * Notes in a title that say only which edition of the recording it is on, or
+ * which part of a song in parts it is ("Part 1"), not that it is a different
+ * version of the song.
  */
 const EDITION_NOTE =
-  /remaster|stereo|\bmono\b|deluxe|expanded|bonus|anniversary/i;
+  /remaster|stereo|\bmono\b|deluxe|expanded|bonus|anniversary|^\s*(?:part|pt\.?)\s*\d+\s*$/i;
 
 /**
  * What a track's title says about which version of the song it is: the notes

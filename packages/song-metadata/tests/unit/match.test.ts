@@ -677,6 +677,32 @@ describe("chooseMatch", () => {
     );
   });
 
+  it.each(["Do The Funky Penguin (Part 1)", "Do The Funky Penguin (Pt. 1)"])(
+    "should not hold a part number against the track on the album: %s",
+    (title) => {
+      const song = {
+        title: "Do The Funky Penguin",
+        artistName: "Rufus Thomas",
+      };
+      const album = {
+        title,
+        artistName: "Rufus Thomas",
+        albumName: "Did You Heard Me?",
+        releaseYear: 1971,
+        releaseDate: "1971-01-01",
+      };
+      const other = {
+        title: "Do The Funky Penguin",
+        artistName: "Rufus Thomas",
+        albumName: "Another Album",
+        releaseYear: 1971,
+        releaseDate: "1971-11-01",
+      };
+
+      expect(chooseMatch(song, [other, album])).toBe(album);
+    },
+  );
+
   it("should not hold a remaster note against the track on the album", () => {
     const song = { title: "True", artistName: "Spandau Ballet" };
     const album = {

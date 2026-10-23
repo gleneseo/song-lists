@@ -1,5 +1,5 @@
 import { SONG_METADATA_STATUS } from "@song-lists/db";
-import { cleanAlbumName } from "./album-name.js";
+import { cleanAlbumName, tidyAlbumName } from "./album-name.js";
 import { createItunesLookup, ITUNES_MIN_INTERVAL_MS } from "./itunes.js";
 import type { WantedSong } from "./match.js";
 import {
@@ -114,7 +114,7 @@ function combineLookups(
   return {
     ...chosen,
     albumName:
-      chosen.albumName === null ? null : cleanAlbumName(chosen.albumName),
+      chosen.albumName === null ? null : tidyAlbumName(chosen.albumName),
     releaseYear: years.length > 0 ? Math.min(...years) : null,
   };
 }

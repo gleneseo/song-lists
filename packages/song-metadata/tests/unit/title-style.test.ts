@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkStyle } from "@/lib/text/title-style";
+import { checkStyle } from "../../src/title-style.js";
 
 describe("checkStyle", () => {
   it.each([

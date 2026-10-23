@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cleanAlbumName } from "../../src/album-name.js";
+import { cleanAlbumName, tidyAlbumName } from "../../src/album-name.js";
 
 describe("cleanAlbumName", () => {
   it.each([
@@ -36,5 +36,18 @@ describe("cleanAlbumName", () => {
     expect(cleanAlbumName("Nevermind (Remastered) (Deluxe Edition)")).toBe(
       "Nevermind",
     );
+  });
+});
+
+describe("tidyAlbumName", () => {
+  it.each([
+    ["Mental Floss for the Globe", "Mental Floss For The Globe"],
+    ["Insomniac (25th Anniversary Deluxe Edition)", "Insomniac"],
+    ["Songs of Surrender (Deluxe)", "Songs Of Surrender"],
+    ["Weezer (Green Album)", "Weezer (Green Album)"],
+    ["Kramer vs. Kramer", "Kramer vs. Kramer"],
+    ["Pleather (Reissue) - EP", "Pleather - EP"],
+  ])("should save %s as %s", (name, tidy) => {
+    expect(tidyAlbumName(name)).toBe(tidy);
   });
 });

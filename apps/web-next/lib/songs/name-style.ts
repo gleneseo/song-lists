@@ -4,7 +4,7 @@ import type {
   ProductionSelection,
 } from "@/lib/songs/resolve-selections";
 import { normalizeText } from "@/lib/text/normalize";
-import { checkStyle } from "@/lib/text/title-style";
+import { checkStyle } from "@song-lists/song-metadata/title-style";
 
 /** Which input an issue is about, so a suggestion can be put back where it came from. */
 type StyleField =

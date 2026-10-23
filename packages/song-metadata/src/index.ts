@@ -25,7 +25,7 @@ export {
   SONG_LOOKUP_MIN_INTERVAL_MS,
 } from "./lookup.js";
 export type { SongLookupOptions } from "./lookup.js";
-export { cleanAlbumName } from "./album-name.js";
+export { cleanAlbumName, tidyAlbumName } from "./album-name.js";
 export type { SongLookupResult } from "./result.js";
 export { chooseMatch } from "./match.js";
 export type { Candidate, WantedSong } from "./match.js";

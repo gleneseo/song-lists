@@ -77,6 +77,13 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
+/** Whether a release states a status other than official; one that states none is let through. */
+function isUnofficial(release: Record<string, unknown> | null) {
+  const status = release?.["status"];
+
+  return typeof status === "string" && status !== "Official";
+}
+
 function yearOrNull(value: unknown): number | null {
   const year = typeof value === "string" ? /^\d{4}/.exec(value)?.[0] : null;
 
@@ -152,7 +159,8 @@ function readCandidates(raw: unknown): ReleaseCandidate[] {
       const kind = group ? kindOf(group) : null;
 
       if (
-        release?.["status"] !== "Official" ||
+        release === null ||
+        isUnofficial(release) ||
         groupId === null ||
         albumName === null ||
         kind === null

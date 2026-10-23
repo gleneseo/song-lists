@@ -96,7 +96,7 @@ const LIVE_ALBUM_PATTERN =
   /^live$|[([][^)\]]*\blive\b[^)\]]*[)\]]|\blive (at|in)\b|['’]s picks\b/i;
 
 /** A four-digit year, or the two-digit one at the end of a date like 4/26/08. */
-const NAMED_YEAR_PATTERN = /\b(?:19|20)\d{2}\b|\b\d{1,2}\/\d{1,2}\/(\d{2})\b/g;
+const NAMED_YEAR_PATTERN = /\b(?:19|20)\d{2}\b/g;
 
 /** Wording that marks a song as a remake the artist recorded later, in the title or the album's name. */
 const RERECORDED_WORDING =
@@ -346,14 +346,9 @@ function isMisdated(candidate: Candidate): boolean {
     return true;
   }
 
-  return [...text.matchAll(NAMED_YEAR_PATTERN)].some(([whole, short]) => {
-    const named =
-      short === undefined
-        ? Number(whole)
-        : Number(short) + (Number(short) <= 30 ? 2000 : 1900);
-
-    return named > releaseYear;
-  });
+  return [...text.matchAll(NAMED_YEAR_PATTERN)].some(
+    ([year]) => Number(year) > releaseYear,
+  );
 }
 
 /**

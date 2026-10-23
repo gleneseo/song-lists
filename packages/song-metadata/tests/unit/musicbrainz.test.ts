@@ -364,6 +364,23 @@ describe("MusicBrainz lookup", () => {
     });
   });
 
+  it("should take a release that states no status", async () => {
+    const lookup = lookupWith(
+      service({
+        recordings: [
+          recording([
+            release("State of Euphoria", "g1", {}, { status: undefined }),
+          ]),
+        ],
+      }),
+    );
+
+    await expect(lookup(wanted)).resolves.toMatchObject({
+      status: "matched",
+      albumName: "State of Euphoria",
+    });
+  });
+
   it("should say not found when the answer has no recordings", async () => {
     await expect(
       lookupWith(service({ recordings: "none" }))(wanted),

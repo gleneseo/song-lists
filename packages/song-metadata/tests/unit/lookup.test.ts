@@ -153,33 +153,6 @@ describe("combining lookups", () => {
     ).toMatchObject({ source: "musicbrainz" });
   });
 
-  it("should not believe iTunes about a release dated years before the song came out", () => {
-    const misdated = {
-      ...itunes,
-      albumName: "Big Fish",
-      releaseYear: 1969,
-    };
-    const album = {
-      ...musicbrainz,
-      albumName: "Brothers and Sisters",
-      releaseYear: 1973,
-      songYear: 1973,
-    };
-
-    expect(combineLookups(misdated, album)).toMatchObject({
-      source: "musicbrainz",
-    });
-    expect(
-      combineLookups({ ...misdated, releaseYear: 1972 }, album),
-    ).toMatchObject({ source: "itunes" });
-    expect(
-      combineLookups(misdated, { ...album, songYear: null }),
-    ).toMatchObject({ source: "itunes" });
-    expect(
-      combineLookups({ ...misdated, releaseYear: null }, album),
-    ).toMatchObject({ source: "itunes" });
-  });
-
   it("should save an album's name without its edition", () => {
     expect(
       combineLookups(

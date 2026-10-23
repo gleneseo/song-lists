@@ -101,22 +101,7 @@ describe("MusicBrainz lookup", () => {
       albumName: "Wild-Eyed Southern Boys",
       releaseYear: 1981,
       isAlbum: true,
-      songYear: null,
     });
-  });
-
-  it("should say the year the song first came out anywhere", async () => {
-    const lookup = lookupWith(
-      service({
-        recordings: [
-          recording([release("Wild-Eyed Southern Boys", "g1")], {
-            "first-release-date": "1980-12-01",
-          }),
-        ],
-      }),
-    );
-
-    await expect(lookup(wanted)).resolves.toMatchObject({ songYear: 1980 });
   });
 
   it("should search by the title and artist", async () => {

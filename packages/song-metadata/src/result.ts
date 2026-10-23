@@ -16,11 +16,6 @@ type SongLookupResult =
       releaseYear: number | null;
       /** Whether the song is on an album of its own, not a single, compilation, or soundtrack. */
       isAlbum: boolean;
-      /**
-       * The year the recording first came out anywhere, when the service says:
-       * no release of the song can be earlier.
-       */
-      songYear?: number | null;
     }
   | { status: typeof SONG_METADATA_STATUS.NOT_FOUND }
   | { status: typeof SONG_METADATA_STATUS.ERROR; message: string };

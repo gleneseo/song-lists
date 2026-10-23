@@ -407,6 +407,17 @@ describe("chooseMatch", () => {
     expect(chooseMatch(wanted, [later, soundtrack])).toBe(soundtrack);
   });
 
+  it("should take a soundtrack over a compilation just called Greatest, of the same year", () => {
+    const compilation = { ...exact, albumName: "Greatest", releaseYear: 1977 };
+    const soundtrack = {
+      ...exact,
+      albumName: "Saturday Night Fever (The Original Movie Soundtrack)",
+      releaseYear: 1977,
+    };
+
+    expect(chooseMatch(wanted, [compilation, soundtrack])).toBe(soundtrack);
+  });
+
   it.each([
     "Live",
     "Drop the Bomb (Live)",

@@ -495,6 +495,33 @@ describe("MusicBrainz lookup", () => {
     });
   });
 
+  it("should date an album with no date by when the album first came out, not by the recording", async () => {
+    const lookup = lookupWith(
+      service({
+        groupDate: "1997",
+        recordings: [
+          recording(
+            [
+              release(
+                "Special Forces",
+                "g2",
+                { primary: "EP" },
+                { date: "2001-12-11" },
+              ),
+              release("Wild-Eyed Southern Boys", "g1", {}, { date: "" }),
+            ],
+            { "first-release-date": "2014-12-12" },
+          ),
+        ],
+      }),
+    );
+
+    await expect(lookup(wanted)).resolves.toMatchObject({
+      albumName: "Wild-Eyed Southern Boys",
+      releaseYear: 1997,
+    });
+  });
+
   it("should name the album as MusicBrainz does, not by a later edition's title", async () => {
     const lookup = lookupWith(
       service({

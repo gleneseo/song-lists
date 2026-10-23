@@ -24,6 +24,9 @@ const MIN_INTERVAL_MS = 1100;
 /** How many albums to try for cover art before giving up on the song. */
 const MAX_COVER_CHECKS = 3;
 
+/** How many albums with no date of their own are looked up for their true year. */
+const MAX_YEAR_CHECKS = 3;
+
 /** MusicBrainz turns away callers that don't say who they are. */
 const HEADERS = { "User-Agent": "song-lists/1.0 (music catalog lookup)" };
 
@@ -65,6 +68,8 @@ interface ReleaseCandidate extends Candidate {
   kind: ReleaseKind;
   recordingId: string;
   releaseGroupId: string;
+  /** Set when the release has no date, so the year is only the recording's first release. */
+  yearGuessed: boolean;
 }
 
 function textOrNull(value: unknown): string | null {
@@ -170,9 +175,9 @@ function readCandidates(raw: unknown): ReleaseCandidate[] {
 
       // A release with no date of its own is no later than the recording's
       // first release, which is the best guess there is for its year.
+      const ownYear = yearOrNull(release["date"]);
       const releaseYear =
-        yearOrNull(release["date"]) ??
-        yearOrNull(recording?.["first-release-date"]);
+        ownYear ?? yearOrNull(recording?.["first-release-date"]);
       const have = found.get(groupId);
 
       if (have && (have.releaseYear ?? Infinity) <= (releaseYear ?? Infinity)) {
@@ -187,6 +192,7 @@ function readCandidates(raw: unknown): ReleaseCandidate[] {
         kind,
         recordingId: id,
         releaseGroupId: groupId,
+        yearGuessed: ownYear === null,
       });
     }
   }
@@ -304,6 +310,30 @@ function createMusicBrainzLookup({
   const hasCover = (groupId: string) =>
     remembered(covers, groupId, askHasCover);
 
+  /**
+   * Gives the albums that have no date of their own the year they first came
+   * out, which can be long before the recording's first release: an album
+   * guessed at 2014 would lose to an EP of 2001, though it came out in 1997.
+   */
+  const dateByAlbums = async (candidates: ReleaseCandidate[]) => {
+    const guessed = candidates
+      .filter(({ yearGuessed }) => yearGuessed)
+      .slice(0, MAX_YEAR_CHECKS);
+    const years = new Map(
+      await Promise.all(
+        guessed.map(
+          async ({ releaseGroupId }) =>
+            [releaseGroupId, (await group(releaseGroupId)).year] as const,
+        ),
+      ),
+    );
+
+    return candidates.map((candidate) => ({
+      ...candidate,
+      releaseYear: years.get(candidate.releaseGroupId) ?? candidate.releaseYear,
+    }));
+  };
+
   return async (wanted) => {
     const url = new URL(SEARCH_URL);
 
@@ -323,7 +353,9 @@ function createMusicBrainzLookup({
         };
       }
 
-      let candidates = readCandidates(await response.json());
+      let candidates = await dateByAlbums(
+        readCandidates(await response.json()),
+      );
 
       for (let tries = 0; tries < MAX_COVER_CHECKS; tries += 1) {
         const match = chooseRelease(wanted, candidates);

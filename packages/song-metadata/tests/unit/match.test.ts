@@ -747,6 +747,18 @@ describe("chooseMatch", () => {
     },
   );
 
+  it("should count an album called the history of an act as a collection", () => {
+    const song = { title: "25 Or 6 To 4", artistName: "Chicago" };
+    const history = {
+      ...song,
+      albumName: "Now More Than Ever: The History of Chicago (Remastered)",
+      releaseYear: 1970,
+    };
+    const album = { ...song, albumName: "Chicago II", releaseYear: 1970 };
+
+    expect(chooseMatch(song, [history, album])).toBe(album);
+  });
+
   it("should count an album just called Love Songs as a compilation", () => {
     const compilation = {
       ...exact,

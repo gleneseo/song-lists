@@ -74,8 +74,12 @@ function better(
   // collection of it. Of two albums of the same year MusicBrainz is believed,
   // since it knows a compilation by its type and iTunes only by its name --
   // unless its album is named for the song, which is more likely a single.
+  if (itunes.releaseYear === null) {
+    // An album that comes with no year is no better than one that does.
+    return musicbrainz.releaseYear === null ? itunes : musicbrainz;
+  }
+
   return musicbrainz.releaseYear !== null &&
-    itunes.releaseYear !== null &&
     (musicbrainz.releaseYear < itunes.releaseYear ||
       (musicbrainz.releaseYear === itunes.releaseYear &&
         musicbrainz.isAlbum &&

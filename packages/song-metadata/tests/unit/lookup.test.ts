@@ -70,10 +70,15 @@ describe("combining lookups", () => {
 
     expect(combineLookups(itunes, original)).toEqual(original);
     expect(combineLookups(itunes, unknown)).toEqual(itunes);
-    expect(combineLookups({ ...itunes, releaseYear: null }, original)).toEqual({
-      ...itunes,
-      releaseYear: null,
-    });
+    expect(combineLookups({ ...itunes, releaseYear: null }, original)).toEqual(
+      original,
+    );
+    expect(
+      combineLookups(
+        { ...itunes, releaseYear: null },
+        { ...musicbrainz, albumName: "Another", releaseYear: null },
+      ),
+    ).toMatchObject({ source: "itunes", releaseYear: null });
   });
 
   it("should believe MusicBrainz about two different albums of the same year, but not two other releases", () => {

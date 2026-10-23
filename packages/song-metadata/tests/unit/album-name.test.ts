@@ -15,6 +15,8 @@ describe("cleanAlbumName", () => {
     ["Trompe le Monde (2026 Remaster)", "Trompe le Monde"],
     ["Thriller - Remastered", "Thriller"],
     ["Thriller - 2008 Remaster", "Thriller"],
+    ["I Choose You (Formerly Blind over You)", "Blind over You"],
+    ["Full Length LP [Formerly Known As: Slam (Deluxe Edition)]", "Slam"],
   ])("should drop the edition from %s", (name, cleaned) => {
     expect(cleanAlbumName(name)).toBe(cleaned);
   });
@@ -45,6 +47,7 @@ describe("tidyAlbumName", () => {
     ["Insomniac (25th Anniversary Deluxe Edition)", "Insomniac"],
     ["Songs of Surrender (Deluxe)", "Songs Of Surrender"],
     ["Pleather (Reissue) - EP", "Pleather - EP"],
+    ["I Choose You (Formerly Blind over You)", "Blind Over You"],
     ["Is This It", "Is This It"],
     ["Bringing it All Back Home", "Bringing It All Back Home"],
   ])("should save %s as %s", (name, tidy) => {

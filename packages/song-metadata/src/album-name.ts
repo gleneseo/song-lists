@@ -5,6 +5,9 @@ const EDITION_WORDS =
 /** A bracketed note at the end of a name, or a dash and a note. */
 const TRAILING_NOTE = /\s*(?:[([]([^)\]]*)[)\]]|\s-\s(.+))$/;
 
+/** A note that says what the album was called before: "I Choose You (Formerly Blind over You)". */
+const RETITLED = /^.+?\s*[([]\s*formerly(?: known as)?:?\s+(.+?)\s*[)\]]$/i;
+
 /** How a service marks an EP or a single, which is part of the name we keep. */
 const RELEASE_MARK = /(\s-\s(?:EP|Single))$/i;
 
@@ -16,6 +19,13 @@ const RELEASE_MARK = /(\s-\s(?:EP|Single))$/i;
  * soundtrack -- stay.
  */
 function cleanAlbumName(name: string): string {
+  // An album that was retitled is known by the title it came out under.
+  const retitled = RETITLED.exec(name)?.[1];
+
+  if (retitled !== undefined) {
+    return cleanAlbumName(retitled);
+  }
+
   const mark = RELEASE_MARK.exec(name)?.[1] ?? "";
   let cleaned = mark === "" ? name : name.slice(0, -mark.length);
 
@@ -62,6 +72,14 @@ const SMALL_WORDS = new Set([
   "as",
   "is",
   "it",
+  "over",
+  "into",
+  "onto",
+  "upon",
+  "off",
+  "out",
+  "up",
+  "down",
 ]);
 
 /**

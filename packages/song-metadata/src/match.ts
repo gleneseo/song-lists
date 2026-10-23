@@ -72,10 +72,10 @@ const COMPILATION_PATTERN =
 
 /**
  * Wording that makes a release a collection of hits even where a service
- * calls it an album ("Hits 96").
+ * calls it an album ("Hits 96", "Best Lyricist Underground (2007-2022)").
  */
 const HITS_PATTERN =
-  /\b(greatest hits|best of|the very best|anthology|essentials?|number ones|hits)\b/i;
+  /\b(greatest hits|best of|the very best|anthology|essentials?|number ones|hits)\b|\b\d{4}\s*[–-]\s*\d{2,4}\b/i;
 
 /**
  * How a service labels a release that is a single rather than an album: "7 (E

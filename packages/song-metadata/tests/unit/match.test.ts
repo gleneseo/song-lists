@@ -463,6 +463,23 @@ describe("chooseMatch", () => {
     expect(chooseMatch(song, [collection, hits])).toBe(collection);
   });
 
+  it("should count a release called an album as a collection when its name spans years", () => {
+    const span = {
+      ...exact,
+      albumName: "Best Lyricist Underground (2007–2022)",
+      kind: "album" as const,
+      releaseYear: 2024,
+    };
+    const album = {
+      ...exact,
+      albumName: "Live From the End of the World",
+      kind: "album" as const,
+      releaseYear: 2025,
+    };
+
+    expect(chooseMatch(wanted, [span, album])).toBe(album);
+  });
+
   it("should count an album just called Love Songs as a compilation", () => {
     const compilation = {
       ...exact,

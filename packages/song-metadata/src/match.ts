@@ -484,11 +484,22 @@ function sortableDate({ releaseDate, releaseYear }: Candidate): string {
   return `${year}-${month}-${day}`;
 }
 
+/**
+ * Notes in a title that say only which edition of the recording it is on, not
+ * that it is a different version of the song.
+ */
+const EDITION_NOTE =
+  /remaster|stereo|\bmono\b|deluxe|expanded|bonus|anniversary/i;
+
 /** Whether the track's title carries a note in brackets or after a dash that the wanted title doesn't. */
 function hasVersionNote(wanted: WantedSong, candidate: Candidate): boolean {
   const note = /[([]|\s[-–—]\s/;
+  const withoutEditions = candidate.title.replace(
+    /\s*[([][^)\]]*[)\]]/g,
+    (group) => (EDITION_NOTE.test(group) ? "" : group),
+  );
 
-  return note.test(candidate.title) && !note.test(wanted.title);
+  return note.test(withoutEditions) && !note.test(wanted.title);
 }
 
 /** Whether the album is named for the song, as an album is for its title track. */

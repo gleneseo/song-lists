@@ -654,6 +654,32 @@ describe("chooseMatch", () => {
     ).toBe(version);
   });
 
+  it("should not hold a remaster note against the track on the album", () => {
+    const song = { title: "True", artistName: "Spandau Ballet" };
+    const album = {
+      title: "True (Remastered)",
+      artistName: "Spandau Ballet",
+      albumName: "Spandau Ballet Studio",
+      releaseYear: 1983,
+    };
+    const anthology = {
+      title: "True",
+      artistName: "Spandau Ballet",
+      albumName: "Awesome 80's",
+      releaseYear: 1983,
+      releaseDate: "1983-03-04",
+    };
+    const earlier = { ...album, releaseDate: "1983-01-01" };
+
+    expect(chooseMatch(song, [anthology, earlier])).toBe(earlier);
+    expect(
+      chooseMatch(song, [
+        anthology,
+        { ...earlier, title: "True (Single Version)" },
+      ]),
+    ).toBe(anthology);
+  });
+
   it("should count an album just called Love Songs as a compilation", () => {
     const compilation = {
       ...exact,

@@ -484,6 +484,13 @@ function sortableDate({ releaseDate, releaseYear }: Candidate): string {
   return `${year}-${month}-${day}`;
 }
 
+/** Whether the track's title carries a note in brackets or after a dash that the wanted title doesn't. */
+function hasVersionNote(wanted: WantedSong, candidate: Candidate): boolean {
+  const note = /[([]|\s[-–—]\s/;
+
+  return note.test(candidate.title) && !note.test(wanted.title);
+}
+
 /** Whether the album is named for the song, as an album is for its title track. */
 function isTitleTrack(wanted: WantedSong, candidate: Candidate): boolean {
   return simplify(candidate.albumName ?? "") === simplify(wanted.title);
@@ -601,8 +608,12 @@ function chooseMatch<T extends Candidate>(
   // & The Stooges" for The Stooges) is the better answer -- but not ahead of
   // an album the act's own credit isn't on: a compilation by the act is no
   // better than the album the partial credit names.
-  const original = leastPenalized(albums, ({ score }) =>
-    score.partial ? 1 : 0,
+  const whole = leastPenalized(albums, ({ score }) => (score.partial ? 1 : 0));
+  // Of those, the track titled as the song is, not a version of it ("Single
+  // Version", "2002 Version"): a release that only carries the song's single
+  // takes should not outrank the album it is plainly on.
+  const original = leastPenalized(whole, ({ candidate, version }) =>
+    version === "studio" && hasVersionNote(wanted, candidate) ? 1 : 0,
   );
 
   return (

@@ -626,6 +626,34 @@ describe("chooseMatch", () => {
     expect(chooseMatch(song, [collection, album])).toBe(album);
   });
 
+  it("should take the track titled as the song over a version of it on an album of the same kind", () => {
+    const song = {
+      title: "I Believe In A Thing Called Love",
+      artistName: "The Darkness",
+    };
+    const version = {
+      title: "I Believe in a Thing Called Love (Single Version)",
+      artistName: "The Darkness",
+      albumName: "Permission To Land... Again (20th Anniversary Edition)",
+      releaseYear: 2002,
+    };
+    const track = {
+      title: "I Believe in a Thing Called Love",
+      artistName: "The Darkness",
+      albumName: "Permission to Land (Bonus Track)",
+      releaseYear: 2003,
+    };
+
+    expect(chooseMatch(song, [version, track])).toBe(track);
+    expect(chooseMatch(song, [version])).toBe(version);
+    expect(
+      chooseMatch(
+        { ...song, title: "I Believe In A Thing Called Love (Single Version)" },
+        [version, track],
+      ),
+    ).toBe(version);
+  });
+
   it("should count an album just called Love Songs as a compilation", () => {
     const compilation = {
       ...exact,

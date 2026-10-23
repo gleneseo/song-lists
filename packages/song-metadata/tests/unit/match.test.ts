@@ -665,7 +665,7 @@ describe("chooseMatch", () => {
     const anthology = {
       title: "True",
       artistName: "Spandau Ballet",
-      albumName: "Awesome 80's",
+      albumName: "Famous Ballads",
       releaseYear: 1983,
       releaseDate: "1983-03-04",
     };
@@ -679,6 +679,24 @@ describe("chooseMatch", () => {
       ]),
     ).toBe(anthology);
   });
+
+  it.each(["60's Soul", "Rock Of The 70's", "We Are The '80s", "90s Country"])(
+    "should count %s, named for a decade, as a collection",
+    (name) => {
+      const song = {
+        title: "Dance To The Music",
+        artistName: "Sly & The Family Stone",
+      };
+      const decade = { ...song, albumName: name, releaseYear: 1967 };
+      const album = {
+        ...song,
+        albumName: "Dance to the Music",
+        releaseYear: 1968,
+      };
+
+      expect(chooseMatch(song, [decade, album])).toBe(album);
+    },
+  );
 
   it("should count an album just called Love Songs as a compilation", () => {
     const compilation = {

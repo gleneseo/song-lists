@@ -70,7 +70,7 @@ const IMITATION_PATTERN =
  * a song written for a film it is the original release.
  */
 const COMPILATION_PATTERN =
-  /\b(greatest hits|best of|the very best|anthology|collection|essentials?|definitive|complete|ultimate|number ones|hits|gold|platinum|classics|singles|compilation|retrospective|best|inspired by|box(ed)?|rarities|b-sides|demos|one[- ]hit wonders?|itunes originals|spotify sessions|rehearsals?|sessions?|outtakes?|vault|re-?recorded|remix(es|ed)?|mixes)\b|\b\d{4}\s*[–-]\s*\d{2,4}\b|#\s?1['’]?s|^(greatest|love songs)$/i;
+  /\b(greatest hits|best of|the very best|anthology|collection|essentials?|definitive|complete|ultimate|number ones|hits|gold|platinum|classics|singles|compilation|retrospective|best|inspired by|box(ed)?|rarities|b-sides|demos|one[- ]hit wonders?|itunes originals|spotify sessions|\d0['’]?s|rehearsals?|sessions?|outtakes?|vault|re-?recorded|remix(es|ed)?|mixes)\b|\b\d{4}\s*[–-]\s*\d{2,4}\b|#\s?1['’]?s|^(greatest|love songs)$/i;
 
 /**
  * Wording that makes a release a collection of hits even where a service

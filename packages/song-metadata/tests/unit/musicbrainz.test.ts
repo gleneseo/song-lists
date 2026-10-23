@@ -109,8 +109,30 @@ describe("MusicBrainz lookup", () => {
     expect(Object.fromEntries(url.searchParams)).toEqual({
       query: 'recording:"Say  Hi " AND artist:"Them"',
       fmt: "json",
-      limit: "15",
+      limit: "30",
     });
+  });
+
+  it("should also search for the first and last words of a longer name", async () => {
+    const fetch = service({ recordings: [] });
+
+    await lookupWith(fetch)({ title: "Move!", artistName: "Damian Marley" });
+
+    const url = urlOf(fetch.mock.calls[0]?.[0] ?? "");
+
+    expect(url.searchParams.get("query")).toBe(
+      'recording:"Move!" AND (artist:"Damian Marley" OR artist:(Damian AND Marley))',
+    );
+  });
+
+  it("should search only for the name when it has no words", async () => {
+    const fetch = service({ recordings: [] });
+
+    await lookupWith(fetch)({ title: "Hi", artistName: "!!!" });
+
+    expect(
+      urlOf(fetch.mock.calls[0]?.[0] ?? "").searchParams.get("query"),
+    ).toBe('recording:"Hi" AND artist:"!!!"');
   });
 
   it("should say who is asking", async () => {

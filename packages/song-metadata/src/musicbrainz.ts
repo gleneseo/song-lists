@@ -14,7 +14,7 @@ const RELEASE_GROUP_URL = "https://musicbrainz.org/ws/2/release-group";
 const COVER_ART_URL = "https://coverartarchive.org/release-group";
 
 /** How many recordings to ask for; the best of these is the one we may use. */
-const RESULT_LIMIT = 15;
+const RESULT_LIMIT = 30;
 
 const REQUEST_TIMEOUT_MS = 10_000;
 
@@ -203,6 +203,22 @@ function readCandidates(raw: unknown): ReleaseCandidate[] {
   return [...found.values()];
 }
 
+/**
+ * The artist part of a search: the name as given, or just its first and last
+ * words, so that a credit with a nickname in the middle ("Damian Jr. Gong
+ * Marley") is found too.
+ */
+function artistQuery(artistName: string): string {
+  const exact = `artist:"${artistName.replaceAll('"', " ")}"`;
+  const words = artistName.match(/[\p{L}\p{N}]+/gu) ?? [];
+  const first = words[0];
+  const last = words.at(-1);
+
+  return words.length < 2 || first === undefined || last === undefined
+    ? exact
+    : `(${exact} OR artist:(${first} AND ${last}))`;
+}
+
 function chooseRelease<T extends ReleaseCandidate>(
   wanted: WantedSong,
   candidates: T[],
@@ -350,7 +366,7 @@ function createMusicBrainzLookup({
     const url = new URL(SEARCH_URL);
 
     url.search = new URLSearchParams({
-      query: `recording:"${wanted.title.replaceAll('"', " ")}" AND artist:"${wanted.artistName.replaceAll('"', " ")}"`,
+      query: `recording:"${wanted.title.replaceAll('"', " ")}" AND ${artistQuery(wanted.artistName)}`,
       fmt: "json",
       limit: String(RESULT_LIMIT),
     }).toString();

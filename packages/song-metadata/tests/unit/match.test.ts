@@ -407,6 +407,35 @@ describe("chooseMatch", () => {
     expect(chooseMatch(wanted, [later, soundtrack])).toBe(soundtrack);
   });
 
+  it("should count an album just called Love Songs as a compilation", () => {
+    const compilation = {
+      ...exact,
+      albumName: "Love Songs",
+      releaseYear: 1977,
+    };
+    const soundtrack = {
+      ...exact,
+      albumName: "Saturday Night Fever (The Original Movie Soundtrack)",
+      releaseYear: 1977,
+    };
+
+    expect(chooseMatch(wanted, [compilation, soundtrack])).toBe(soundtrack);
+  });
+
+  it("should count a release called an album as a collection when it is named for hits", () => {
+    const hits = { ...exact, albumName: "Hits 96", kind: "album" as const };
+    const album = {
+      ...exact,
+      albumName: "Travelling Without Moving",
+      kind: "album" as const,
+      releaseYear: 1996,
+    };
+
+    expect(chooseMatch(wanted, [{ ...hits, releaseYear: 1996 }, album])).toBe(
+      album,
+    );
+  });
+
   it("should take a soundtrack over a compilation just called Greatest, of the same year", () => {
     const compilation = { ...exact, albumName: "Greatest", releaseYear: 1977 };
     const soundtrack = {
@@ -518,6 +547,23 @@ describe("chooseMatch, for the same act written another way", () => {
     expect(
       chooseMatch(song('"Weird Al" Yankovic'), [song('"Weird Al" Yankovic')]),
     ).not.toBeNull();
+  });
+
+  it("should ignore a nickname written without quotes", () => {
+    const candidate = song("Damian Jr. Gong Marley");
+
+    expect(chooseMatch(song("Damian Marley"), [candidate])).toBe(candidate);
+    expect(
+      chooseMatch(song("Damian Jr. Gong Marley"), [song("Damian Marley")]),
+    ).not.toBeNull();
+    expect(
+      chooseMatch(song("Damian Marley"), [
+        song("Damian One Two Three Four Marley"),
+      ]),
+    ).toBeNull();
+    expect(
+      chooseMatch(song("Marley"), [song("Marley Damian Marley")]),
+    ).toBeNull();
   });
 
   it("should not mind a missing or added the, anywhere in the name", () => {

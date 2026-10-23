@@ -68,7 +68,14 @@ const IMITATION_PATTERN =
  * a song written for a film it is the original release.
  */
 const COMPILATION_PATTERN =
-  /\b(greatest hits|best of|the very best|anthology|collection|essentials?|definitive|complete|ultimate|number ones|hits|gold|platinum|classics|singles|compilation|retrospective|best|inspired by|box(ed)?|rarities|b-sides|demos|rehearsals?|sessions?|outtakes?|vault|re-?recorded|remix(es|ed)?|mixes)\b|\b\d{4}\s*[–-]\s*\d{2,4}\b|^greatest$/i;
+  /\b(greatest hits|best of|the very best|anthology|collection|essentials?|definitive|complete|ultimate|number ones|hits|gold|platinum|classics|singles|compilation|retrospective|best|inspired by|box(ed)?|rarities|b-sides|demos|rehearsals?|sessions?|outtakes?|vault|re-?recorded|remix(es|ed)?|mixes)\b|\b\d{4}\s*[–-]\s*\d{2,4}\b|^(greatest|love songs)$/i;
+
+/**
+ * Wording that makes a release a collection of hits even where a service
+ * calls it an album ("Hits 96").
+ */
+const HITS_PATTERN =
+  /\b(greatest hits|best of|the very best|anthology|essentials?|number ones|hits)\b/i;
 
 /**
  * How a service labels a release that is a single rather than an album: "7 (E
@@ -152,6 +159,9 @@ function simplify(text: string): string {
   return words(withoutVersion) || words(plain) || plain;
 }
 
+/** How many words a nickname may add to an artist's name. */
+const MAX_NICKNAME_WORDS = 3;
+
 /** Words that join the names of acts that appear together. */
 const ACT_SEPARATOR =
   /\s*(?:,|&|\+|\band\b|\bx\b|\bfeat\.?|\bfeaturing\b|\bwith\b|\bvs\.?)\s*/i;
@@ -180,7 +190,34 @@ function artistReadings(name: string): string[] {
   return readings;
 }
 
+/**
+ * Whether one name is the other with something added in the middle, as a
+ * nickname is: "Damian Jr. Gong Marley" is Damian Marley.
+ */
+function isNicknamed(a: string, b: string): boolean {
+  const [fewer, more] = [a.split(" "), b.split(" ")].toSorted(
+    (x, y) => x.length - y.length,
+  ) as [string[], string[]];
+
+  return (
+    fewer.length >= 2 &&
+    more.length > fewer.length &&
+    more.length <= fewer.length + MAX_NICKNAME_WORDS &&
+    fewer[0] === more[0] &&
+    fewer.at(-1) === more.at(-1) &&
+    fewer.slice(1, -1).every((word) => more.includes(word))
+  );
+}
+
 function artistSimilarity(a: string, b: string): number {
+  if (
+    artistReadings(a).some((reading) =>
+      artistReadings(b).some((other) => isNicknamed(reading, other)),
+    )
+  ) {
+    return 1;
+  }
+
   return Math.max(
     ...artistReadings(a).flatMap((reading) =>
       artistReadings(b).map((other) => similarity(reading, other)),
@@ -376,7 +413,9 @@ function notAnAlbumPenalty(wanted: WantedSong, candidate: Candidate): number {
   const named =
     candidate.kind === undefined
       ? COMPILATION_PATTERN.test(album) || SINGLE_PATTERN.test(album)
-      : candidate.kind === "compilation" || candidate.kind === "single";
+      : candidate.kind === "compilation" ||
+        candidate.kind === "single" ||
+        HITS_PATTERN.test(album);
 
   return named || isSongNamedEp(wanted, candidate) ? 1 : 0;
 }

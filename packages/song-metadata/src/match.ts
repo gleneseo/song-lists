@@ -422,13 +422,35 @@ function isSongNamedEp(wanted: WantedSong, candidate: Candidate): boolean {
   );
 }
 
+/** A volume number at the end of an album's name: "Between the Sheets, Vol. 1". */
+const VOLUME_SUFFIX = /[\s,:-]+(?:vol(?:ume)?|pts?|part)\.?\s*\d+$/i;
+
+/**
+ * Whether the album is a numbered volume of another album in the same list
+ * ("Between the Sheets, Vol. 1" beside "Between the Sheets"): a series of
+ * collections named for the album, not the album.
+ */
+function isNumberedVolumeOf(
+  album: string,
+  otherAlbums: ReadonlySet<string>,
+): boolean {
+  return (
+    VOLUME_SUFFIX.test(album) &&
+    otherAlbums.has(simplify(album.replace(VOLUME_SUFFIX, "")))
+  );
+}
+
 /**
  * How far a candidate is from being on an album of its own: 0 for one on an
  * album, 1 for one on a single (or an EP that is a single in disguise), 2 for
  * one on a compilation. A song that never was on an album is better taken from
  * its single than from a collection.
  */
-function notAnAlbumPenalty(wanted: WantedSong, candidate: Candidate): number {
+function notAnAlbumPenalty(
+  wanted: WantedSong,
+  candidate: Candidate,
+  otherAlbums: ReadonlySet<string> = new Set(),
+): number {
   const album = candidate.albumName ?? "";
   const isCompilation =
     candidate.kind === undefined
@@ -439,7 +461,7 @@ function notAnAlbumPenalty(wanted: WantedSong, candidate: Candidate): number {
       ? SINGLE_PATTERN.test(album)
       : candidate.kind === "single";
 
-  if (isCompilation) {
+  if (isCompilation || isNumberedVolumeOf(album, otherAlbums)) {
     return 2;
   }
 
@@ -553,8 +575,11 @@ function chooseMatch<T extends Candidate>(
   const closest = [...studio, ...debutLive].filter(
     ({ closeness }) => closeness >= best - CLOSE_ENOUGH - Number.EPSILON * 8,
   );
+  const albumNames = new Set(
+    closest.map(({ candidate }) => simplify(candidate.albumName ?? "")),
+  );
   const albums = leastPenalized(closest, ({ candidate }) =>
-    notAnAlbumPenalty(wanted, candidate),
+    notAnAlbumPenalty(wanted, candidate, albumNames),
   );
   // Of those, the act itself rather than a credit it is only part of ("Iggy
   // & The Stooges" for The Stooges) is the better answer -- but not ahead of

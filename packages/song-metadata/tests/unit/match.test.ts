@@ -535,6 +535,29 @@ describe("chooseMatch", () => {
     expect(chooseMatch(song, [fuller, own])).toBe(own);
   });
 
+  it("should not take a numbered volume of an album for the album itself", () => {
+    const song = {
+      title: "Between The Sheets",
+      artistName: "The Isley Brothers",
+    };
+    const volume = {
+      ...song,
+      albumName: "Between the Sheets, Vol. 1",
+      releaseYear: 1972,
+    };
+    const album = {
+      ...song,
+      albumName: "Between the Sheets",
+      releaseYear: 1983,
+    };
+
+    expect(chooseMatch(song, [volume, album])).toBe(album);
+    expect(chooseMatch(song, [volume])).toBe(volume);
+    expect(
+      chooseMatch(song, [volume, { ...album, albumName: "Another Album" }]),
+    ).toMatchObject({ albumName: "Between the Sheets, Vol. 1" });
+  });
+
   it("should count an album just called Love Songs as a compilation", () => {
     const compilation = {
       ...exact,

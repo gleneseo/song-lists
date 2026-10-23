@@ -558,6 +558,34 @@ describe("chooseMatch", () => {
     ).toMatchObject({ albumName: "Between the Sheets, Vol. 1" });
   });
 
+  it("should take the album that came out first in the year when the year ties", () => {
+    const song = { title: "Outstanding", artistName: "The Gap Band" };
+    const live = {
+      ...song,
+      albumName: "More of Funk Comes a-Live",
+      releaseYear: 1982,
+      releaseDate: "1982-11-01T08:00:00Z",
+    };
+    const studio = {
+      ...song,
+      albumName: "The Gap Band IV",
+      releaseYear: 1982,
+      releaseDate: "1982-05-17T07:00:00Z",
+    };
+    const undated = { ...song, albumName: "Another", releaseYear: 1982 };
+    const yearOnly = { ...song, albumName: "Year Only", releaseYear: 1982 };
+
+    expect(chooseMatch(song, [live, studio])).toBe(studio);
+    expect(chooseMatch(song, [undated, live, studio])).toBe(studio);
+    expect(chooseMatch(song, [yearOnly, undated])).toBe(yearOnly);
+    expect(
+      chooseMatch(song, [
+        { ...undated, releaseYear: null },
+        { ...yearOnly, releaseDate: "1982-06" },
+      ]),
+    ).toMatchObject({ albumName: "Year Only" });
+  });
+
   it("should count an album just called Love Songs as a compilation", () => {
     const compilation = {
       ...exact,

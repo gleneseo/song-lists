@@ -28,6 +28,8 @@ interface ItunesTrack {
   albumName: string | null;
   artworkUrl: string | null;
   releaseYear: number | null;
+  /** The full date, as the service gives it, to tell releases of one year apart. */
+  releaseDate: string | null;
 }
 
 function textOrNull(value: unknown): string | null {
@@ -65,6 +67,7 @@ function readTrack(raw: unknown): ItunesTrack | null {
     albumName: textOrNull(record["collectionName"]),
     artworkUrl: textOrNull(record["artworkUrl100"]),
     releaseYear: yearOrNull(record["releaseDate"]),
+    releaseDate: textOrNull(record["releaseDate"]),
   };
 }
 

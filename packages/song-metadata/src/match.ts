@@ -15,6 +15,8 @@ interface Candidate {
   albumName?: string | null | undefined;
   /** The year the song came out, when the service says. */
   releaseYear?: number | null | undefined;
+  /** The full date, when the service gives one, to tell releases of one year apart. */
+  releaseDate?: string | null | undefined;
   /**
    * What sort of release it is, for a service that says so outright. Without
    * it, the sort is read from the album's name.
@@ -468,6 +470,19 @@ function notAnAlbumPenalty(
   return isSingle || isSongNamedEp(wanted, candidate) ? 1 : 0;
 }
 
+/**
+ * A date to compare with others of the same year: the day, or the end of the
+ * month or year when the service gives less.
+ */
+function sortableDate({ releaseDate, releaseYear }: Candidate): string {
+  const date = releaseDate ?? "";
+  const [year = "9999", month = "12", day = "31"] = /^\d{4}/.test(date)
+    ? date.slice(0, 10).split("-")
+    : [String(releaseYear ?? 9999)];
+
+  return `${year}-${month}-${day}`;
+}
+
 /** Whether the album is named for the song, as an album is for its title track. */
 function isTitleTrack(wanted: WantedSong, candidate: Candidate): boolean {
   return simplify(candidate.albumName ?? "") === simplify(wanted.title);
@@ -597,6 +612,7 @@ function chooseMatch<T extends Candidate>(
         releaseKind(a.candidate) - releaseKind(b.candidate) ||
         Number(!isTitleTrack(wanted, a.candidate)) -
           Number(!isTitleTrack(wanted, b.candidate)) ||
+        sortableDate(a.candidate).localeCompare(sortableDate(b.candidate)) ||
         a.position - b.position,
     )[0]?.candidate ?? null
   );

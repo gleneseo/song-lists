@@ -480,6 +480,18 @@ describe("chooseMatch", () => {
     expect(chooseMatch(wanted, [span, album])).toBe(album);
   });
 
+  it("should not take an iTunes Originals collection for the album of the same year", () => {
+    const song = { title: "Maps", artistName: "Yeah Yeah Yeahs" };
+    const originals = {
+      ...song,
+      albumName: "iTunes Originals: Yeah Yeah Yeahs",
+      releaseYear: 2003,
+    };
+    const album = { ...song, albumName: "Fever to Tell", releaseYear: 2003 };
+
+    expect(chooseMatch(song, [originals, album])).toBe(album);
+  });
+
   it("should count an album just called Love Songs as a compilation", () => {
     const compilation = {
       ...exact,

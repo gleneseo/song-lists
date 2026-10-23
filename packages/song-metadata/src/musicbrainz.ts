@@ -72,6 +72,9 @@ interface ReleaseCandidate extends Candidate {
   yearGuessed: boolean;
 }
 
+/** A song on a release group that something has dated. */
+type DatedCandidate = ReleaseCandidate & { releaseYear: number };
+
 function textOrNull(value: unknown): string | null {
   return typeof value === "string" && value !== "" ? value : null;
 }
@@ -200,10 +203,10 @@ function readCandidates(raw: unknown): ReleaseCandidate[] {
   return [...found.values()];
 }
 
-function chooseRelease(
+function chooseRelease<T extends ReleaseCandidate>(
   wanted: WantedSong,
-  candidates: ReleaseCandidate[],
-): ReleaseCandidate | null {
+  candidates: T[],
+): T | null {
   for (const kinds of KIND_STEPS) {
     const match = chooseMatch(
       wanted,
@@ -315,7 +318,9 @@ function createMusicBrainzLookup({
    * out, which can be long before the recording's first release: an album
    * guessed at 2014 would lose to an EP of 2001, though it came out in 1997.
    */
-  const dateByAlbums = async (candidates: ReleaseCandidate[]) => {
+  const dateByAlbums = async (
+    candidates: ReleaseCandidate[],
+  ): Promise<DatedCandidate[]> => {
     const guessed = candidates
       .filter(({ yearGuessed }) => yearGuessed)
       .slice(0, MAX_YEAR_CHECKS);
@@ -328,10 +333,17 @@ function createMusicBrainzLookup({
       ),
     );
 
-    return candidates.map((candidate) => ({
-      ...candidate,
-      releaseYear: years.get(candidate.releaseGroupId) ?? candidate.releaseYear,
-    }));
+    // An album nothing dates at all is no better than a guess at the song's record.
+    return candidates
+      .map((candidate) => ({
+        ...candidate,
+        releaseYear:
+          years.get(candidate.releaseGroupId) ?? candidate.releaseYear,
+      }))
+      .filter(
+        (candidate): candidate is DatedCandidate =>
+          candidate.releaseYear !== null && candidate.releaseYear !== undefined,
+      );
   };
 
   return async (wanted) => {
@@ -373,7 +385,7 @@ function createMusicBrainzLookup({
             sourceTrackId: match.recordingId,
             artworkUrl: `${COVER_ART_URL}/${match.releaseGroupId}/front`,
             albumName: album.title ?? match.albumName,
-            releaseYear: album.year ?? match.releaseYear ?? null,
+            releaseYear: album.year ?? match.releaseYear,
             isAlbum: isProperAlbum(wanted, match),
           };
         }

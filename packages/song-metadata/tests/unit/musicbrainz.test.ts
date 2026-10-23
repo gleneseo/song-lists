@@ -151,7 +151,7 @@ describe("MusicBrainz lookup", () => {
     ).resolves.toMatchObject({ releaseYear: 1981 });
   });
 
-  it("should leave the year out when nothing gives one", async () => {
+  it("should say not found when nothing gives the album a year", async () => {
     const fetch = service({
       recordings: [
         recording([release("Wild-Eyed Southern Boys", "g1", {}, { date: "" })]),
@@ -159,8 +159,8 @@ describe("MusicBrainz lookup", () => {
       groupDate: null,
     });
 
-    await expect(lookupWith(fetch)(wanted)).resolves.toMatchObject({
-      releaseYear: null,
+    await expect(lookupWith(fetch)(wanted)).resolves.toEqual({
+      status: "not_found",
     });
   });
 
@@ -519,6 +519,24 @@ describe("MusicBrainz lookup", () => {
     await expect(lookup(wanted)).resolves.toMatchObject({
       albumName: "Wild-Eyed Southern Boys",
       releaseYear: 1997,
+    });
+  });
+
+  it("should pass over an album that nothing dates", async () => {
+    const lookup = lookupWith(
+      service({
+        groupDate: null,
+        recordings: [
+          recording([
+            release("The Hip Hop Bible", "g2", {}, { date: "" }),
+            release("Wild-Eyed Southern Boys", "g1", {}, { date: "1981" }),
+          ]),
+        ],
+      }),
+    );
+
+    await expect(lookup(wanted)).resolves.toMatchObject({
+      albumName: "Wild-Eyed Southern Boys",
     });
   });
 

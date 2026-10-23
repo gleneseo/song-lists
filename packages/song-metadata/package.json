@@ -11,10 +11,6 @@
     "./artwork": {
       "types": "./src/artwork.ts",
       "default": "./src/artwork.ts"
-    },
-    "./title-style": {
-      "types": "./src/title-style.ts",
-      "default": "./src/title-style.ts"
     }
   },
   "main": "./src/index.ts",

@@ -1,5 +1,3 @@
-import { checkStyle } from "./title-style.js";
-
 /** Words that mark a reissue of an album rather than another album. */
 const EDITION_WORDS =
   /\b(deluxe|expanded|remaster(ed)?|re-?issue|anniversary|bonus|special|legacy|collector'?s|edition|version|complete|super|mono|stereo|explicit|clean)\b/i;
@@ -36,16 +34,4 @@ function cleanAlbumName(name: string): string {
   return cleaned + mark;
 }
 
-/**
- * The album's name as we save it: without its edition, and written in our
- * house style for names ("Mental Floss For The Globe", not "Mental Floss for
- * the Globe"), as the names of songs and artists are.
- */
-function tidyAlbumName(name: string): string {
-  const cleaned = cleanAlbumName(name);
-  const style = checkStyle(cleaned);
-
-  return style.ok ? cleaned : style.suggestion;
-}
-
-export { cleanAlbumName, tidyAlbumName };
+export { cleanAlbumName };

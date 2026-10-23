@@ -505,6 +505,36 @@ describe("chooseMatch", () => {
     expect(chooseMatch(song, [forty5])).toBe(forty5);
   });
 
+  it("should take an album credited to a fuller name over the act's own compilation", () => {
+    const song = { title: "Gimme Danger", artistName: "The Stooges" };
+    const rehearsals = {
+      ...song,
+      albumName: "My Girl Hates My Heroin (1973 Tour Rehearsals)",
+      releaseYear: 1973,
+    };
+    const album = {
+      title: "Gimme Danger [2023 Remaster]",
+      artistName: "Iggy & The Stooges",
+      albumName: "Raw Power (2023 Remaster) [Iggy Mix]",
+      releaseYear: 1973,
+    };
+
+    expect(chooseMatch(song, [rehearsals, album])).toBe(album);
+  });
+
+  it("should still take the act's own credit over a fuller one when both are on albums", () => {
+    const song = { title: "Gimme Danger", artistName: "The Stooges" };
+    const own = { ...song, albumName: "Raw Power", releaseYear: 1973 };
+    const fuller = {
+      title: "Gimme Danger",
+      artistName: "Iggy & The Stooges",
+      albumName: "Raw Power",
+      releaseYear: 1973,
+    };
+
+    expect(chooseMatch(song, [fuller, own])).toBe(own);
+  });
+
   it("should count an album just called Love Songs as a compilation", () => {
     const compilation = {
       ...exact,

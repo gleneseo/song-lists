@@ -547,17 +547,21 @@ function chooseMatch<T extends Candidate>(
     ({ candidate }) =>
       debut !== null && (candidate.releaseYear ?? Infinity) < debut,
   );
-  // The act itself, rather than a credit it is only part of, is the better
-  // answer whenever there is one.
-  const whole = leastPenalized([...studio, ...debutLive], ({ score }) =>
-    score.partial ? 1 : 0,
+  const best = Math.max(
+    ...[...studio, ...debutLive].map(({ closeness }) => closeness),
   );
-  const best = Math.max(...whole.map(({ closeness }) => closeness));
-  const closest = whole.filter(
-    ({ closeness }) => closeness >= best - CLOSE_ENOUGH,
+  const closest = [...studio, ...debutLive].filter(
+    ({ closeness }) => closeness >= best - CLOSE_ENOUGH - Number.EPSILON * 8,
   );
-  const original = leastPenalized(closest, ({ candidate }) =>
+  const albums = leastPenalized(closest, ({ candidate }) =>
     notAnAlbumPenalty(wanted, candidate),
+  );
+  // Of those, the act itself rather than a credit it is only part of ("Iggy
+  // & The Stooges" for The Stooges) is the better answer -- but not ahead of
+  // an album the act's own credit isn't on: a compilation by the act is no
+  // better than the album the partial credit names.
+  const original = leastPenalized(albums, ({ score }) =>
+    score.partial ? 1 : 0,
   );
 
   return (

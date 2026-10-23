@@ -481,6 +481,28 @@ describe("MusicBrainz lookup", () => {
     ).toBe(false);
   });
 
+  it("should take a single from a film as a single, not as the soundtrack", async () => {
+    const lookup = lookupWith(
+      service({
+        recordings: [
+          recording([
+            release(
+              "Stayin' Alive",
+              "g1",
+              { primary: "Single", secondary: ["Soundtrack"] },
+              { date: "1977" },
+            ),
+          ]),
+        ],
+      }),
+    );
+
+    await expect(lookup(wanted)).resolves.toMatchObject({
+      albumName: "Stayin' Alive",
+      isAlbum: false,
+    });
+  });
+
   it("should take a soundtrack as an album", async () => {
     const lookup = lookupWith(
       service({

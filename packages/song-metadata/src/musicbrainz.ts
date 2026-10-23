@@ -177,6 +177,12 @@ function kindOf(group: Record<string, unknown>): ReleaseKind | null {
     return null;
   }
 
+  // A single is a single, even one from a film: its soundtrack type says only
+  // which film it was for.
+  if (primary === "Single") {
+    return "single";
+  }
+
   // A film's soundtrack is usually entered as a compilation too, being the
   // work of several acts, but it is where the film's songs first came out.
   if (secondary.includes("Soundtrack")) {
@@ -187,7 +193,7 @@ function kindOf(group: Record<string, unknown>): ReleaseKind | null {
     return "compilation";
   }
 
-  return primary === "Single" ? "single" : primary === "EP" ? "ep" : "album";
+  return primary === "EP" ? "ep" : "album";
 }
 
 function recordingsOf(raw: unknown): unknown[] {

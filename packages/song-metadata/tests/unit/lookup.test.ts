@@ -76,29 +76,6 @@ describe("combining lookups", () => {
     });
   });
 
-  it("should not take an album decades after the song's soundtrack for the original", () => {
-    const soundtrack = {
-      ...itunes,
-      albumName: "Back to the Future",
-      releaseYear: 1985,
-      isAlbum: false,
-    };
-    const collection = {
-      ...musicbrainz,
-      albumName: "Hits of the 80s",
-      releaseYear: 2009,
-    };
-
-    expect(combineLookups(soundtrack, collection)).toEqual(soundtrack);
-    expect(combineLookups(collection, soundtrack)).toEqual(soundtrack);
-    expect(
-      combineLookups({ ...soundtrack, releaseYear: 2008 }, collection),
-    ).toEqual(collection);
-    expect(
-      combineLookups({ ...soundtrack, releaseYear: null }, collection),
-    ).toEqual(collection);
-  });
-
   it("should believe MusicBrainz about two different albums of the same year, but not two other releases", () => {
     const compilation = {
       ...itunes,

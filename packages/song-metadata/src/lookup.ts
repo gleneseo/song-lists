@@ -40,12 +40,26 @@ function isNamedFor(wanted: WantedSong | undefined, albumName: string | null) {
   );
 }
 
+/** How many years earlier than the song's first release a date has to be to be impossible. */
+const IMPOSSIBLE_YEARS = 2;
+
 /** Which of two matches describes the song's own record better. */
 function better(
   itunes: Matched,
   musicbrainz: Matched,
   wanted?: WantedSong,
 ): Matched {
+  // A release dated years before the song first came out is misdated (a 1969
+  // film soundtrack carrying a song of 1973): the other service is believed.
+  if (
+    musicbrainz.songYear !== undefined &&
+    musicbrainz.songYear !== null &&
+    itunes.releaseYear !== null &&
+    itunes.releaseYear <= musicbrainz.songYear - IMPOSSIBLE_YEARS
+  ) {
+    return musicbrainz;
+  }
+
   if (itunes.isAlbum !== musicbrainz.isAlbum) {
     return itunes.isAlbum ? itunes : musicbrainz;
   }

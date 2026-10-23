@@ -76,6 +76,8 @@ interface ReleaseCandidate extends Candidate {
   releaseGroupId: string;
   /** Set when the release has no date, so the year is only the recording's first release. */
   yearGuessed: boolean;
+  /** The year the recording first came out anywhere. */
+  songYear: number | null;
 }
 
 /** A song on a release group that something has dated. */
@@ -261,6 +263,7 @@ function readCandidates(raw: unknown, wanted: WantedSong): ReleaseCandidate[] {
         recordingId: id,
         releaseGroupId: groupId,
         yearGuessed: ownYear === null,
+        songYear: yearOrNull(recording?.["first-release-date"]),
       });
     }
   }
@@ -488,6 +491,7 @@ function createMusicBrainzLookup({
             albumName: album.title ?? match.albumName,
             releaseYear: album.year ?? match.releaseYear,
             isAlbum: isProperAlbum(wanted, match),
+            songYear: match.songYear,
           };
         }
 

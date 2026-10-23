@@ -1,4 +1,4 @@
-import { SONG_METADATA_STATUS } from "@song-lists/db";
+import { SONG_METADATA_SOURCE, SONG_METADATA_STATUS } from "@song-lists/db";
 import { cleanAlbumName, tidyAlbumName } from "./album-name.js";
 import { createItunesLookup, ITUNES_MIN_INTERVAL_MS } from "./itunes.js";
 import type { WantedSong } from "./match.js";
@@ -125,18 +125,29 @@ function combineLookups(
 
   const chosen = second ? better(first, second, wanted) : first;
   const other = second ? (chosen === first ? second : first) : null;
-  const years = [
-    chosen.releaseYear,
-    other && sameAlbumKey(other.albumName) === sameAlbumKey(chosen.albumName)
-      ? other.releaseYear
-      : null,
-  ].filter((year): year is number => year !== null);
+  const sameAlbum =
+    other !== null &&
+    sameAlbumKey(other.albumName) === sameAlbumKey(chosen.albumName)
+      ? other
+      : null;
+  // When both name the same album, MusicBrainz's year is the album's own first
+  // release; iTunes dates a track by when it first came out, which can be a
+  // single's year ahead of the album's. Without it, the earlier of the two.
+  const albumYear = [chosen, sameAlbum].find(
+    (match) =>
+      match?.source === SONG_METADATA_SOURCE.MUSICBRAINZ &&
+      match.isAlbum &&
+      match.releaseYear !== null,
+  )?.releaseYear;
+  const years = [chosen.releaseYear, sameAlbum?.releaseYear ?? null].filter(
+    (year): year is number => year !== null,
+  );
 
   return {
     ...chosen,
     albumName:
       chosen.albumName === null ? null : tidyAlbumName(chosen.albumName),
-    releaseYear: years.length > 0 ? Math.min(...years) : null,
+    releaseYear: albumYear ?? (years.length > 0 ? Math.min(...years) : null),
   };
 }
 

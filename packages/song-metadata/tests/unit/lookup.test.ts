@@ -186,6 +186,20 @@ describe("combining lookups", () => {
     ).toMatchObject({ source: "itunes", releaseYear: 1981 });
   });
 
+  it("should take MusicBrainz's year for the album, not iTunes's earlier year for the track", () => {
+    const track = { ...itunes, albumName: "Seal [1991]", releaseYear: 1990 };
+    const album = { ...musicbrainz, albumName: "Seal", releaseYear: 1991 };
+
+    expect(combineLookups(track, album)).toMatchObject({
+      source: "itunes",
+      albumName: "Seal",
+      releaseYear: 1991,
+    });
+    expect(
+      combineLookups(track, { ...album, releaseYear: null }),
+    ).toMatchObject({ releaseYear: 1990 });
+  });
+
   it("should treat an iTunes EP and MusicBrainz's name for it as the same album", () => {
     expect(
       combineLookups(

@@ -8,6 +8,9 @@ const TRAILING_NOTE = /\s*(?:[([]([^)\]]*)[)\]]|\s-\s(.+))$/;
 /** A note that says what the album was called before: "I Choose You (Formerly Blind over You)". */
 const RETITLED = /^.+?\s*[([]\s*formerly(?: known as)?:?\s+(.+?)\s*[)\]]$/i;
 
+/** A year alone in the note, as in "Seal [1991]": the year has a place of its own. */
+const YEAR_NOTE = /^\s*\d{4}\s*$/;
+
 /** How a service marks an EP or a single, which is part of the name we keep. */
 const RELEASE_MARK = /(\s-\s(?:EP|Single))$/i;
 
@@ -34,7 +37,11 @@ function cleanAlbumName(name: string): string {
     const text = note?.[1] ?? note?.[2] ?? "";
     const stripped = note ? cleaned.slice(0, note.index).trimEnd() : cleaned;
 
-    if (!note || !EDITION_WORDS.test(text) || stripped === "") {
+    if (
+      !note ||
+      !(EDITION_WORDS.test(text) || YEAR_NOTE.test(text)) ||
+      stripped === ""
+    ) {
       break;
     }
 

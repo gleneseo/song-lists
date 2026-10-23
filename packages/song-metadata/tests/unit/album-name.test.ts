@@ -15,6 +15,8 @@ describe("cleanAlbumName", () => {
     ["Trompe le Monde (2026 Remaster)", "Trompe le Monde"],
     ["Thriller - Remastered", "Thriller"],
     ["Thriller - 2008 Remaster", "Thriller"],
+    ["Seal [1991]", "Seal"],
+    ["Greatest Hits (1999)", "Greatest Hits"],
     ["I Choose You (Formerly Blind over You)", "Blind over You"],
     ["Full Length LP [Formerly Known As: Slam (Deluxe Edition)]", "Slam"],
   ])("should drop the edition from %s", (name, cleaned) => {

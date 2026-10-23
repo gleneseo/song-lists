@@ -423,21 +423,6 @@ function isSongNamedEp(wanted: WantedSong, candidate: Candidate): boolean {
 }
 
 /**
- * Whether the album is named for the act and another one ("Back to Back: The
- * Vogues & The Equals"), as a split release or a tribute is: not the act's own
- * album. An act that is itself named with "&" or "and" is left out of this.
- */
-function isSplitRelease(wanted: WantedSong, candidate: Candidate): boolean {
-  const album = candidate.albumName ?? "";
-
-  return (
-    !ACT_SEPARATOR.test(wanted.artistName) &&
-    /[&/+]|\band\b|\bvs\.?\s/i.test(album) &&
-    simplify(album).includes(plainAct(simplify(wanted.artistName)))
-  );
-}
-
-/**
  * How far a candidate is from being on an album of its own: 0 for one on an
  * album, 1 for one on a single (or an EP that is a single in disguise), 2 for
  * one on a compilation. A song that never was on an album is better taken from
@@ -454,7 +439,7 @@ function notAnAlbumPenalty(wanted: WantedSong, candidate: Candidate): number {
       ? SINGLE_PATTERN.test(album)
       : candidate.kind === "single";
 
-  if (isCompilation || isSplitRelease(wanted, candidate)) {
+  if (isCompilation) {
     return 2;
   }
 

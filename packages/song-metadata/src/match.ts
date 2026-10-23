@@ -548,14 +548,13 @@ function chooseMatch<T extends Candidate>(
 }
 
 /**
- * Whether a candidate is the studio recording on an album (or an EP) of its
- * own, rather than on a single, compilation, soundtrack, or an EP named for
- * the song -- or a concert recording that was taken for the original.
+ * Whether a candidate is the studio recording on an album (or an EP, or a
+ * soundtrack, which is where a film's song first came out) of its own, rather
+ * than on a single, compilation, or an EP named for the song -- or a concert recording that was taken for the original.
  */
 function isProperAlbum(wanted: WantedSong, candidate: Candidate): boolean {
   return (
     notAnAlbumPenalty(wanted, candidate) === 0 &&
-    releaseKind(candidate) !== 2 &&
     versionOf(wanted, candidate) === "studio"
   );
 }

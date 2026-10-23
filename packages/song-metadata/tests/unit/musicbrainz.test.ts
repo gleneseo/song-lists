@@ -251,7 +251,6 @@ describe("MusicBrainz lookup", () => {
 
   it.each([
     ["a single", { primary: "Single" }, "Hold On Loosely"],
-    ["a soundtrack", { secondary: ["Soundtrack"] }, "Footloose"],
     ["a compilation", { secondary: ["Compilation"] }, "Greatest Hits"],
   ])(
     "should settle for %s when that is all there is",
@@ -266,6 +265,23 @@ describe("MusicBrainz lookup", () => {
       });
     },
   );
+
+  it("should take a soundtrack as an album", async () => {
+    const lookup = lookupWith(
+      service({
+        recordings: [
+          recording([
+            release("Footloose", "g1", { secondary: ["Soundtrack"] }),
+          ]),
+        ],
+      }),
+    );
+
+    await expect(lookup(wanted)).resolves.toMatchObject({
+      albumName: "Footloose",
+      isAlbum: true,
+    });
+  });
 
   it("should take an EP as an album", async () => {
     const lookup = lookupWith(

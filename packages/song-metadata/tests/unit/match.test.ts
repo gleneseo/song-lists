@@ -789,6 +789,26 @@ describe("chooseMatch, for a single or EP", () => {
     expect(chooseMatch(wanted, [soundtrack, ep])).toBe(ep);
   });
 
+  it("should put an album ahead of an EP, and an EP ahead of a soundtrack, when a service says which each is", () => {
+    const stated = (kind: "album" | "ep" | "soundtrack") => ({
+      ...exact,
+      albumName: `Release ${kind}`,
+      releaseYear: 1990,
+      kind,
+    });
+
+    expect(
+      chooseMatch(wanted, [
+        stated("soundtrack"),
+        stated("ep"),
+        stated("album"),
+      ]),
+    ).toMatchObject({ kind: "album" });
+    expect(
+      chooseMatch(wanted, [stated("soundtrack"), stated("ep")]),
+    ).toMatchObject({ kind: "ep" });
+  });
+
   it("should take a soundtrack that came out before the EP", () => {
     const soundtrack = release("Clerks (Music from the Motion Picture)", 1992);
 

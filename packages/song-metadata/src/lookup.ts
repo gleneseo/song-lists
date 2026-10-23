@@ -18,6 +18,16 @@ function sameAlbumKey(name: string | null): string {
     .replaceAll(/[^\p{L}\p{N}]/gu, "");
 }
 
+/**
+ * An album's key without a number at the end of its name, as a band numbers
+ * its albums of the same name: "The Bronx (III)" is the key of "The Bronx".
+ */
+function numberlessAlbumKey(name: string | null): string {
+  return sameAlbumKey(
+    (name ?? "").replace(/[\s(]+(?:[ivxlc]+|\d+)\)?\s*$/i, ""),
+  );
+}
+
 /** Which of two matches describes the song's own record better. */
 function better(itunes: Matched, musicbrainz: Matched): Matched {
   if (itunes.isAlbum !== musicbrainz.isAlbum) {
@@ -25,6 +35,16 @@ function better(itunes: Matched, musicbrainz: Matched): Matched {
   }
 
   if (sameAlbumKey(itunes.albumName) === sameAlbumKey(musicbrainz.albumName)) {
+    return itunes;
+  }
+
+  // Of one year, a numbered album is the same as its unnumbered name: only
+  // iTunes says which of a band's albums called "The Bronx" it is.
+  if (
+    itunes.releaseYear === musicbrainz.releaseYear &&
+    numberlessAlbumKey(itunes.albumName) ===
+      numberlessAlbumKey(musicbrainz.albumName)
+  ) {
     return itunes;
   }
 

@@ -468,6 +468,23 @@ test.describe("a song's art, album, and where to hear it", () => {
     ).toBeVisible();
   });
 
+  test("details set by hand credit no one", async ({ as }) => {
+    const song = await arrangeSong();
+    await arrangeSongDetails(song, {
+      source: null,
+      albumName: "The Acceptance Album",
+      releaseYear: 1997,
+    });
+    const page = await as("user");
+
+    await openSongInModal(page, song);
+
+    const modal = dialog(page);
+    await expect(modal.getByText("The Acceptance Album · 1997")).toBeVisible();
+    await expect(modal.getByText(/Album details via/)).toHaveCount(0);
+    await expect(modal.getByText(/Added to the catalog/)).toBeVisible();
+  });
+
   test("the full page shows them too", async ({ as }) => {
     const song = await arrangeSong();
     await arrangeSongDetails(song, {

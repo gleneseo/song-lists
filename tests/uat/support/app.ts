@@ -154,7 +154,7 @@ async function arrangeSongDetails(
   song: ArrangedSong,
   details: {
     status?: "matched" | "not_found" | "error";
-    source?: "itunes" | "musicbrainz";
+    source?: "itunes" | "musicbrainz" | null;
     artworkUrl?: string | null;
     albumName?: string | null;
     releaseYear?: number | null;
@@ -172,7 +172,9 @@ async function arrangeSongDetails(
       [
         song.id,
         status,
-        matched ? (details.source ?? "itunes") : null,
+        matched && details.source !== null
+          ? (details.source ?? "itunes")
+          : null,
         matched ? (details.artworkUrl ?? null) : null,
         matched ? (details.albumName ?? null) : null,
         matched ? (details.releaseYear ?? null) : null,

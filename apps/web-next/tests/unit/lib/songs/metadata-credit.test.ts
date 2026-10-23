@@ -8,8 +8,11 @@ describe("metadataCredit", () => {
     );
   });
 
-  it("should credit iTunes otherwise", () => {
+  it("should credit iTunes for what it found", () => {
     expect(metadataCredit("itunes")).toBe("iTunes");
-    expect(metadataCredit(null)).toBe("iTunes");
+  });
+
+  it("should credit no one when no service was behind the details", () => {
+    expect(metadataCredit(null)).toBeNull();
   });
 });

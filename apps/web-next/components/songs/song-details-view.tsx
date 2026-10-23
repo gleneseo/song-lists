@@ -36,6 +36,9 @@ function SongDetailsView({
   const Heading = headingLevel;
   const artworkUrl = details.metadata?.artworkUrl ?? null;
   const albumName = details.metadata?.albumName ?? null;
+  const credit = details.metadata
+    ? metadataCredit(details.metadata.source)
+    : null;
   const albumLine = [albumName, details.metadata?.releaseYear]
     .filter((part) => part !== null && part !== undefined)
     .join(" · ");
@@ -180,8 +183,7 @@ function SongDetailsView({
       <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
         <p className="text-xs text-muted-foreground">
           Added to the catalog {formatDate(details.addedAt)}
-          {details.metadata &&
-            ` · Album details via ${metadataCredit(details.metadata.source)}`}
+          {credit && ` · Album details via ${credit}`}
         </p>
         {footerAction}
       </div>

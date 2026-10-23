@@ -25,8 +25,8 @@ const MIN_INTERVAL_MS = 1100;
 /** How many albums to try for cover art before giving up on the song. */
 const MAX_COVER_CHECKS = 3;
 
-/** How many albums with no date of their own are looked up for their true year. */
-const MAX_YEAR_CHECKS = 3;
+/** How many albums are looked up for the year they first came out. */
+const MAX_YEAR_CHECKS = 6;
 
 /** MusicBrainz turns away callers that don't say who they are. */
 const HEADERS = { "User-Agent": "song-lists/1.0 (music catalog lookup)" };
@@ -50,6 +50,11 @@ const EXCLUDED_SECONDARY_TYPES = new Set([
  * or soundtrack is taken from there; only when it isn't on one, from a
  * single; and only then from a compilation.
  */
+const ALBUM_KINDS: ReleaseKind[] = ["album", "ep", "soundtrack"];
+
+/** How many years before an album a song's single must have come out for the single to be the original. */
+const SINGLE_LEAD_YEARS = 10;
+
 const KIND_STEPS: ReleaseKind[][] = [
   ["album", "ep", "soundtrack"],
   ["album", "ep", "soundtrack", "single"],
@@ -265,12 +270,12 @@ function readCandidates(raw: unknown, wanted: WantedSong): ReleaseCandidate[] {
 
 /**
  * The artist part of a search: the name as given, or just its first and last
- * words, so that a credit with a nickname in the middle ("Damian Jr. Gong
+ * telling words (not "the" or "and"), so that a credit with a nickname in the middle ("Damian Jr. Gong
  * Marley") is found too.
  */
 function artistQuery(artistName: string): string {
   const exact = `artist:"${artistName.replaceAll('"', " ")}"`;
-  const words = artistName.match(/[\p{L}\p{N}]+/gu) ?? [];
+  const words = namingWords(artistName);
   const first = words[0];
   const last = words.at(-1);
 
@@ -279,7 +284,12 @@ function artistQuery(artistName: string): string {
     : `(${exact} OR artist:(${first} AND ${last}))`;
 }
 
-function chooseRelease<T extends ReleaseCandidate>(
+/** The year a candidate came out, or a year that never comes when nothing says. */
+function yearOf({ releaseYear }: ReleaseCandidate): number {
+  return releaseYear ?? Infinity;
+}
+
+function chooseRelease<T extends DatedCandidate>(
   wanted: WantedSong,
   candidates: T[],
 ): T | null {
@@ -290,7 +300,18 @@ function chooseRelease<T extends ReleaseCandidate>(
     );
 
     if (match) {
-      return match;
+      // A song first sold as a single long before any album it ended up on
+      // (a 1965 single, a soundtrack of 1987) never was an album's song.
+      const single = chooseMatch(
+        wanted,
+        candidates.filter(({ kind }) => kind === "single"),
+      );
+
+      return single &&
+        match.kind !== "single" &&
+        single.releaseYear + SINGLE_LEAD_YEARS <= match.releaseYear
+        ? single
+        : match;
     }
   }
 
@@ -390,19 +411,23 @@ function createMusicBrainzLookup({
     remembered(covers, groupId, askHasCover);
 
   /**
-   * Gives the albums that have no date of their own the year they first came
-   * out, which can be long before the recording's first release: an album
-   * guessed at 2014 would lose to an EP of 2001, though it came out in 1997.
+   * Gives the albums the year they first came out, which can be long before
+   * the release that was found: an album found on a 2012 reissue, or guessed at
+   * 2014 for lack of a date, would lose to a 2009 collection or a 2001 EP,
+   * though it came out in 1989 or 1997.
    */
   const dateByAlbums = async (
     candidates: ReleaseCandidate[],
   ): Promise<DatedCandidate[]> => {
-    const guessed = candidates
-      .filter(({ yearGuessed }) => yearGuessed)
+    const asked = candidates
+      .filter(
+        ({ kind, yearGuessed }) => yearGuessed || ALBUM_KINDS.includes(kind),
+      )
+      .toSorted((a, b) => yearOf(a) - yearOf(b))
       .slice(0, MAX_YEAR_CHECKS);
     const years = new Map(
       await Promise.all(
-        guessed.map(
+        asked.map(
           async ({ releaseGroupId }) =>
             [releaseGroupId, (await group(releaseGroupId)).year] as const,
         ),

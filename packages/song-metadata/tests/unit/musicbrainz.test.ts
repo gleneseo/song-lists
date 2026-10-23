@@ -42,6 +42,7 @@ function service({
   recordings = [recording([release("Wild-Eyed Southern Boys", "g1")])],
   search = 200,
   groupDate = "1981-04-14",
+  groupDates = {},
   groupTitle = null,
   group = 200,
   covers = {},
@@ -49,6 +50,8 @@ function service({
   recordings?: unknown;
   search?: number;
   groupDate?: string | null;
+  /** The first release of particular groups, where it isn't `groupDate`. */
+  groupDates?: Record<string, string | null>;
   groupTitle?: string | null;
   group?: number;
   covers?: Record<string, number>;
@@ -66,7 +69,12 @@ function service({
       return Promise.resolve(
         new Response(
           JSON.stringify({
-            "first-release-date": groupDate,
+            "first-release-date": Object.hasOwn(
+              groupDates,
+              url.pathname.split("/").at(-1) ?? "",
+            )
+              ? groupDates[url.pathname.split("/").at(-1) ?? ""]
+              : groupDate,
             title: groupTitle,
           }),
           { status: group },
@@ -121,7 +129,22 @@ describe("MusicBrainz lookup", () => {
     const url = urlOf(fetch.mock.calls[0]?.[0] ?? "");
 
     expect(url.searchParams.get("query")).toBe(
-      'recording:"Move!" AND (artist:"Damian Marley" OR artist:(Damian AND Marley))',
+      'recording:"Move!" AND (artist:"Damian Marley" OR artist:(damian AND marley))',
+    );
+  });
+
+  it("should leave out the and and when searching for the words of a name", async () => {
+    const fetch = service({ recordings: [] });
+
+    await lookupWith(fetch)({
+      title: "Kokomo",
+      artistName: "The Beach Boys",
+    });
+
+    expect(
+      urlOf(fetch.mock.calls[0]?.[0] ?? "").searchParams.get("query"),
+    ).toBe(
+      'recording:"Kokomo" AND (artist:"The Beach Boys" OR artist:(beach AND boys))',
     );
   });
 
@@ -381,6 +404,41 @@ describe("MusicBrainz lookup", () => {
     });
   });
 
+  it.each([
+    ["more than ten years before the album", "1965", "single"],
+    ["less than ten years before the album", "1980", "album"],
+  ])(
+    "should take a song's single when it came out %s",
+    async (_n, singleYear, expected) => {
+      const lookup = lookupWith(
+        service({
+          groupDates: { g1: "1987", g2: singleYear },
+          recordings: [
+            recording([
+              release(
+                "Good Morning Vietnam",
+                "g1",
+                { secondary: ["Soundtrack"] },
+                { date: "1987" },
+              ),
+              release(
+                "Hold On Loosely",
+                "g2",
+                { primary: "Single" },
+                { date: singleYear },
+              ),
+            ]),
+          ],
+        }),
+      );
+
+      await expect(lookup(wanted)).resolves.toMatchObject({
+        albumName:
+          expected === "single" ? "Hold On Loosely" : "Good Morning Vietnam",
+      });
+    },
+  );
+
   it("should take an EP as an album", async () => {
     const lookup = lookupWith(
       service({
@@ -587,7 +645,7 @@ describe("MusicBrainz lookup", () => {
   it("should take an EP named for the song when it came out before the album", async () => {
     const lookup = lookupWith(
       service({
-        groupDate: "1980",
+        groupDates: { g1: "1980", g2: "1981" },
         recordings: [
           recording([
             release(

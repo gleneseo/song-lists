@@ -8,6 +8,9 @@ const TRAILING_NOTE = /\s*(?:[([]([^)\]]*)[)\]]|\s-\s(.+))$/;
 /** A note that says what the album was called before: "I Choose You (Formerly Blind over You)". */
 const RETITLED = /^.+?\s*[([]\s*formerly(?: known as)?:?\s+(.+?)\s*[)\]]$/i;
 
+/** A note that says which disc of a set a track is on: "(Disc 1)", "[CD 2]". */
+const DISC_NOTE = /\s*[([]\s*(?:disc|cd)\s*\d+\s*[)\]]/gi;
+
 /** A year alone in the note, as in "Seal [1991]": the year has a place of its own. */
 const YEAR_NOTE = /^\s*\d{4}\s*$/;
 
@@ -22,6 +25,13 @@ const RELEASE_MARK = /(\s-\s(?:EP|Single))$/i;
  * soundtrack -- stay.
  */
 function cleanAlbumName(name: string): string {
+  // Which disc of a set a track is on says nothing about the album, and a
+  // live album is marked (Live) however a service brackets it.
+  name = name
+    .replace(DISC_NOTE, "")
+    .replace(/\s*\[\s*live\s*\]\s*$/i, " (Live)")
+    .trim();
+
   // An album that was retitled is known by the title it came out under.
   const retitled = RETITLED.exec(name)?.[1];
 

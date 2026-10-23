@@ -423,6 +423,28 @@ describe("chooseMatch", () => {
     expect(chooseMatch(wantedSong, [anniversary, titleTrack])).toBe(titleTrack);
   });
 
+  it.each([
+    "Ain't No Fun (If the Homies Can't Have None) [kissmenerdygirl edit]",
+    "Ain't No Fun (Bad Boy Remix)",
+    "Ain't No Fun (Club Mashup)",
+  ])("should never take someone's remix or edit of the song: %s", (title) => {
+    const song = { title: "Ain't No Fun", artistName: "Snoop Dogg" };
+    const remixed = { ...song, title, releaseYear: 2017 };
+
+    expect(chooseMatch(song, [remixed])).toBeNull();
+    expect(chooseMatch({ ...song, title }, [remixed])).toBe(remixed);
+  });
+
+  it.each(["Raw (Edit)", "Raw (Radio Edit)", "Raw - Single Edit"])(
+    "should still take the song's own edit: %s",
+    (title) => {
+      const song = { title: "Raw", artistName: "Big Daddy Kane" };
+      const edit = { ...song, title };
+
+      expect(chooseMatch(song, [edit])).toBe(edit);
+    },
+  );
+
   it("should count an album just called Love Songs as a compilation", () => {
     const compilation = {
       ...exact,

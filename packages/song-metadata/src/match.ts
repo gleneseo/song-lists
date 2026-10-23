@@ -109,6 +109,14 @@ const NAMED_YEAR_PATTERN = /\b(?:19|20)\d{2}\b/g;
 const RERECORDED_WORDING =
   "re-?record(ed|ing)s?|taylor['’]s version|\\d+(st|nd|rd|th) anniversary (version|mix|recording)";
 
+/**
+ * Wording that marks a track as someone's remix or edit of the song: a
+ * remix, a mashup, or an edit by name ("[kissmenerdygirl edit]"), but not a
+ * radio edit or a bare "(Edit)", which are the song as released.
+ */
+const REMIXED_WORDING =
+  "remix(?:es|ed)?|mash-?up|bootleg|rework|(?<=\\b\\w+\\s)(?<!\\b(?:radio|single|album|clean|explicit|short|original|extended|main|lp|video)\\s)edit";
+
 /** A date of a concert in an album's name: 5/22/77, 2003.06.21, 1987-10-31, May 28, 1977. */
 const CONCERT_DATE_PATTERN =
   /\b\d{1,2}\/\d{1,2}\/(?:\d{2}|\d{4})\b|\b\d{4}[./-]\d{1,2}[./-]\d{1,2}\b|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.? \d{1,2},? \d{4}\b/i;
@@ -127,6 +135,9 @@ const BACKING_PATTERN = new RegExp(
   `\\b(instrumentals?|karaoke|acapella|a cappella|${RERECORDED_WORDING})\\b`,
   "i",
 );
+
+/** Wording in a track's title that marks it as someone's remix or edit. */
+const REMIXED_PATTERN = new RegExp(`\\b(${REMIXED_WORDING})\\b`, "i");
 
 /** Wording that marks a track as a live recording. */
 const LIVE_PATTERN = /\blive\b/i;
@@ -345,12 +356,16 @@ function versionOf(
   wanted: WantedSong,
   candidate: Candidate,
 ): "studio" | "backing" | "live" {
-  if (VERSION_PATTERN.test(wanted.title)) {
+  if (
+    VERSION_PATTERN.test(wanted.title) ||
+    REMIXED_PATTERN.test(wanted.title)
+  ) {
     return "studio";
   }
 
   if (
     BACKING_PATTERN.test(candidate.title) ||
+    REMIXED_PATTERN.test(candidate.title) ||
     BACKING_PATTERN.test(candidate.albumName ?? "")
   ) {
     return "backing";

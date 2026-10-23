@@ -38,14 +38,19 @@ function better(itunes: Matched, musicbrainz: Matched): Matched {
     return itunes;
   }
 
-  // Of one year, a numbered album is the same as its unnumbered name: only
-  // iTunes says which of a band's albums called "The Bronx" it is.
+  // Of one year, a numbered album is the same as its unnumbered name, and
+  // whichever service says which of a band's albums called "The Bronx" it is
+  // has the better name.
   if (
     itunes.releaseYear === musicbrainz.releaseYear &&
     numberlessAlbumKey(itunes.albumName) ===
       numberlessAlbumKey(musicbrainz.albumName)
   ) {
-    return itunes;
+    return sameAlbumKey(musicbrainz.albumName) !==
+      numberlessAlbumKey(musicbrainz.albumName) &&
+      sameAlbumKey(itunes.albumName) === numberlessAlbumKey(itunes.albumName)
+      ? musicbrainz
+      : itunes;
   }
 
   // The earlier release is the original; a later one is a reissue or a

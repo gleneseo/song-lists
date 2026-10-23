@@ -97,19 +97,32 @@ describe("combining lookups", () => {
     ).toMatchObject({ source: "itunes" });
   });
 
-  it("should keep iTunes's numbered name for a band's albums of the same name", () => {
+  it("should keep whichever name carries the number for a band's albums of the same name", () => {
+    const year = { releaseYear: 2008 };
+    const itunesNumbered = { ...itunes, albumName: "The Bronx (III)", ...year };
+    const itunesPlain = { ...itunes, albumName: "The Bronx", ...year };
+    const mbNumbered = {
+      ...musicbrainz,
+      albumName: "The Bronx (III)",
+      ...year,
+    };
+    const mbPlain = { ...musicbrainz, albumName: "The Bronx", ...year };
+
+    expect(combineLookups(itunesNumbered, mbPlain)).toEqual(itunesNumbered);
+    expect(combineLookups(itunesPlain, mbNumbered)).toEqual(mbNumbered);
+    expect(combineLookups(itunesPlain, mbPlain)).toEqual(itunesPlain);
+    expect(combineLookups(itunesNumbered, mbNumbered)).toEqual(itunesNumbered);
+  });
+
+  it("should not match a numbered album to a plain name of another year", () => {
     const numbered = {
       ...itunes,
       albumName: "The Bronx (III)",
       releaseYear: 2008,
     };
-    const plain = { ...musicbrainz, albumName: "The Bronx", releaseYear: 2008 };
+    const plain = { ...musicbrainz, albumName: "The Bronx", releaseYear: 2003 };
 
-    expect(combineLookups(numbered, plain)).toEqual(numbered);
-    expect(combineLookups(numbered, { ...plain, releaseYear: 2003 })).toEqual({
-      ...plain,
-      releaseYear: 2003,
-    });
+    expect(combineLookups(numbered, plain)).toEqual(plain);
   });
 
   it("should save an album's name without its edition", () => {

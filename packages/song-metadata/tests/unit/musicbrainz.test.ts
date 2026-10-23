@@ -305,6 +305,34 @@ describe("MusicBrainz lookup", () => {
     });
   });
 
+  it("should take a soundtrack entered as a compilation too, ahead of a single", async () => {
+    const lookup = lookupWith(
+      service({
+        recordings: [
+          recording([
+            release(
+              "Footloose",
+              "g1",
+              { secondary: ["Compilation", "Soundtrack"] },
+              { date: "1988" },
+            ),
+            release(
+              "Hold On Loosely",
+              "g2",
+              { primary: "Single" },
+              { date: "1987" },
+            ),
+          ]),
+        ],
+      }),
+    );
+
+    await expect(lookup(wanted)).resolves.toMatchObject({
+      albumName: "Footloose",
+      isAlbum: true,
+    });
+  });
+
   it("should take an EP as an album", async () => {
     const lookup = lookupWith(
       service({

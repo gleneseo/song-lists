@@ -45,14 +45,14 @@ const EXCLUDED_SECONDARY_TYPES = new Set([
 ]);
 
 /**
- * Which kinds of release are acceptable at each step. A song on an album or
- * EP is taken from there; only when it isn't on one, from a single or
- * soundtrack; and only then from a compilation.
+ * Which kinds of release are acceptable at each step. A song on an album, EP
+ * or soundtrack is taken from there; only when it isn't on one, from a
+ * single; and only then from a compilation.
  */
 const KIND_STEPS: ReleaseKind[][] = [
-  ["album", "ep"],
-  ["album", "ep", "single", "soundtrack"],
-  ["album", "ep", "single", "soundtrack", "compilation"],
+  ["album", "ep", "soundtrack"],
+  ["album", "ep", "soundtrack", "single"],
+  ["album", "ep", "soundtrack", "single", "compilation"],
 ];
 
 interface MusicBrainzLookupOptions {
@@ -126,12 +126,14 @@ function kindOf(group: Record<string, unknown>): ReleaseKind | null {
     return null;
   }
 
-  if (secondary.includes("Compilation")) {
-    return "compilation";
-  }
-
+  // A film's soundtrack is usually entered as a compilation too, being the
+  // work of several acts, but it is where the film's songs first came out.
   if (secondary.includes("Soundtrack")) {
     return "soundtrack";
+  }
+
+  if (secondary.includes("Compilation")) {
+    return "compilation";
   }
 
   return primary === "Single" ? "single" : primary === "EP" ? "ep" : "album";

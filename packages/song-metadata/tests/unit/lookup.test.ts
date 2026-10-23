@@ -139,6 +139,20 @@ describe("combining lookups", () => {
     expect(combineLookups(numbered, plain)).toEqual(plain);
   });
 
+  it("should not believe MusicBrainz on a tie when its album is named for the song", () => {
+    const song = { title: "More Than A Woman", artistName: "Bee Gees" };
+    const soundtrack = { ...itunes, albumName: "Saturday Night Fever" };
+    const single = { ...musicbrainz, albumName: "More Than a Woman" };
+
+    expect(combineLookups(soundtrack, single, song)).toEqual(soundtrack);
+    expect(combineLookups(soundtrack, single)).toMatchObject({
+      source: "musicbrainz",
+    });
+    expect(
+      combineLookups(soundtrack, { ...single, albumName: null }, song),
+    ).toMatchObject({ source: "musicbrainz" });
+  });
+
   it("should save an album's name without its edition", () => {
     expect(
       combineLookups(

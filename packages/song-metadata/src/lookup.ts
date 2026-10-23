@@ -31,8 +31,21 @@ function unqualifiedAlbumKey(name: string | null): string {
   );
 }
 
+/** Whether an album is named for the song, as a single is. */
+function isNamedFor(wanted: WantedSong | undefined, albumName: string | null) {
+  return (
+    wanted !== undefined &&
+    albumName !== null &&
+    sameAlbumKey(albumName) === sameAlbumKey(wanted.title)
+  );
+}
+
 /** Which of two matches describes the song's own record better. */
-function better(itunes: Matched, musicbrainz: Matched): Matched {
+function better(
+  itunes: Matched,
+  musicbrainz: Matched,
+  wanted?: WantedSong,
+): Matched {
   if (itunes.isAlbum !== musicbrainz.isAlbum) {
     return itunes.isAlbum ? itunes : musicbrainz;
   }
@@ -59,11 +72,14 @@ function better(itunes: Matched, musicbrainz: Matched): Matched {
 
   // The earlier release is the original; a later one is a reissue or a
   // collection of it. Of two albums of the same year MusicBrainz is believed,
-  // since it knows a compilation by its type and iTunes only by its name.
+  // since it knows a compilation by its type and iTunes only by its name --
+  // unless its album is named for the song, which is more likely a single.
   return musicbrainz.releaseYear !== null &&
     itunes.releaseYear !== null &&
     (musicbrainz.releaseYear < itunes.releaseYear ||
-      (musicbrainz.releaseYear === itunes.releaseYear && musicbrainz.isAlbum))
+      (musicbrainz.releaseYear === itunes.releaseYear &&
+        musicbrainz.isAlbum &&
+        !isNamedFor(wanted, musicbrainz.albumName)))
     ? musicbrainz
     : itunes;
 }
@@ -87,6 +103,7 @@ function better(itunes: Matched, musicbrainz: Matched): Matched {
 function combineLookups(
   itunes: SongLookupResult,
   musicbrainz: SongLookupResult,
+  wanted?: WantedSong,
 ): SongLookupResult {
   const matches = [itunes, musicbrainz].filter(
     (result): result is Matched =>
@@ -102,7 +119,7 @@ function combineLookups(
     );
   }
 
-  const chosen = second ? better(first, second) : first;
+  const chosen = second ? better(first, second, wanted) : first;
   const other = second ? (chosen === first ? second : first) : null;
   const years = [
     chosen.releaseYear,
@@ -146,6 +163,7 @@ function createSongLookup({
   return async (wanted) =>
     combineLookups(
       ...(await Promise.all([itunes(wanted), musicbrainz(wanted)])),
+      wanted,
     );
 }
 

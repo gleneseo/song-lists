@@ -492,6 +492,38 @@ describe("chooseMatch", () => {
     expect(chooseMatch(song, [originals, album])).toBe(album);
   });
 
+  it("should count an album named for the act and another act as a collection", () => {
+    const song = { title: "Five O'Clock World", artistName: "The Vogues" };
+    const split = {
+      ...song,
+      albumName: "Back to Back: The Vogues & The Equals",
+      releaseYear: 1965,
+    };
+    const album = {
+      ...song,
+      albumName: "Five O'Clock World",
+      releaseYear: 1966,
+    };
+
+    expect(chooseMatch(song, [split, album])).toBe(album);
+    expect(chooseMatch(song, [split])).toBe(split);
+  });
+
+  it("should not take the album of an act named with an ampersand for a split release", () => {
+    const duo = { title: "Boot Scootin' Boogie", artistName: "Brooks & Dunn" };
+    const album = {
+      ...duo,
+      albumName: "Brooks & Dunn: Live",
+      releaseYear: 1993,
+    };
+    const other = { ...duo, albumName: "Brand New Man", releaseYear: 1991 };
+
+    expect(chooseMatch(duo, [album, other])).toBe(other);
+    expect(
+      chooseMatch(duo, [{ ...album, releaseYear: 1990 }, other]),
+    ).toMatchObject({ albumName: "Brooks & Dunn: Live" });
+  });
+
   it("should count an album just called Love Songs as a compilation", () => {
     const compilation = {
       ...exact,

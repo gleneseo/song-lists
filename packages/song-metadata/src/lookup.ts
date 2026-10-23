@@ -29,10 +29,11 @@ function better(itunes: Matched, musicbrainz: Matched): Matched {
   }
 
   // The earlier release is the original; a later one is a reissue or a
-  // collection of it.
+  // collection of it. Of the same year MusicBrainz is believed, since it
+  // knows a compilation by its type and iTunes only by its name.
   return musicbrainz.releaseYear !== null &&
     itunes.releaseYear !== null &&
-    musicbrainz.releaseYear < itunes.releaseYear
+    musicbrainz.releaseYear <= itunes.releaseYear
     ? musicbrainz
     : itunes;
 }
@@ -41,8 +42,10 @@ function better(itunes: Matched, musicbrainz: Matched): Matched {
  * Settles what iTunes and MusicBrainz each found into one answer.
  *
  * A song on an album of its own beats one on a single or compilation; of two
- * albums, the one that came out first wins; and when they tie, iTunes does,
- * for its art can be asked for at any size. The album's name is saved without
+ * albums, the one that came out first wins; and when they tie, MusicBrainz
+ * does, for it knows a compilation by its type, not just its name. When both
+ * name the same album, iTunes is kept, for its art can be asked for at any
+ * size. The album's name is saved without
  * its edition ("Insomniac", not "Insomniac (25th Anniversary Deluxe
  * Edition)"), and when both services name the same album, the earlier of
  * their years is kept, since a reissue gets a later date.

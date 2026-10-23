@@ -76,6 +76,21 @@ describe("combining lookups", () => {
     });
   });
 
+  it("should believe MusicBrainz about two different albums of the same year", () => {
+    const compilation = {
+      ...itunes,
+      albumName: "Street Grooves",
+      releaseYear: 1989,
+    };
+    const album = {
+      ...musicbrainz,
+      albumName: "The Biz Never Sleeps",
+      releaseYear: 1989,
+    };
+
+    expect(combineLookups(compilation, album)).toEqual(album);
+  });
+
   it("should save an album's name without its edition", () => {
     expect(
       combineLookups(

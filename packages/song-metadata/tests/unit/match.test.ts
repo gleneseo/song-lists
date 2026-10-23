@@ -781,6 +781,17 @@ describe("chooseMatch", () => {
     expect(chooseMatch(song, [score])).toBe(score);
   });
 
+  it.each(["A-Sides", "Singles: A-Sides And B-Sides", "Rarities & B-Sides"])(
+    "should count %s as a collection",
+    (name) => {
+      const song = { title: "Black Hole Sun", artistName: "Soundgarden" };
+      const collection = { ...song, albumName: name, releaseYear: 1994 };
+      const album = { ...song, albumName: "Superunknown", releaseYear: 1994 };
+
+      expect(chooseMatch(song, [collection, album])).toBe(album);
+    },
+  );
+
   it("should count an album just called Love Songs as a compilation", () => {
     const compilation = {
       ...exact,

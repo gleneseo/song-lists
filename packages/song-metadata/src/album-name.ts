@@ -34,4 +34,30 @@ function cleanAlbumName(name: string): string {
   return cleaned + mark;
 }
 
-export { cleanAlbumName };
+/** A word, with an apostrophe-joined tail ("Don't") kept as part of it. */
+const WORD = /[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu;
+
+/** Written in lowercase whatever its place in a name, as in "Kramer vs. Kramer". */
+const ALWAYS_LOWERCASE = new Set(["vs"]);
+
+/**
+ * The album's name as we save it: without its edition, and with each word
+ * that is entirely lowercase given a capital, as in the names of songs and
+ * artists ("Mental Floss for the Globe" is "Mental Floss For The Globe").
+ * Nothing else is touched -- not an acronym, nor capitals in the middle of a
+ * word -- since those are often deliberate and a service's spelling is as good
+ * a guess as any.
+ */
+function tidyAlbumName(name: string): string {
+  return cleanAlbumName(name).replaceAll(WORD, (word) => {
+    const first = word.charAt(0);
+
+    return word === word.toLowerCase() &&
+      first !== first.toUpperCase() &&
+      !ALWAYS_LOWERCASE.has(word)
+      ? first.toUpperCase() + word.slice(1)
+      : word;
+  });
+}
+
+export { cleanAlbumName, tidyAlbumName };

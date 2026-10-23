@@ -420,6 +420,11 @@ function notAnAlbumPenalty(wanted: WantedSong, candidate: Candidate): number {
   return named || isSongNamedEp(wanted, candidate) ? 1 : 0;
 }
 
+/** Whether the album is named for the song, as an album is for its title track. */
+function isTitleTrack(wanted: WantedSong, candidate: Candidate): boolean {
+  return simplify(candidate.albumName ?? "") === simplify(wanted.title);
+}
+
 /**
  * Which kind of release a candidate is, for choosing between ones of the same
  * year: an album (0), then an EP (1), then a soundtrack (2).
@@ -535,6 +540,8 @@ function chooseMatch<T extends Candidate>(
         (a.candidate.releaseYear ?? Infinity) -
           (b.candidate.releaseYear ?? Infinity) ||
         releaseKind(a.candidate) - releaseKind(b.candidate) ||
+        Number(!isTitleTrack(wanted, a.candidate)) -
+          Number(!isTitleTrack(wanted, b.candidate)) ||
         a.position - b.position,
     )[0]?.candidate ?? null
   );

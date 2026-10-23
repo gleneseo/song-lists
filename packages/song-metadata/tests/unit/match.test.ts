@@ -407,6 +407,22 @@ describe("chooseMatch", () => {
     expect(chooseMatch(wanted, [later, soundtrack])).toBe(soundtrack);
   });
 
+  it("should take the album named for the song over another album of the same year", () => {
+    const wantedSong = { title: "Lick It Up", artistName: "KISS" };
+    const anniversary = {
+      ...wantedSong,
+      albumName: "Kiss 40: Decades of Decibels",
+      releaseYear: 1983,
+    };
+    const titleTrack = {
+      ...wantedSong,
+      albumName: "Lick It Up",
+      releaseYear: 1983,
+    };
+
+    expect(chooseMatch(wantedSong, [anniversary, titleTrack])).toBe(titleTrack);
+  });
+
   it("should count an album just called Love Songs as a compilation", () => {
     const compilation = {
       ...exact,

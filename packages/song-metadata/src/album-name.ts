@@ -37,27 +37,51 @@ function cleanAlbumName(name: string): string {
 /** A word, with an apostrophe-joined tail ("Don't") kept as part of it. */
 const WORD = /[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu;
 
-/** Written in lowercase whatever its place in a name, as in "Kramer vs. Kramer". */
-const ALWAYS_LOWERCASE = new Set(["vs"]);
+/**
+ * The small words that title-case writing sometimes leaves in lowercase
+ * ("Mental Floss for the Globe"), which our style capitalizes. "vs" is not
+ * one of them: it stays lowercase.
+ */
+const SMALL_WORDS = new Set([
+  "a",
+  "an",
+  "the",
+  "of",
+  "for",
+  "and",
+  "but",
+  "or",
+  "nor",
+  "in",
+  "on",
+  "at",
+  "to",
+  "by",
+  "from",
+  "with",
+  "as",
+  "is",
+  "it",
+]);
 
 /**
- * The album's name as we save it: without its edition, and with each word
- * that is entirely lowercase given a capital, as in the names of songs and
- * artists ("Mental Floss for the Globe" is "Mental Floss For The Globe").
- * Nothing else is touched -- not an acronym, nor capitals in the middle of a
- * word -- since those are often deliberate and a service's spelling is as good
- * a guess as any.
+ * The album's name as we save it: without its edition, and with the small
+ * words left in lowercase in a title-cased name capitalized, as in the names
+ * of songs and artists ("Mental Floss for the Globe" is "Mental Floss For The
+ * Globe"). Nothing else is touched: not other lowercase words, not capitals
+ * in the middle of a word, and not a name written entirely in lowercase, since
+ * those are often deliberate ("xx", "nWo", "thank u, next").
  */
 function tidyAlbumName(name: string): string {
-  return cleanAlbumName(name).replaceAll(WORD, (word) => {
-    const first = word.charAt(0);
+  const cleaned = cleanAlbumName(name);
 
-    return word === word.toLowerCase() &&
-      first !== first.toUpperCase() &&
-      !ALWAYS_LOWERCASE.has(word)
-      ? first.toUpperCase() + word.slice(1)
-      : word;
-  });
+  if (cleaned === cleaned.toLowerCase()) {
+    return cleaned;
+  }
+
+  return cleaned.replaceAll(WORD, (word) =>
+    SMALL_WORDS.has(word) ? word.charAt(0).toUpperCase() + word.slice(1) : word,
+  );
 }
 
 export { cleanAlbumName, tidyAlbumName };

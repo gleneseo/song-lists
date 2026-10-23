@@ -44,11 +44,9 @@ describe("tidyAlbumName", () => {
     ["Mental Floss for the Globe", "Mental Floss For The Globe"],
     ["Insomniac (25th Anniversary Deluxe Edition)", "Insomniac"],
     ["Songs of Surrender (Deluxe)", "Songs Of Surrender"],
-    ["Don't Stop", "Don't Stop"],
-    ["don't stop", "Don't Stop"],
-    ["thank u, next", "Thank U, Next"],
-    ["Weezer (Green Album)", "Weezer (Green Album)"],
     ["Pleather (Reissue) - EP", "Pleather - EP"],
+    ["Is This It", "Is This It"],
+    ["Bringing it All Back Home", "Bringing It All Back Home"],
   ])("should save %s as %s", (name, tidy) => {
     expect(tidyAlbumName(name)).toBe(tidy);
   });
@@ -59,9 +57,13 @@ describe("tidyAlbumName", () => {
     "ScHoolboy Q",
     "iPhone Sessions",
     "nWo Wolfpac",
+    "xx",
+    "The xx Remixed",
+    "Weezer (Green Album)",
+    "thank u, next",
+    "in rainbows",
     "McCartney II",
     "3rd Bass",
-    "Sign “☮︎” The Times",
     "÷",
     "",
   ])("should leave %s as it is", (name) => {

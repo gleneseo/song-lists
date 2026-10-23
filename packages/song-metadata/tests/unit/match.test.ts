@@ -654,6 +654,29 @@ describe("chooseMatch", () => {
     ).toBe(version);
   });
 
+  it("should take the version of the song that was asked for, remix or not", () => {
+    const song = { title: "Ignition (Remix)", artistName: "R. Kelly" };
+    const remix = {
+      ...song,
+      albumName: "Chocolate Factory",
+      releaseYear: 2002,
+      releaseDate: "2002-10-22",
+    };
+    const original = {
+      title: "Ignition",
+      artistName: "R. Kelly",
+      albumName: "Totally R&B Sessions",
+      releaseYear: 2002,
+      releaseDate: "2002-10-21",
+    };
+
+    expect(chooseMatch(song, [original, remix])).toBe(remix);
+    expect(chooseMatch(song, [original])).toBe(original);
+    expect(chooseMatch({ ...song, title: "Ignition" }, [remix, original])).toBe(
+      original,
+    );
+  });
+
   it("should not hold a remaster note against the track on the album", () => {
     const song = { title: "True", artistName: "Spandau Ballet" };
     const album = {

@@ -39,7 +39,6 @@ describe("iTunes lookup", () => {
       albumName: "Wild-Eyed Southern Boys",
       releaseYear: 1981,
       isAlbum: true,
-      releaseRank: 0,
     });
   });
 
@@ -138,7 +137,6 @@ describe("iTunes lookup", () => {
       albumName: null,
       releaseYear: null,
       isAlbum: true,
-      releaseRank: 0,
     });
   });
 

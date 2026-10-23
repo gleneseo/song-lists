@@ -664,5 +664,5 @@ function isProperAlbum(wanted: WantedSong, candidate: Candidate): boolean {
   );
 }
 
-export { chooseMatch, isProperAlbum, releaseKind, simplify };
+export { chooseMatch, isProperAlbum, simplify };
 export type { Candidate, ReleaseKind, WantedSong };

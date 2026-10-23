@@ -16,8 +16,6 @@ type SongLookupResult =
       releaseYear: number | null;
       /** Whether the song is on an album of its own, not a single, compilation, or soundtrack. */
       isAlbum: boolean;
-      /** How far the release is from a plain album: 0 for one, 1 for an EP, 2 for a soundtrack. */
-      releaseRank?: number;
     }
   | { status: typeof SONG_METADATA_STATUS.NOT_FOUND }
   | { status: typeof SONG_METADATA_STATUS.ERROR; message: string };

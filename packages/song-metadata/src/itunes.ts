@@ -1,10 +1,5 @@
 import { SONG_METADATA_SOURCE, SONG_METADATA_STATUS } from "@song-lists/db";
-import {
-  chooseMatch,
-  isProperAlbum,
-  releaseKind,
-  type WantedSong,
-} from "./match.js";
+import { chooseMatch, isProperAlbum, type WantedSong } from "./match.js";
 import type { SongLookupResult } from "./result.js";
 import { createRateLimiter, type RateLimiter } from "./rate-limiter.js";
 
@@ -135,7 +130,6 @@ function createItunesLookup({
             albumName: match.albumName,
             releaseYear: match.releaseYear,
             isAlbum: isProperAlbum(wanted, match),
-            releaseRank: releaseKind(match),
           }
         : { status: SONG_METADATA_STATUS.NOT_FOUND };
     } catch (error) {

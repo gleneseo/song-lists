@@ -550,7 +550,12 @@ function createMusicBrainzLookup({
             artworkUrl: `${COVER_ART_URL}/${match.releaseGroupId}/front`,
             albumName: album.title ?? match.albumName,
             releaseYear: album.year ?? match.releaseYear,
-            isAlbum: isProperAlbum(wanted, match),
+            // judged by the name the album is saved under, which can say more
+            // than the release it was found on ("... Original Motion Picture Score")
+            isAlbum: isProperAlbum(wanted, {
+              ...match,
+              albumName: album.title ?? match.albumName,
+            }),
           };
         }
 

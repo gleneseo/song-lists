@@ -503,6 +503,24 @@ describe("MusicBrainz lookup", () => {
     });
   });
 
+  it("should not count an album as one when its own title says it is a score", async () => {
+    const lookup = lookupWith(
+      service({
+        groupTitle: "The Goonies: Original Motion Picture Score",
+        recordings: [
+          recording([
+            release("The Goonies", "g1", { secondary: ["Soundtrack"] }),
+          ]),
+        ],
+      }),
+    );
+
+    await expect(lookup(wanted)).resolves.toMatchObject({
+      albumName: "The Goonies: Original Motion Picture Score",
+      isAlbum: false,
+    });
+  });
+
   it("should take a soundtrack as an album", async () => {
     const lookup = lookupWith(
       service({

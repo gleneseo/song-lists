@@ -76,7 +76,7 @@ describe("combining lookups", () => {
     });
   });
 
-  it("should believe MusicBrainz about two different albums of the same year", () => {
+  it("should believe MusicBrainz about two different albums of the same year, but not two other releases", () => {
     const compilation = {
       ...itunes,
       albumName: "Street Grooves",
@@ -89,6 +89,12 @@ describe("combining lookups", () => {
     };
 
     expect(combineLookups(compilation, album)).toEqual(album);
+    expect(
+      combineLookups(
+        { ...compilation, isAlbum: false },
+        { ...album, isAlbum: false },
+      ),
+    ).toMatchObject({ source: "itunes" });
   });
 
   it("should save an album's name without its edition", () => {

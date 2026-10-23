@@ -29,11 +29,12 @@ function better(itunes: Matched, musicbrainz: Matched): Matched {
   }
 
   // The earlier release is the original; a later one is a reissue or a
-  // collection of it. Of the same year MusicBrainz is believed, since it
-  // knows a compilation by its type and iTunes only by its name.
+  // collection of it. Of two albums of the same year MusicBrainz is believed,
+  // since it knows a compilation by its type and iTunes only by its name.
   return musicbrainz.releaseYear !== null &&
     itunes.releaseYear !== null &&
-    musicbrainz.releaseYear <= itunes.releaseYear
+    (musicbrainz.releaseYear < itunes.releaseYear ||
+      (musicbrainz.releaseYear === itunes.releaseYear && musicbrainz.isAlbum))
     ? musicbrainz
     : itunes;
 }

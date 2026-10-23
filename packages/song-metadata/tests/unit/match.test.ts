@@ -558,6 +558,31 @@ describe("chooseMatch", () => {
     ).toMatchObject({ albumName: "Between the Sheets, Vol. 1" });
   });
 
+  it.each([
+    "More of Funk Comes a-Live",
+    "MTV Unplugged",
+    "Kiss Alive: In Concert",
+  ])(
+    "should take a studio album over %s, a concert album, of the same year",
+    (name) => {
+      const song = { title: "Outstanding", artistName: "The Gap Band" };
+      const concert = {
+        ...song,
+        albumName: name,
+        releaseYear: 1982,
+        releaseDate: "1982-01-01T00:00:00Z",
+      };
+      const studio = {
+        ...song,
+        albumName: "The Gap Band IV",
+        releaseYear: 1982,
+        releaseDate: "1982-05-17T07:00:00Z",
+      };
+
+      expect(chooseMatch(song, [concert, studio])).toBe(studio);
+    },
+  );
+
   it("should take the album that came out first in the year when the year ties", () => {
     const song = { title: "Outstanding", artistName: "The Gap Band" };
     const live = {

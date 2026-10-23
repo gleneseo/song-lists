@@ -99,10 +99,11 @@ const SOUNDTRACK_PATTERN =
 /**
  * Wording that marks an album as a recording of a concert, including a
  * series of archive concerts named for the one who picked them (Dick's Picks,
- * Dave's Picks).
+ * Dave's Picks), and the ways a live album is titled without the word ("More
+ * of Funk Comes a-Live", "MTV Unplugged", "In Concert").
  */
 const LIVE_ALBUM_PATTERN =
-  /^live$|[([][^)\]]*\blive\b[^)\]]*[)\]]|\blive (at|in)\b|['’]s picks\b/i;
+  /^live$|[([][^)\]]*\blive\b[^)\]]*[)\]]|\blive (at|in)\b|['’]s picks\b|\ba-live\b|\bunplugged\b|\bin concert\b/i;
 
 /** A four-digit year, or the two-digit one at the end of a date like 4/26/08. */
 const NAMED_YEAR_PATTERN = /\b(?:19|20)\d{2}\b/g;

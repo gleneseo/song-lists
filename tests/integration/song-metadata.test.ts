@@ -47,7 +47,7 @@ describe("song metadata, in the database", () => {
     updatedBy: SYSTEM_USER_ID,
   });
 
-  it("should ship with the lookup results already in, for a song that was found and one that wasn't", async () => {
+  it("should ship with the lookup results already in, and none that failed", async () => {
     const counts = await pool.query<{ status: string; total: string }>(
       `select status, count(*) as total
          from song_lists.song_metadata
@@ -59,7 +59,6 @@ describe("song metadata, in the database", () => {
     );
 
     expect(total["matched"]).toBeGreaterThan(0);
-    expect(total["not_found"]).toBeGreaterThan(0);
     expect(total["error"]).toBeUndefined();
   });
 

@@ -63,7 +63,7 @@ describe("song metadata, in the database", () => {
     expect(total["error"]).toBeUndefined();
   });
 
-  it("should ship every song a lookup matched with its art, album, and track, every hand-set one with an album or a year, and every other with none", async () => {
+  it("should ship every song a lookup matched with its art, album, and track, every hand-set one with its album and year, and every other with none", async () => {
     const incomplete = await pool.query(
       `select s.title from song_lists.song_metadata m
          join song_lists.songs s on s.id = m.song_id
@@ -71,7 +71,7 @@ describe("song metadata, in the database", () => {
                and (m.artwork_url is null or m.album_name is null
                     or m.source_track_id is null or m.release_year is null))
            or (m.status = 'matched' and m.matched_by = 'manual'
-               and m.album_name is null and m.release_year is null)
+               and (m.album_name is null or m.release_year is null))
            or (m.status <> 'matched'
                and (m.artwork_url is not null or m.album_name is not null
                     or m.source_track_id is not null))`,

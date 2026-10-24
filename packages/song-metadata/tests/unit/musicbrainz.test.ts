@@ -737,6 +737,61 @@ describe("MusicBrainz lookup", () => {
     });
   });
 
+  describe("for a title with punctuation inside its words", () => {
+    const punctuated = {
+      title: "Heaven Help The M.F.'s",
+      artistName: ".38 Special",
+    };
+
+    /** A service that finds the song only by the plain words, as MusicBrainz does. */
+    function findingPlainWordsOnly() {
+      const found = service({
+        recordings: [
+          recording([release("Wild-Eyed Southern Boys", "g1")], {
+            title: "Heaven Help the M.F’s",
+          }),
+        ],
+      });
+
+      return vi.fn<typeof fetch>((input, init) =>
+        (urlOf(input).searchParams.get("query") ?? "").includes("M.F.")
+          ? Promise.resolve(
+              new Response(JSON.stringify({ recordings: [] }), {
+                status: 200,
+              }),
+            )
+          : found(input, init),
+      );
+    }
+
+    it("should look again for its plain words when the whole finds nothing", async () => {
+      const fetch = findingPlainWordsOnly();
+
+      await expect(lookupWith(fetch)(punctuated)).resolves.toMatchObject({
+        albumName: "Wild-Eyed Southern Boys",
+      });
+      expect(
+        fetch.mock.calls.some(([input]) =>
+          (urlOf(input).searchParams.get("query") ?? "").startsWith(
+            'recording:"Heaven Help The" AND',
+          ),
+        ),
+      ).toBe(true);
+    });
+
+    it("should not look again when the title has no plain words", async () => {
+      const fetch = service({ recordings: [] });
+
+      await lookupWith(fetch)({ title: "?!", artistName: ".38 Special" });
+
+      expect(
+        fetch.mock.calls.filter(([input]) =>
+          (urlOf(input).searchParams.get("query") ?? "").includes('"?!"'),
+        ),
+      ).toHaveLength(3);
+    });
+  });
+
   it("should say not found when the answer has no recordings", async () => {
     await expect(
       lookupWith(service({ recordings: "none" }))(wanted),

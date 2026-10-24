@@ -467,6 +467,13 @@ function createMusicBrainzLookup({
       );
   };
 
+  /** The words of a title that are only letters and digits, to search for when its whole is not found. */
+  const plainWordsOf = (title: string) =>
+    title
+      .split(/\s+/)
+      .filter((word) => /^[\p{L}\p{N}]+$/u.test(word))
+      .join(" ");
+
   const searchUrl = (
     wanted: WantedSong,
     offset: number,
@@ -511,6 +518,21 @@ function createMusicBrainzLookup({
       }
 
       let recordings = recordingsOf(await response.json());
+
+      // A title with punctuation inside its words ("M.F.'s") is split up
+      // differently here than in the record, so the exact phrase finds
+      // nothing; look again for just the plain words, which are vetted
+      // against the whole title afterwards.
+      if (recordings.length === 0) {
+        const plain = plainWordsOf(wanted.title);
+
+        if (plain !== "" && plain !== wanted.title) {
+          recordings = await askRecordings(
+            searchUrl({ ...wanted, title: plain }, 0, RESULT_LIMIT),
+          );
+        }
+      }
+
       let candidates = await dateByAlbums(readCandidates(recordings, wanted));
 
       // With no album of the song's own yet, look further: first at the next

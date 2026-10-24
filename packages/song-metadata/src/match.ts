@@ -308,11 +308,46 @@ function similarity(a: string, b: string): number {
   return longest === 0 ? 1 : 1 - editDistance(a, b) / longest;
 }
 
+/** A word with symbols standing in for some of its letters: "F**k", "N****s". */
+const MASKED_WORD = /^\p{L}[\p{L}']*[*!#$@%?][\p{L}'*!#$@%?]*$/u;
+
+/**
+ * Spells out the words that a source masks with symbols ("F*!#In' Up") using
+ * the words of the wanted title ("Fuckin' Up"), when they start with the same
+ * letter and are at least as long as the masked word.
+ */
+function unmaskWords(title: string, wantedTitle: string): string {
+  const wantedWords = wantedTitle.split(/\s+/);
+
+  return title
+    .split(/\s+/)
+    .map((word) => {
+      if (!MASKED_WORD.test(word)) {
+        return word;
+      }
+
+      const first = word.charAt(0).toLowerCase();
+
+      return (
+        wantedWords.find(
+          (other) =>
+            other.length >= word.length &&
+            other.charAt(0).toLowerCase() === first &&
+            /^\p{L}[\p{L}']*$/u.test(other),
+        ) ?? word
+      );
+    })
+    .join(" ");
+}
+
 function scoreCandidate(
   wanted: WantedSong,
   candidate: Candidate,
 ): { title: number; artist: number; partial: boolean } {
-  const title = similarity(simplify(wanted.title), simplify(candidate.title));
+  const title = similarity(
+    simplify(wanted.title),
+    simplify(unmaskWords(candidate.title, wanted.title)),
+  );
   const artist = artistSimilarity(wanted.artistName, candidate.artistName);
   const shared =
     artist < MIN_ARTIST_SIMILARITY

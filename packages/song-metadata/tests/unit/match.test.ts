@@ -77,6 +77,24 @@ describe("chooseMatch", () => {
     expect(chooseMatch(wanted, [candidate])).toBe(candidate);
   });
 
+  it("should read a word a source masks with symbols as the word it hides", () => {
+    const candidate = { title: "F*!#In' Up", artistName: "Neil Young" };
+
+    expect(
+      chooseMatch({ title: "Fuckin' Up", artistName: "Neil Young" }, [
+        candidate,
+      ]),
+    ).toBe(candidate);
+  });
+
+  it("should not read a masked word as one that starts with another letter", () => {
+    expect(
+      chooseMatch({ title: "Real Thing", artistName: "Pearl Jam" }, [
+        { title: "S**l Thing", artistName: "Pearl Jam" },
+      ]),
+    ).toBeNull();
+  });
+
   it("should refuse a different song by the same artist", () => {
     expect(
       chooseMatch(wanted, [

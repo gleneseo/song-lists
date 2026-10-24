@@ -139,6 +139,9 @@ const BACKING_PATTERN = new RegExp(
   "i",
 );
 
+/** Wording in an album's name that marks it as made up of instrumentals. */
+const INSTRUMENTAL_ALBUM_PATTERN = /\binstrumentals?\b/i;
+
 /** Wording in a track's title that marks it as someone's remix or edit. */
 const REMIXED_PATTERN = new RegExp(`\\b(${REMIXED_WORDING})\\b`, "i");
 
@@ -649,10 +652,21 @@ function chooseMatch<T extends Candidate>(
     ({ candidate }) =>
       debut !== null && (candidate.releaseYear ?? Infinity) < debut,
   );
-  const best = Math.max(
-    ...[...studio, ...debutLive].map(({ closeness }) => closeness),
-  );
-  const closest = [...studio, ...debutLive].filter(
+  // When nothing else is left, a track named just as the song is on an
+  // instrumentals album is the song: some songs are only instrumental.
+  const releases = [...studio, ...debutLive];
+  const pool =
+    releases.length > 0
+      ? releases
+      : versions.filter(
+          ({ version, candidate }) =>
+            version === "backing" &&
+            INSTRUMENTAL_ALBUM_PATTERN.test(candidate.albumName ?? "") &&
+            !BACKING_PATTERN.test(candidate.title) &&
+            !REMIXED_PATTERN.test(candidate.title),
+        );
+  const best = Math.max(...pool.map(({ closeness }) => closeness));
+  const closest = pool.filter(
     ({ closeness }) => closeness >= best - CLOSE_ENOUGH - Number.EPSILON * 8,
   );
   const albumNames = new Set(

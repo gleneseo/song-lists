@@ -95,6 +95,32 @@ describe("chooseMatch", () => {
     ).toBeNull();
   });
 
+  it("should accept a song that only came out on an instrumentals album", () => {
+    const candidate = {
+      title: "Wig Blows Off",
+      artistName: "Tobacco",
+      albumName: "Rarities (Instrumental Rarities & Unreleased Beats)",
+    };
+
+    expect(
+      chooseMatch({ title: "Wig Blows Off", artistName: "Tobacco" }, [
+        candidate,
+      ]),
+    ).toBe(candidate);
+  });
+
+  it("should refuse an instrumental of a song when the title says so", () => {
+    expect(
+      chooseMatch({ title: "Nightcrawler", artistName: "Czarface" }, [
+        {
+          title: "Nightcrawler (Instrumental)",
+          artistName: "Czarface",
+          albumName: "Heroes - Instrumentals",
+        },
+      ]),
+    ).toBeNull();
+  });
+
   it("should refuse a different song by the same artist", () => {
     expect(
       chooseMatch(wanted, [
@@ -178,10 +204,17 @@ describe("chooseMatch", () => {
     expect(chooseMatch(wanted, [concert])).toBeNull();
   });
 
-  it("should refuse a track on an instrumentals album", () => {
+  it("should prefer the song's own release to a track on an instrumentals album", () => {
+    const album = { ...exact, albumName: "Wild-Eyed (Instrumentals)" };
+    const original = { ...exact, albumName: "Wild-Eyed" };
+
+    expect(chooseMatch(wanted, [album, original])).toBe(original);
+  });
+
+  it("should accept a track on an instrumentals album when it is all there is", () => {
     const album = { ...exact, albumName: "Wild-Eyed (Instrumentals)" };
 
-    expect(chooseMatch(wanted, [album])).toBeNull();
+    expect(chooseMatch(wanted, [album])).toBe(album);
   });
 
   it.each([

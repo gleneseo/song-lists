@@ -7,6 +7,7 @@ import {
   type Candidate,
   type ReleaseKind,
   type WantedSong,
+  readSymbols,
 } from "./match.js";
 import { createRateLimiter, type RateLimiter } from "./rate-limiter.js";
 
@@ -27,6 +28,9 @@ const OFFICIAL_ALBUMS_ONLY =
 
 /** How many more to ask for, past the first, when those had no album of the song's own. */
 const MORE_RESULTS = 70;
+
+/** A word this long or longer may be spelled a little differently in a fuzzy search. */
+const MIN_FUZZY_WORD = 4;
 
 const REQUEST_TIMEOUT_MS = 10_000;
 
@@ -467,6 +471,19 @@ function createMusicBrainzLookup({
       );
   };
 
+  /**
+   * The words of a title, each one allowed a letter or two of difference, for
+   * a title whose spelling differs from the record's by more than punctuation
+   * ("Chanels" for "chanel$"). Short words must match exactly, or nearly any
+   * word would do.
+   */
+  const fuzzyWordsOf = (title: string) =>
+    readSymbols(title)
+      .split(/[^\p{L}\p{N}]+/u)
+      .filter((word) => word !== "")
+      .map((word) => (word.length >= MIN_FUZZY_WORD ? `${word}~` : word))
+      .join(" AND ");
+
   /** The words of a title that are only letters and digits, to search for when its whole is not found. */
   const plainWordsOf = (title: string) =>
     title
@@ -479,11 +496,15 @@ function createMusicBrainzLookup({
     offset: number,
     limit: number,
     officialAlbumsOnly = false,
+    fuzzy = false,
   ) => {
     const url = new URL(SEARCH_URL);
+    const recordingQuery = fuzzy
+      ? `recording:(${fuzzyWordsOf(wanted.title)})`
+      : `recording:"${wanted.title.replaceAll('"', " ")}"`;
 
     url.search = new URLSearchParams({
-      query: `recording:"${wanted.title.replaceAll('"', " ")}" AND ${artistQuery(wanted.artistName)}${officialAlbumsOnly ? OFFICIAL_ALBUMS_ONLY : ""}`,
+      query: `${recordingQuery} AND ${artistQuery(wanted.artistName)}${officialAlbumsOnly ? OFFICIAL_ALBUMS_ONLY : ""}`,
       fmt: "json",
       limit: String(limit),
       ...(offset > 0 ? { offset: String(offset) } : {}),
@@ -531,6 +552,13 @@ function createMusicBrainzLookup({
             searchUrl({ ...wanted, title: plain }, 0, RESULT_LIMIT),
           );
         }
+      }
+
+      // Still nothing: allow each word a letter or two of difference.
+      if (recordings.length === 0 && fuzzyWordsOf(wanted.title) !== "") {
+        recordings = await askRecordings(
+          searchUrl(wanted, 0, RESULT_LIMIT, false, true),
+        );
       }
 
       let candidates = await dateByAlbums(readCandidates(recordings, wanted));

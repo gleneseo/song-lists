@@ -48,6 +48,31 @@ describe("simplify", () => {
     expect(simplify("Hall & Oates")).toBe(simplify("Hall and Oates"));
   });
 
+  it("should read a dollar sign as the letter s", () => {
+    expect(simplify("Brand New Chanel$")).toBe("brand new chanels");
+    expect(simplify("Joey Bada$$")).toBe(simplify("Joey Badass"));
+  });
+
+  it("should leave a dollar sign before a number as money", () => {
+    expect(simplify("If I Had $1000000")).toBe("if i had 1000000");
+  });
+
+  it("should read an exclamation point inside a word as the letter i", () => {
+    expect(simplify("P!nk")).toBe("pink");
+    expect(simplify("Sk!n Deep")).toBe("skin deep");
+  });
+
+  it("should leave an exclamation point that ends a word as punctuation", () => {
+    expect(simplify("Yahoo!")).toBe("yahoo");
+    expect(simplify("Hey! You")).toBe("hey you");
+    expect(simplify("!!!")).toBe("!!!");
+  });
+
+  it("should read an at sign beside a letter as the letter a", () => {
+    expect(simplify("M@ke It Rain")).toBe("make it rain");
+    expect(simplify("Cl@ss")).toBe("class");
+  });
+
   it("should keep a title that is nothing but a note in brackets", () => {
     expect(simplify("(Untitled)")).toBe("untitled");
   });
@@ -119,6 +144,36 @@ describe("chooseMatch", () => {
         },
       ]),
     ).toBeNull();
+  });
+
+  it("should accept a title the service spells with a dollar sign for an s", () => {
+    const candidate = { title: "brand new chanel$", artistName: "Slayyyter" };
+
+    expect(
+      chooseMatch({ title: "Brand New Chanels", artistName: "Slayyyter" }, [
+        candidate,
+      ]),
+    ).toBe(candidate);
+  });
+
+  it("should accept an artist the service spells with a dollar sign for an s", () => {
+    const candidate = { title: "Hold On Loosely", artistName: "Ke$ha" };
+
+    expect(
+      chooseMatch({ title: "Hold On Loosely", artistName: "Kesha" }, [
+        candidate,
+      ]),
+    ).toBe(candidate);
+  });
+
+  it("should accept an artist the service spells with an exclamation point for an i", () => {
+    const candidate = { title: "Hold On Loosely", artistName: "P!nk" };
+
+    expect(
+      chooseMatch({ title: "Hold On Loosely", artistName: "Pink" }, [
+        candidate,
+      ]),
+    ).toBe(candidate);
   });
 
   it("should refuse a different song by the same artist", () => {

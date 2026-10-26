@@ -794,6 +794,93 @@ describe("MusicBrainz lookup", () => {
     });
   });
 
+  describe("for a title the record spells differently by more than punctuation", () => {
+    const misspelled = {
+      title: "Brand New Chanels",
+      artistName: ".38 Special",
+    };
+
+    /** A service whose search finds the song only when each long word may differ a little. */
+    function findingFuzzyWordsOnly() {
+      const found = service({
+        recordings: [
+          recording([release("Wild-Eyed Southern Boys", "g1")], {
+            title: "brand new chanel$",
+          }),
+        ],
+      });
+
+      return vi.fn<typeof fetch>((input, init) =>
+        !urlOf(input).pathname.endsWith("/recording") ||
+        (urlOf(input).searchParams.get("query") ?? "").includes("~")
+          ? found(input, init)
+          : Promise.resolve(
+              new Response(JSON.stringify({ recordings: [] }), {
+                status: 200,
+              }),
+            ),
+      );
+    }
+
+    it("should look again, letting each long word differ a little, when nothing is found", async () => {
+      const fetch = findingFuzzyWordsOnly();
+
+      await expect(lookupWith(fetch)(misspelled)).resolves.toMatchObject({
+        status: "matched",
+        matchedTitle: "brand new chanel$",
+        albumName: "Wild-Eyed Southern Boys",
+      });
+      expect(
+        fetch.mock.calls.some(([input]) =>
+          (urlOf(input).searchParams.get("query") ?? "").startsWith(
+            "recording:(Brand~ AND New AND Chanels~) AND",
+          ),
+        ),
+      ).toBe(true);
+    });
+
+    it("should read symbols used as letters in the title before choosing the words", async () => {
+      const fetch = service({ recordings: [] });
+
+      await lookupWith(fetch)({
+        title: "Sk!n D$ep",
+        artistName: ".38 Special",
+      });
+
+      expect(
+        fetch.mock.calls.some(([input]) =>
+          (urlOf(input).searchParams.get("query") ?? "").startsWith(
+            "recording:(Skin~ AND Dsep~) AND",
+          ),
+        ),
+      ).toBe(true);
+    });
+
+    it("should not look for fuzzy words when the title has no words", async () => {
+      const fetch = service({ recordings: [] });
+
+      await lookupWith(fetch)({ title: "?!", artistName: ".38 Special" });
+
+      expect(
+        fetch.mock.calls.some(([input]) =>
+          (urlOf(input).searchParams.get("query") ?? "").includes("~"),
+        ),
+      ).toBe(false);
+    });
+
+    it("should not look again with fuzzy words when the exact title was found", async () => {
+      const fetch = service();
+
+      await lookupWith(fetch)(wanted);
+
+      expect(
+        fetch.mock.calls.some(([input]) =>
+          (urlOf(input).searchParams.get("query") ?? "").includes("~"),
+        ),
+      ).toBe(false);
+    });
+  });
+
   it("should say not found when the answer has no recordings", async () => {
     await expect(
       lookupWith(service({ recordings: "none" }))(wanted),

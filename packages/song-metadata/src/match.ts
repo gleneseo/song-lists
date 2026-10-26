@@ -148,6 +148,20 @@ const REMIXED_PATTERN = new RegExp(`\\b(${REMIXED_WORDING})\\b`, "i");
 /** Wording that marks a track as a live recording. */
 const LIVE_PATTERN = /\blive\b/i;
 
+/**
+ * A symbol used as the letter it resembles is that letter: a dollar sign that
+ * isn't the start of an amount ("Chanel$", "Bada$$"; "$20 Bill" is money) is an
+ * "s", an exclamation point inside a word ("P!nk"; not "Yahoo!") an "i", and
+ * an at sign beside a letter ("M@ke") an "a". The web app reads "$" and "!"
+ * the same way for sorting and searching.
+ */
+function readSymbols(text: string): string {
+  return text
+    .replace(/\$(?!\d)/g, "s")
+    .replace(/!(?=\w)/g, "i")
+    .replace(/(?<=\p{L})@|@(?=\p{L})/gu, "a");
+}
+
 function stripAccents(text: string): string {
   return text.normalize("NFKD").replace(/[̀-ͯ]/g, "");
 }
@@ -164,7 +178,7 @@ function simplify(text: string): string {
     .replace(/\([^)]*\)|\[[^\]]*\]/g, " ")
     .replace(/\s[-–—]\s.*$/, " ");
   const words = (value: string) =>
-    value
+    readSymbols(value)
       .replace(/&/g, " and ")
       .replace(/(^|\s)['’]?n['’]?(?=\s|$)/g, "$1and")
       .replace(/[^\p{L}\p{N} ]/gu, " ")
@@ -713,5 +727,5 @@ function isProperAlbum(wanted: WantedSong, candidate: Candidate): boolean {
   );
 }
 
-export { chooseMatch, isProperAlbum, simplify };
+export { chooseMatch, isProperAlbum, readSymbols, simplify };
 export type { Candidate, ReleaseKind, WantedSong };

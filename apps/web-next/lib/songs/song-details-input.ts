@@ -134,5 +134,17 @@ function detailsToSave(
   return unchanged ? undefined : current;
 }
 
-export { cleanSongDetails, detailsToSave, EMPTY_SONG_DETAILS };
+/**
+ * Whether two sets of details say the same thing: the same album, year, and
+ * cover art, ignoring stray spaces. The service they came from doesn't count.
+ */
+function sameSongDetails(a: SongDetailsInput, b: SongDetailsInput): boolean {
+  return (
+    tidy(a.albumName) === tidy(b.albumName) &&
+    tidy(a.releaseYear) === tidy(b.releaseYear) &&
+    tidy(a.artworkUrl) === tidy(b.artworkUrl)
+  );
+}
+
+export { cleanSongDetails, detailsToSave, EMPTY_SONG_DETAILS, sameSongDetails };
 export type { CleanSongDetails, CleanSongDetailsResult, SongDetailsInput };

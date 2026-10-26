@@ -5,7 +5,10 @@ import { Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { findSongDetails } from "@/lib/actions/find-song-details";
 import { metadataCredit } from "@/lib/songs/metadata-credit";
-import type { SongDetailsInput } from "@/lib/songs/song-details-input";
+import {
+  sameSongDetails,
+  type SongDetailsInput,
+} from "@/lib/songs/song-details-input";
 import { SongArtwork } from "@/components/songs/song-artwork";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +19,7 @@ const PREVIEW_SIZE = 96;
 type LookupState =
   | { status: "idle" }
   | { status: "looking" }
-  | { status: "found" }
+  | { status: "found"; unchanged: boolean }
   | { status: "not_found" }
   | { status: "error"; message: string };
 
@@ -75,8 +78,11 @@ function SongDetailsFields({
       }
 
       if (result.status === "found") {
+        // Compared with what the form has now, which is what it replaces.
+        const unchanged = sameSongDetails(value, result.details);
+
         onChange(result.details);
-        setLookup({ status: "found" });
+        setLookup({ status: "found", unchanged });
       } else {
         setLookup(
           result.status === "not_found"
@@ -123,7 +129,9 @@ function SongDetailsFields({
         )}
         {lookup.status === "found" && (
           <p className="text-muted-foreground">
-            Found. Check the details below and correct anything before saving.
+            {lookup.unchanged
+              ? "Found. It matches the details already here, so there's nothing to change."
+              : "Found. Check the details below and correct anything before saving."}
           </p>
         )}
         {lookup.status === "not_found" && (

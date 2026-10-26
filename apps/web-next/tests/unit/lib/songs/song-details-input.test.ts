@@ -3,6 +3,7 @@ import {
   cleanSongDetails,
   detailsToSave,
   EMPTY_SONG_DETAILS,
+  sameSongDetails,
   type SongDetailsInput,
 } from "@/lib/songs/song-details-input";
 
@@ -170,5 +171,35 @@ describe("detailsToSave", () => {
 
   it("should send nothing, rather than clear what a song had, when everything is blanked", () => {
     expect(detailsToSave(EMPTY_SONG_DETAILS, typed)).toBe(undefined);
+  });
+});
+
+describe("sameSongDetails", () => {
+  it("should find details the same when album, year, and cover art are", () => {
+    expect(sameSongDetails(typed, { ...typed })).toBe(true);
+  });
+
+  it("should ignore stray spaces, and the service the details came from", () => {
+    expect(
+      sameSongDetails(typed, {
+        ...typed,
+        albumName: "Rhyme Pays",
+        artworkUrl: "https://example.test/art.jpg",
+        source: "musicbrainz",
+        sourceTrackId: "other",
+      }),
+    ).toBe(true);
+  });
+
+  it.each([
+    ["album", { albumName: "Other" }],
+    ["year", { releaseYear: "1988" }],
+    ["cover art", { artworkUrl: "https://example.test/other.jpg" }],
+  ])("should find details different when the %s is", (_, change) => {
+    expect(sameSongDetails(typed, { ...typed, ...change })).toBe(false);
+  });
+
+  it("should find two empty sets of details the same", () => {
+    expect(sameSongDetails(EMPTY_SONG_DETAILS, EMPTY_SONG_DETAILS)).toBe(true);
   });
 });

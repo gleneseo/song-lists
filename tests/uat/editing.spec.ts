@@ -864,4 +864,49 @@ test.describe("an admin editing a song's album details", () => {
     await expect(albumField(page)).toBeVisible();
     await expect(removeButton(page)).toHaveCount(0);
   });
+
+  test("says so when a lookup finds just the details the song already has", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    const song = await arrangeSong();
+    await arrangeSongDetails(song, {
+      source: "itunes",
+      artworkUrl: "https://example.test/stub/100x100bb.jpg",
+      albumName: `Stub Album for ${song.title}`,
+      releaseYear: 1999,
+    });
+    await openSong(page, song);
+    await dialog(page).getByRole("button", { name: "Edit" }).click();
+
+    await lookUpButton(page).click();
+
+    await expect(
+      dialog(page).getByText(
+        "Found. It matches the details already here, so there's nothing to change.",
+      ),
+    ).toBeVisible();
+    await expect(albumField(page)).toHaveValue(`Stub Album for ${song.title}`);
+  });
+
+  test("asks for the details to be checked when a lookup finds something different", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    const song = await arrangeSong();
+    await arrangeSongDetails(song, {
+      albumName: "Old Album",
+      releaseYear: 1975,
+    });
+    await openSong(page, song);
+    await dialog(page).getByRole("button", { name: "Edit" }).click();
+
+    await lookUpButton(page).click();
+
+    await expect(
+      dialog(page).getByText(
+        "Found. Check the details below and correct anything before saving.",
+      ),
+    ).toBeVisible();
+  });
 });

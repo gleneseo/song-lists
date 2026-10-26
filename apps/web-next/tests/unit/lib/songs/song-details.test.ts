@@ -15,6 +15,7 @@ const bareRow: SongDetailsRow = {
   productions: [],
   advocates: [],
   lists: [],
+  metadata: null,
 };
 
 describe("toSongDetails", () => {
@@ -32,8 +33,47 @@ describe("toSongDetails", () => {
       productions: [],
       advocates: [],
       lists: [],
+      metadata: null,
     });
   });
+
+  it("should carry over what the lookup found for a matched song", () => {
+    const actual = toSongDetails({
+      ...bareRow,
+      metadata: {
+        status: "matched",
+        source: "itunes",
+        artworkUrl: "https://example.test/art/100x100bb.jpg",
+        albumName: "Summer Breeze",
+        releaseYear: 1974,
+      },
+    });
+
+    expect(actual.metadata).toEqual({
+      source: "itunes",
+      artworkUrl: "https://example.test/art/100x100bb.jpg",
+      albumName: "Summer Breeze",
+      releaseYear: 1974,
+    });
+  });
+
+  it.each(["not_found", "error"])(
+    "should show nothing for a song whose lookup ended in %s",
+    (status) => {
+      const actual = toSongDetails({
+        ...bareRow,
+        metadata: {
+          status,
+          source: null,
+          artworkUrl: null,
+          albumName: null,
+          releaseYear: null,
+        },
+      });
+
+      expect(actual.metadata).toBeNull();
+    },
+  );
 
   it("should keep the bio when there is one", () => {
     expect(toSongDetails({ ...bareRow, bio: "A gem." }).bio).toBe("A gem.");

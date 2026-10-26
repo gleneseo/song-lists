@@ -5,5 +5,9 @@
     "rootDir": ".",
     "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo"
   },
-  "include": ["src", "tests", "package.json"]
+  "include": ["src", "tests", "package.json"],
+  "references": [
+    { "path": "../../packages/db" },
+    { "path": "../../packages/song-metadata" }
+  ]
 }

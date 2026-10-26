@@ -3,5 +3,13 @@ export * as schema from "./schema/song-lists.js";
 export { createDb } from "./client.js";
 export type { CreateDbOptions, Database } from "./client.js";
 export { LIST_EXTRA_COLUMN, ListExtraColumn } from "./list-extra-column.js";
+export {
+  SONG_METADATA_MATCHED_BY,
+  SONG_METADATA_SOURCE,
+  SONG_METADATA_STATUS,
+  SongMetadataMatchedBy,
+  SongMetadataSource,
+  SongMetadataStatus,
+} from "./song-metadata.js";
 export { USER_ROLE, UserRole } from "./user-role.js";
 export { SYSTEM_USER_ID } from "./system-user.js";

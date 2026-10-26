@@ -29,6 +29,9 @@ const submit = (page: Page) =>
 const styleWarning = (page: Page) =>
   page.getByRole("alert").filter({ hasText: "written in our style" });
 
+const similarSongWarning = (page: Page) =>
+  page.getByRole("alert").filter({ hasText: "may already be here" });
+
 async function startNewSong(page: Page): Promise<void> {
   await page.goto("/songs/new");
   await expect(artistField(page)).toBeVisible();
@@ -331,7 +334,7 @@ test.describe("when it can't be added yet", () => {
     await expect(submit(page)).toBeDisabled();
   });
 
-  test("a title that differs only by a symbol is offered as a match, but can still go ahead", async ({
+  test("a title that differs only by a symbol is flagged as a likely match, but can still go ahead", async ({
     as,
   }) => {
     const page = await as("admin");
@@ -340,10 +343,66 @@ test.describe("when it can't be added yet", () => {
 
     await titleField(page).fill("Paper Trails");
 
-    await expect(
-      page.getByText(/Did you mean the existing song/),
-    ).toBeVisible();
+    await expect(similarSongWarning(page)).toBeVisible();
+    await expect(similarSongWarning(page)).toContainText(
+      "We already have “Paper Trail$” by Joey Bada$$",
+    );
     await expect(submit(page)).toBeEnabled();
+  });
+
+  test("the likely match opens in a modal over the form, which is kept", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    await startNewSong(page);
+    await choose(artistField(page), "Joey Bada", /Joey Bada\$\$/);
+    await titleField(page).fill("Paper Trails");
+    await page.getByLabel("Bio / notes (optional)").fill("Half a thought");
+    await page.evaluate(() => {
+      (window as unknown as { stillHere: boolean }).stillHere = true;
+    });
+
+    await similarSongWarning(page)
+      .getByRole("link", { name: /View “Paper Trail\$”/ })
+      .click();
+
+    const modal = page.getByRole("dialog");
+    await expect(
+      modal.getByRole("heading", { name: "Paper Trail$", level: 2 }),
+    ).toBeVisible();
+    await expect(page).toHaveURL(/\/song\/\d+$/);
+
+    await page.keyboard.press("Escape");
+
+    await expect(modal).toHaveCount(0);
+    await expect(page).toHaveURL(/\/songs\/new$/);
+    // Not reloaded: the marker set before the click is still there.
+    expect(
+      await page.evaluate(
+        () => (window as unknown as { stillHere?: boolean }).stillHere,
+      ),
+    ).toBe(true);
+    await expect(titleField(page)).toHaveValue("Paper Trails");
+    await expect(page.getByLabel("Bio / notes (optional)")).toHaveValue(
+      "Half a thought",
+    );
+    await expect(artistField(page)).toHaveValue(/Joey Bada/);
+  });
+
+  test("the likely match offers a way out: it's already there, so cancel", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    await page.goto("/dashboard");
+    await page.getByRole("link", { name: "Add song" }).click();
+    await choose(artistField(page), "Joey Bada", /Joey Bada\$\$/);
+    await titleField(page).fill("Paper Trails");
+
+    await similarSongWarning(page)
+      .getByRole("button", { name: /already there/ })
+      .click();
+
+    await expect(page).toHaveURL(/\/dashboard$/);
   });
 
   test("the same title by a different artist is not a duplicate", async ({
@@ -501,5 +560,396 @@ test.describe("cancelling", () => {
     await page.getByRole("button", { name: "Cancel" }).click();
 
     await expect(page).toHaveURL(/\/dashboard$/);
+  });
+});
+
+test.describe("starting over", () => {
+  test("cancelling and opening the form again finds it empty", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    await page.goto("/dashboard");
+    await page.getByRole("link", { name: "Add song" }).click();
+    await expect(artistField(page)).toBeVisible();
+    await choose(artistField(page), "Joey Bada", /Joey Bada\$\$/);
+    await titleField(page).fill("Something half typed");
+    await page.getByLabel("Bio / notes (optional)").fill("Half a thought");
+
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expect(page).toHaveURL(/\/dashboard$/);
+    await page.getByRole("link", { name: "Add song" }).click();
+
+    await expect(artistField(page)).toBeVisible();
+    await expect(artistField(page)).toHaveValue("");
+    await expect(titleField(page)).toHaveValue("");
+    await expect(page.getByLabel("Bio / notes (optional)")).toHaveValue("");
+  });
+});
+
+const detailsSection = (page: Page): Locator => section(page, "Album details");
+const lookUpButton = (page: Page): Locator =>
+  page.getByRole("button", { name: /^Look up album details|^Looking up/ });
+const albumField = (page: Page): Locator =>
+  detailsSection(page).getByLabel("Album", { exact: true });
+const yearField = (page: Page): Locator =>
+  detailsSection(page).getByLabel("Year", { exact: true });
+const coverField = (page: Page): Locator =>
+  detailsSection(page).getByLabel("Cover art address");
+
+/** What the song's saved album details are, straight from the database. */
+async function savedDetails(title: string) {
+  return withDatabase(async (pool) => {
+    const { rows } = await pool.query<{
+      status: string;
+      album_name: string | null;
+      release_year: number | null;
+      artwork_url: string | null;
+      source: string | null;
+      matched_by: string;
+    }>(
+      `select m.status, m.album_name, m.release_year, m.artwork_url, m.source, m.matched_by
+       from song_lists.song_metadata m join song_lists.songs s on s.id = m.song_id
+       where s.title = $1`,
+      [title],
+    );
+
+    return rows;
+  });
+}
+
+test.describe("looking up album details while adding a song", () => {
+  test("everyone who can add a song is offered the lookup", async ({ as }) => {
+    for (const role of ["admin", "manager", "user"] as const) {
+      const page = await as(role);
+      await startNewSong(page);
+
+      await expect(detailsSection(page), role).toBeVisible();
+      await expect(lookUpButton(page), role).toBeVisible();
+    }
+  });
+
+  test("a person who isn't an admin looks a song up and adds it with the details", async ({
+    as,
+  }) => {
+    const page = await as("user");
+    const title = freshName("Song");
+    await startNewSong(page);
+    await create(artistField(page), freshName("Band"));
+    await titleField(page).fill(title);
+
+    await lookUpButton(page).click();
+
+    await expect(albumField(page)).toHaveValue(`Stub Album for ${title}`);
+    await submit(page).click();
+    await expect(page.getByText(/was added successfully/)).toBeVisible();
+    expect(await savedDetails(title)).toMatchObject([
+      {
+        album_name: `Stub Album for ${title}`,
+        release_year: 1999,
+        matched_by: "manual",
+      },
+    ]);
+  });
+
+  test("the lookup waits until the song has a title and an artist", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    await startNewSong(page);
+    await expect(lookUpButton(page)).toBeDisabled();
+    await expect(
+      page.getByText("Give the song a title and an artist first."),
+    ).toBeVisible();
+
+    await titleField(page).fill(freshName("Song"));
+    await expect(lookUpButton(page)).toBeDisabled();
+    await create(artistField(page), freshName("Band"));
+
+    await expect(lookUpButton(page)).toBeEnabled();
+  });
+
+  test("shows that a lookup is under way until the answer is back, then fills in the details to correct before adding the song", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    const artist = freshName("Band");
+    const title = freshName("Song");
+    await startNewSong(page);
+    await create(artistField(page), artist);
+    await titleField(page).fill(title);
+
+    await lookUpButton(page).click();
+
+    await expect(
+      page.getByRole("button", { name: "Looking up…" }),
+    ).toBeDisabled();
+    await expect(
+      page.getByText(/Looking up album details on iTunes and MusicBrainz/),
+    ).toBeVisible();
+    await expect(submit(page)).toBeDisabled();
+    await expect(albumField(page)).toBeDisabled();
+
+    await expect(
+      page.getByText(
+        new RegExp(`Found “${title}” by ${artist}\\. Check the details below`),
+      ),
+    ).toBeVisible();
+    await expect(lookUpButton(page)).toHaveText("Look up album details");
+    await expect(submit(page)).toBeEnabled();
+    await expect(albumField(page)).toHaveValue(`Stub Album for ${title}`);
+    await expect(yearField(page)).toHaveValue("1999");
+    await expect(coverField(page)).toHaveValue(
+      "https://example.test/stub/100x100bb.jpg",
+    );
+    await expect(page.getByText("Album details via iTunes")).toBeVisible();
+
+    await albumField(page).fill("The Corrected Album");
+    await yearField(page).fill("2001");
+    await submit(page).click();
+
+    await expect(
+      page.getByText(`“${title}” by ${artist} was added successfully.`),
+    ).toBeVisible();
+    expect(await savedDetails(title)).toEqual([
+      {
+        status: "matched",
+        album_name: "The Corrected Album",
+        release_year: 2001,
+        artwork_url: "https://example.test/stub/100x100bb.jpg",
+        source: "itunes",
+        matched_by: "manual",
+      },
+    ]);
+  });
+
+  test("changing the cover art by hand takes the song's details off the service's name", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    const title = freshName("Song");
+    await startNewSong(page);
+    await create(artistField(page), freshName("Band"));
+    await titleField(page).fill(title);
+    await lookUpButton(page).click();
+    await expect(albumField(page)).toHaveValue(`Stub Album for ${title}`);
+    await expect(page.getByText("Album details via iTunes")).toBeVisible();
+
+    await coverField(page).fill("https://example.test/mine/cover.jpg");
+
+    await expect(page.getByText("Album details via iTunes")).toHaveCount(0);
+    await submit(page).click();
+    await expect(page.getByText(/was added successfully/)).toBeVisible();
+    expect(await savedDetails(title)).toMatchObject([
+      { artwork_url: "https://example.test/mine/cover.jpg", source: null },
+    ]);
+  });
+
+  test("details typed in by hand are saved without a lookup", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    const title = freshName("Song");
+    await startNewSong(page);
+    await create(artistField(page), freshName("Band"));
+    await titleField(page).fill(title);
+
+    await albumField(page).fill("Typed By Hand");
+    await yearField(page).fill("1977");
+    await submit(page).click();
+
+    await expect(page.getByText(/was added successfully/)).toBeVisible();
+    expect(await savedDetails(title)).toMatchObject([
+      {
+        status: "matched",
+        album_name: "Typed By Hand",
+        release_year: 1977,
+        artwork_url: null,
+        matched_by: "manual",
+      },
+    ]);
+  });
+
+  test("a song added with no details has none saved by the form", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    const title = freshName("Song");
+    await startNewSong(page);
+    await create(artistField(page), freshName("Band"));
+    await titleField(page).fill(title);
+    await submit(page).click();
+
+    await expect(page.getByText(/was added successfully/)).toBeVisible();
+    expect(await savedDetails(title)).toEqual([]);
+  });
+
+  test("a lookup that finds nothing says so, and the details can be filled in by hand", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    await startNewSong(page);
+    await create(artistField(page), freshName("Band"));
+    await titleField(page).fill(freshName("Nothing Found Song"));
+
+    await lookUpButton(page).click();
+
+    await expect(page.getByText(/Nothing matched/)).toBeVisible();
+    await expect(albumField(page)).toHaveValue("");
+    await expect(albumField(page)).toBeEnabled();
+  });
+
+  test("a lookup that fails says so, and can be tried again", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    await startNewSong(page);
+    await create(artistField(page), freshName("Band"));
+    await titleField(page).fill(freshName("Lookup Failure Song"));
+
+    await lookUpButton(page).click();
+
+    await expect(
+      page.getByRole("alert").filter({ hasText: "The lookup didn't work" }),
+    ).toBeVisible();
+    await expect(lookUpButton(page)).toBeEnabled();
+    await expect(submit(page)).toBeEnabled();
+  });
+
+  test("details that don't check out are refused, and the song is not added", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    const title = freshName("Song");
+    await startNewSong(page);
+    await create(artistField(page), freshName("Band"));
+    await titleField(page).fill(title);
+    await albumField(page).fill("Some Album");
+    await yearField(page).fill("19");
+
+    await submit(page).click();
+
+    await expect(page.getByText(/The year must be four digits/)).toBeVisible();
+    await withDatabase(async (pool) => {
+      const { rowCount } = await pool.query(
+        "select 1 from song_lists.songs where title = $1",
+        [title],
+      );
+      expect(rowCount).toBe(0);
+    });
+  });
+});
+
+test.describe("keeping the form short", () => {
+  /** Where the boxes of choices are on the page, and whether they scroll. */
+  const groupBox = (page: Page, name: string) =>
+    page.getByRole("group", { name, exact: true });
+
+  test("the lists box shows about three at a time and scrolls for the rest, with the Master List ticked", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    await startNewSong(page);
+    const lists = groupBox(page, "Add this song to");
+
+    const size = await lists.evaluate((element) => ({
+      shown: element.clientHeight,
+      all: element.scrollHeight,
+    }));
+
+    expect(size.shown).toBeLessThanOrEqual(100);
+    expect(size.all).toBeGreaterThan(size.shown);
+    await expect(
+      lists.getByRole("checkbox", { name: "The Master List" }),
+    ).toBeChecked();
+    await expect(lists.getByRole("checkbox", { checked: true })).toHaveCount(1);
+    // The ones below are still there to tick.
+    await lists.getByRole("checkbox", { name: "Getting Lit" }).check();
+    await expect(
+      lists.getByRole("checkbox", { name: "Getting Lit" }),
+    ).toBeChecked();
+  });
+
+  test("the advocates are laid out side by side, in a box that also scrolls", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    await startNewSong(page);
+    const advocates = groupBox(page, "Additional advocates");
+    const names = advocates.locator("label");
+
+    const [first, second] = await Promise.all([
+      names.nth(0).boundingBox(),
+      names.nth(1).boundingBox(),
+    ]);
+    const size = await advocates.evaluate((element) => ({
+      shown: element.clientHeight,
+      all: element.scrollHeight,
+    }));
+
+    expect(second?.y).toBeCloseTo(first?.y ?? -1, 0);
+    expect(second?.x).toBeGreaterThan(first?.x ?? 0);
+    expect(size.shown).toBeLessThanOrEqual(100);
+  });
+
+  test("the album details put the year and the cover art address on one row", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    await startNewSong(page);
+
+    const [album, year, cover] = await Promise.all([
+      albumField(page).boundingBox(),
+      yearField(page).boundingBox(),
+      coverField(page).boundingBox(),
+    ]);
+
+    expect(year?.y).toBeCloseTo(cover?.y ?? -1, 0);
+    expect(cover?.x).toBeGreaterThan((year?.x ?? 0) + (year?.width ?? 0));
+    expect(year?.y).toBeGreaterThan(album?.y ?? Infinity);
+  });
+});
+
+test.describe("when a lookup spells the title differently", () => {
+  const useTitleLink = (page: Page): Locator =>
+    page.getByRole("button", { name: /^Use “.+” as the title$/ });
+
+  test("offers a link that puts the service's title in the title field", async ({
+    as,
+  }) => {
+    const page = await as("user");
+    const word = freshWord();
+    const title = `Misspelled Song ${word}`;
+    const correct = `Correct Song ${word}`;
+    await startNewSong(page);
+    await create(artistField(page), freshName("Band"));
+    await titleField(page).fill(title);
+
+    await lookUpButton(page).click();
+
+    await expect(
+      page.getByText("The service spells the title differently."),
+    ).toBeVisible();
+    await expect(useTitleLink(page)).toHaveText(
+      `Use “${correct}” as the title`,
+    );
+    await useTitleLink(page).click();
+
+    await expect(titleField(page)).toHaveValue(correct);
+    await expect(useTitleLink(page)).toHaveCount(0);
+    await submit(page).click();
+    await expect(page.getByText(/was added successfully/)).toBeVisible();
+    expect(await savedDetails(correct)).toHaveLength(1);
+  });
+
+  test("offers no link when the title is spelled the same", async ({ as }) => {
+    const page = await as("user");
+    await startNewSong(page);
+    await create(artistField(page), freshName("Band"));
+    await titleField(page).fill(freshName("Song"));
+
+    await lookUpButton(page).click();
+
+    await expect(page.getByText(/Found “/)).toBeVisible();
+    await expect(useTitleLink(page)).toHaveCount(0);
   });
 });

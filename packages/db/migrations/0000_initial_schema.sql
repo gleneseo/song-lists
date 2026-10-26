@@ -128,6 +128,26 @@ CREATE TABLE "song_lists"."song_featured_artists" (
 	CONSTRAINT "song_featured_artists_song_id_artist_id_unique" UNIQUE("song_id","artist_id")
 );
 --> statement-breakpoint
+CREATE TABLE "song_lists"."song_metadata" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"resource_id" uuid DEFAULT uuidv7() NOT NULL,
+	"song_id" integer NOT NULL,
+	"status" text NOT NULL,
+	"source" text,
+	"source_track_id" text,
+	"artwork_url" text,
+	"album_name" text,
+	"release_year" integer,
+	"matched_by" text NOT NULL,
+	"fetched_at" timestamp NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"created_by" uuid NOT NULL,
+	"updated_by" uuid NOT NULL,
+	CONSTRAINT "song_metadata_resource_id_unique" UNIQUE("resource_id"),
+	CONSTRAINT "song_metadata_song_id_unique" UNIQUE("song_id")
+);
+--> statement-breakpoint
 CREATE TABLE "song_lists"."song_productions" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"resource_id" uuid DEFAULT uuidv7() NOT NULL,
@@ -208,6 +228,9 @@ ALTER TABLE "song_lists"."song_featured_artists" ADD CONSTRAINT "song_featured_a
 ALTER TABLE "song_lists"."song_featured_artists" ADD CONSTRAINT "song_featured_artists_artist_id_artists_id_fk" FOREIGN KEY ("artist_id") REFERENCES "song_lists"."artists"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "song_lists"."song_featured_artists" ADD CONSTRAINT "song_featured_artists_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "song_lists"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "song_lists"."song_featured_artists" ADD CONSTRAINT "song_featured_artists_updated_by_users_id_fk" FOREIGN KEY ("updated_by") REFERENCES "song_lists"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "song_lists"."song_metadata" ADD CONSTRAINT "song_metadata_song_id_songs_id_fk" FOREIGN KEY ("song_id") REFERENCES "song_lists"."songs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "song_lists"."song_metadata" ADD CONSTRAINT "song_metadata_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "song_lists"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "song_lists"."song_metadata" ADD CONSTRAINT "song_metadata_updated_by_users_id_fk" FOREIGN KEY ("updated_by") REFERENCES "song_lists"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "song_lists"."song_productions" ADD CONSTRAINT "song_productions_song_id_songs_id_fk" FOREIGN KEY ("song_id") REFERENCES "song_lists"."songs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "song_lists"."song_productions" ADD CONSTRAINT "song_productions_production_id_productions_id_fk" FOREIGN KEY ("production_id") REFERENCES "song_lists"."productions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "song_lists"."song_productions" ADD CONSTRAINT "song_productions_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "song_lists"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint

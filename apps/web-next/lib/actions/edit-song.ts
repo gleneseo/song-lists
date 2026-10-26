@@ -9,10 +9,18 @@ import {
   getSongLinks,
   type SongEditData,
 } from "@/lib/queries/song-edit";
+import {
+  removeSongDetails,
+  saveSongDetails,
+} from "@/lib/queries/song-metadata";
 import { findExistingSong, type ExistingSongMatch } from "@/lib/queries/songs";
 import { getUserAccess } from "@/lib/queries/users";
 import { diffIds } from "@/lib/songs/diff-ids";
 import { formatNote } from "@/lib/songs/format-note";
+import {
+  cleanSongDetails,
+  type SongDetailsInput,
+} from "@/lib/songs/song-details-input";
 import {
   resolveArtist,
   resolveCover,
@@ -41,6 +49,14 @@ interface UpdateSongInput {
   addCover: CoverSelection;
   listIds: number[];
   advocateUserIds: string[];
+  /**
+   * The album details to save, as the admin settled on them; left out to
+   * keep whatever the song has. Saved as chosen by hand, so an automatic
+   * lookup never replaces them.
+   */
+  details?: SongDetailsInput;
+  /** Take the song's album details away (instead of saving `details`). */
+  removeDetails?: boolean;
 }
 
 type LoadSongForEditResult =
@@ -86,6 +102,15 @@ async function updateSong(input: UpdateSongInput): Promise<UpdateSongResult> {
 
   if (!title) {
     return { status: "error", message: "Title is required." };
+  }
+
+  const details =
+    input.details && !input.removeDetails
+      ? cleanSongDetails(input.details)
+      : null;
+
+  if (details?.status === "error") {
+    return { status: "error", message: details.message };
   }
 
   const author = (await getUserAccess(userId))?.name ?? "An admin";
@@ -168,6 +193,12 @@ async function updateSong(input: UpdateSongInput): Promise<UpdateSongResult> {
           updatedAt: new Date(),
         })
         .where(eq(schema.songs.id, input.songId));
+
+      if (input.removeDetails) {
+        await removeSongDetails(tx, input.songId, userId);
+      } else if (details) {
+        await saveSongDetails(tx, input.songId, details.details, userId);
+      }
 
       const links = await getSongLinks(tx, input.songId);
 

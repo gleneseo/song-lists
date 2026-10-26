@@ -12,9 +12,10 @@
 | [song_advocates](#song_advocates) | 8 |
 | [song_covers](#song_covers) | 8 |
 | [song_featured_artists](#song_featured_artists) | 8 |
+| [song_metadata](#song_metadata) | 15 |
 | [song_productions](#song_productions) | 8 |
 | [songs](#songs) | 9 |
-| [users](#users) | 13 |
+| [users](#users) | 14 |
 | [verifications](#verifications) | 6 |
 
 ---
@@ -365,6 +366,46 @@
 
 ---
 
+## song_metadata
+
+### Columns
+
+| Name | Type | Default | Nullable | Children | Parents |
+|------|------|---------|----------|----------|---------|
+| **id** | serial | - | NO | - | - |
+| resource_id | uuid | `uuidv7()` | NO | - | - |
+| song_id | integer | - | NO | - | [songs.id](#songs) |
+| status | text | - | NO | - | - |
+| source | text | - | YES | - | - |
+| source_track_id | text | - | YES | - | - |
+| artwork_url | text | - | YES | - | - |
+| album_name | text | - | YES | - | - |
+| release_year | integer | - | YES | - | - |
+| matched_by | text | - | NO | - | - |
+| fetched_at | timestamp | - | NO | - | - |
+| created_at | timestamp | `now()` | NO | - | - |
+| updated_at | timestamp | `now()` | NO | - | - |
+| created_by | uuid | - | NO | - | [users.id](#users) |
+| updated_by | uuid | - | NO | - | [users.id](#users) |
+
+### Constraints
+
+| Name | Type | Definition |
+|------|------|------------|
+| song_metadata_song_id_songs_id_fk | FOREIGN KEY | (song_id) → songs(id) |
+| song_metadata_created_by_users_id_fk | FOREIGN KEY | (created_by) → users(id) |
+| song_metadata_updated_by_users_id_fk | FOREIGN KEY | (updated_by) → users(id) |
+
+### Relations
+
+| Parent | Child | Type |
+|--------|-------|------|
+| [users.id](#users) | **[song_metadata.created_by](#song_metadata)** | Many to One |
+| [songs.id](#songs) | **[song_metadata.song_id](#song_metadata)** | Many to One |
+| [users.id](#users) | **[song_metadata.updated_by](#song_metadata)** | Many to One |
+
+---
+
 ## song_productions
 
 ### Columns
@@ -406,7 +447,7 @@
 
 | Name | Type | Default | Nullable | Children | Parents |
 |------|------|---------|----------|----------|---------|
-| **id** | serial | - | NO | [list_songs.song_id](#list_songs), [song_advocates.song_id](#song_advocates), [song_covers.original_song_id](#song_covers), [song_covers.song_id](#song_covers), [song_featured_artists.song_id](#song_featured_artists), [song_productions.song_id](#song_productions) | - |
+| **id** | serial | - | NO | [list_songs.song_id](#list_songs), [song_advocates.song_id](#song_advocates), [song_covers.original_song_id](#song_covers), [song_covers.song_id](#song_covers), [song_featured_artists.song_id](#song_featured_artists), [song_metadata.song_id](#song_metadata), [song_productions.song_id](#song_productions) | - |
 | resource_id | uuid | `uuidv7()` | NO | - | - |
 | title | text | - | NO | - | - |
 | artist_id | integer | - | NO | - | [artists.id](#artists) |
@@ -433,6 +474,7 @@
 | **[songs.id](#songs)** | [song_covers.original_song_id](#song_covers) | Many to One |
 | **[songs.id](#songs)** | [song_covers.song_id](#song_covers) | Many to One |
 | **[songs.id](#songs)** | [song_featured_artists.song_id](#song_featured_artists) | Many to One |
+| **[songs.id](#songs)** | [song_metadata.song_id](#song_metadata) | Many to One |
 | **[songs.id](#songs)** | [song_productions.song_id](#song_productions) | Many to One |
 | [artists.id](#artists) | **[songs.artist_id](#songs)** | Many to One |
 | [users.id](#users) | **[songs.created_by](#songs)** | Many to One |
@@ -446,7 +488,7 @@
 
 | Name | Type | Default | Nullable | Children | Parents |
 |------|------|---------|----------|----------|---------|
-| **id** | uuid | `uuidv7()` | NO | [accounts.user_id](#accounts), [artists.created_by](#artists), [artists.updated_by](#artists), [list_songs.created_by](#list_songs), [list_songs.updated_by](#list_songs), [lists.created_by](#lists), [lists.updated_by](#lists), [production_types.created_by](#production_types), [production_types.updated_by](#production_types), [productions.created_by](#productions), [productions.updated_by](#productions), [sessions.user_id](#sessions), [song_advocates.created_by](#song_advocates), [song_advocates.updated_by](#song_advocates), [song_advocates.user_id](#song_advocates), [song_covers.created_by](#song_covers), [song_covers.updated_by](#song_covers), [song_featured_artists.created_by](#song_featured_artists), [song_featured_artists.updated_by](#song_featured_artists), [song_productions.created_by](#song_productions), [song_productions.updated_by](#song_productions), [songs.created_by](#songs), [songs.updated_by](#songs), [users.created_by](#users), [users.updated_by](#users) | - |
+| **id** | uuid | `uuidv7()` | NO | [accounts.user_id](#accounts), [artists.created_by](#artists), [artists.updated_by](#artists), [list_songs.created_by](#list_songs), [list_songs.updated_by](#list_songs), [lists.created_by](#lists), [lists.updated_by](#lists), [production_types.created_by](#production_types), [production_types.updated_by](#production_types), [productions.created_by](#productions), [productions.updated_by](#productions), [sessions.user_id](#sessions), [song_advocates.created_by](#song_advocates), [song_advocates.updated_by](#song_advocates), [song_advocates.user_id](#song_advocates), [song_covers.created_by](#song_covers), [song_covers.updated_by](#song_covers), [song_featured_artists.created_by](#song_featured_artists), [song_featured_artists.updated_by](#song_featured_artists), [song_metadata.created_by](#song_metadata), [song_metadata.updated_by](#song_metadata), [song_productions.created_by](#song_productions), [song_productions.updated_by](#song_productions), [songs.created_by](#songs), [songs.updated_by](#songs), [users.created_by](#users), [users.updated_by](#users) | - |
 | email | text | - | NO | - | - |
 | email_verified | boolean | `false` | NO | - | - |
 | name | text | - | NO | - | - |
@@ -455,6 +497,7 @@
 | role | text | `'user'` | NO | - | - |
 | bio | text | - | YES | - | - |
 | image | text | - | YES | - | - |
+| deactivated_at | timestamp | - | YES | - | - |
 | created_at | timestamp | `now()` | NO | - | - |
 | updated_at | timestamp | `now()` | NO | - | - |
 | created_by | uuid | - | YES | - | [users.id](#users) |
@@ -490,6 +533,8 @@
 | **[users.id](#users)** | [song_covers.updated_by](#song_covers) | Many to One |
 | **[users.id](#users)** | [song_featured_artists.created_by](#song_featured_artists) | Many to One |
 | **[users.id](#users)** | [song_featured_artists.updated_by](#song_featured_artists) | Many to One |
+| **[users.id](#users)** | [song_metadata.created_by](#song_metadata) | Many to One |
+| **[users.id](#users)** | [song_metadata.updated_by](#song_metadata) | Many to One |
 | **[users.id](#users)** | [song_productions.created_by](#song_productions) | Many to One |
 | **[users.id](#users)** | [song_productions.updated_by](#song_productions) | Many to One |
 | **[users.id](#users)** | [songs.created_by](#songs) | Many to One |
@@ -553,6 +598,9 @@ erDiagram
     song_featured_artists }o--|| users : "created_by"
     song_featured_artists }o--|| songs : "song_id"
     song_featured_artists }o--|| users : "updated_by"
+    song_metadata }o--|| users : "created_by"
+    song_metadata }o--|| songs : "song_id"
+    song_metadata }o--|| users : "updated_by"
     song_productions }o--|| users : "created_by"
     song_productions }o--|| productions : "production_id"
     song_productions }o--|| songs : "song_id"
@@ -668,6 +716,23 @@ erDiagram
         uuid created_by FK
         uuid updated_by FK
     }
+    song_metadata {
+        serial id PK
+        uuid resource_id UK
+        integer song_id FK,UK
+        text status
+        text source
+        text source_track_id
+        text artwork_url
+        text album_name
+        integer release_year
+        text matched_by
+        timestamp fetched_at
+        timestamp created_at
+        timestamp updated_at
+        uuid created_by FK
+        uuid updated_by FK
+    }
     song_productions {
         serial id PK
         uuid resource_id UK
@@ -699,6 +764,7 @@ erDiagram
         text role
         text bio
         text image
+        timestamp deactivated_at
         timestamp created_at
         timestamp updated_at
         uuid created_by FK

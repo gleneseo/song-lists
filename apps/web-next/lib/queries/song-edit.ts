@@ -1,6 +1,7 @@
 import { asc, eq } from "drizzle-orm";
-import { schema } from "@song-lists/db";
+import { SONG_METADATA_STATUS, schema } from "@song-lists/db";
 import type { CreatableOption } from "@/components/add-song/creatable-autocomplete";
+import type { SongDetailsInput } from "@/lib/songs/song-details-input";
 import { db } from "./client";
 import { getLists, type ListOption } from "./lists";
 import { getProductionTypes, type ProductionTypeOption } from "./productions";
@@ -19,6 +20,8 @@ interface SongEditData {
   covers: CreatableOption[];
   listIds: number[];
   advocateIds: string[];
+  /** The album details the song shows now, or `null` when it has none. */
+  details: SongDetailsInput | null;
   lists: ListOption[];
   advocateOptions: UserOption[];
   productionTypes: ProductionTypeOption[];
@@ -55,6 +58,16 @@ async function getSongEditData(songId: number): Promise<SongEditData | null> {
         },
         lists: { columns: { listId: true } },
         advocates: { columns: { userId: true } },
+        metadata: {
+          columns: {
+            status: true,
+            source: true,
+            sourceTrackId: true,
+            artworkUrl: true,
+            albumName: true,
+            releaseYear: true,
+          },
+        },
       },
     }),
     getLists(),
@@ -85,6 +98,19 @@ async function getSongEditData(songId: number): Promise<SongEditData | null> {
     })),
     listIds: row.lists.map((entry) => entry.listId),
     advocateIds: row.advocates.map((entry) => entry.userId),
+    details:
+      row.metadata?.status === SONG_METADATA_STATUS.MATCHED
+        ? {
+            albumName: row.metadata.albumName ?? "",
+            releaseYear:
+              row.metadata.releaseYear === null
+                ? ""
+                : String(row.metadata.releaseYear),
+            artworkUrl: row.metadata.artworkUrl ?? "",
+            source: row.metadata.source,
+            sourceTrackId: row.metadata.sourceTrackId,
+          }
+        : null,
     lists,
     advocateOptions,
     productionTypes,

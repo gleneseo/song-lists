@@ -17,12 +17,18 @@ import { CheckboxList } from "@/components/add-song/checkbox-list";
 import { CoverField } from "@/components/add-song/cover-field";
 import {
   CreatableAutocomplete,
+  selectionLabel,
   type CreatableOption,
   type CreatableSelection,
 } from "@/components/add-song/creatable-autocomplete";
 import { CreatableCombobox } from "@/components/add-song/creatable-combobox";
 import { ProductionField } from "@/components/add-song/production-field";
+import { SongDetailsFields } from "@/components/songs/song-details-fields";
 import { ENTITY_HEADING_ID } from "@/components/entity-heading";
+import {
+  detailsToSave,
+  EMPTY_SONG_DETAILS,
+} from "@/lib/songs/song-details-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -90,6 +96,10 @@ function LoadedForm({
   const [listIds, setListIds] = useState(data.listIds);
   const [advocateIds, setAdvocateIds] = useState(data.advocateIds);
 
+  const [details, setDetails] = useState(data.details ?? EMPTY_SONG_DETAILS);
+  const [lookingUp, setLookingUp] = useState(false);
+  const [removeDetails, setRemoveDetails] = useState(false);
+
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -128,6 +138,11 @@ function LoadedForm({
         addCover: toCoverSelection(coverChoice, coverNewArtist, coverNewTitle),
         listIds,
         advocateUserIds: advocateIds,
+        ...(removeDetails
+          ? { removeDetails: true }
+          : detailsToSave(details, data.details)
+            ? { details: detailsToSave(details, data.details) }
+            : {}),
       };
 
       const result = await updateSong(input);
@@ -208,6 +223,57 @@ function LoadedForm({
         </div>
       </FormSection>
 
+      <FormSection title="Album details">
+        <SongDetailsFields
+          idPrefix="edit-song-details"
+          title={title}
+          artistName={artist ? selectionLabel(artist) : ""}
+          value={details}
+          onChange={(next) => {
+            // Typing or looking up again means the details are wanted after all.
+            setDetails(next);
+            setRemoveDetails(false);
+          }}
+          onBusyChange={setLookingUp}
+          onUseTitle={setTitle}
+        />
+        {removeDetails ? (
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            <p className="text-muted-foreground" role="status">
+              The album details will be removed when you save.
+            </p>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setDetails(data.details ?? EMPTY_SONG_DETAILS);
+                setRemoveDetails(false);
+              }}
+            >
+              Keep them
+            </Button>
+          </div>
+        ) : (
+          data.details && (
+            <div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={lookingUp}
+                onClick={() => {
+                  setDetails(EMPTY_SONG_DETAILS);
+                  setRemoveDetails(true);
+                }}
+              >
+                Remove album details
+              </Button>
+            </div>
+          )
+        )}
+      </FormSection>
+
       <FormSection title="Featured artists">
         <CreatableCombobox
           label="Featured artists"
@@ -274,6 +340,7 @@ function LoadedForm({
           options={data.lists}
           selectedIds={listIds}
           onChange={setListIds}
+          maxRows={3}
         />
       </FormSection>
 
@@ -283,6 +350,8 @@ function LoadedForm({
           options={data.advocateOptions}
           selectedIds={advocateIds}
           onChange={setAdvocateIds}
+          layout="tiles"
+          maxRows={3}
         />
       </FormSection>
 
@@ -295,7 +364,7 @@ function LoadedForm({
         >
           Cancel
         </Button>
-        <Button type="submit" disabled={saving}>
+        <Button type="submit" disabled={saving || lookingUp}>
           {saving ? "Saving…" : "Save changes"}
         </Button>
       </div>

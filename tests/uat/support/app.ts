@@ -145,6 +145,44 @@ async function arrangeSong(
   });
 }
 
+/**
+ * Records what the automatic lookup found (or didn't) for an arranged song,
+ * straight in the database -- the browser tests never call out to iTunes, so
+ * this is how a song gets its art, album, and year.
+ */
+async function arrangeSongDetails(
+  song: ArrangedSong,
+  details: {
+    status?: "matched" | "not_found" | "error";
+    source?: "itunes" | "musicbrainz" | null;
+    artworkUrl?: string | null;
+    albumName?: string | null;
+    releaseYear?: number | null;
+  } = {},
+): Promise<void> {
+  const status = details.status ?? "matched";
+  const matched = status === "matched";
+
+  await withDatabase(async (pool) => {
+    await pool.query(
+      `insert into song_lists.song_metadata
+         (song_id, status, source, artwork_url, album_name, release_year, matched_by, fetched_at, created_by, updated_by)
+       select $1, $2, $3, $4, $5, $6, 'auto', now(), id, id
+       from song_lists.users where name = 'Al'`,
+      [
+        song.id,
+        status,
+        matched && details.source !== null
+          ? (details.source ?? "itunes")
+          : null,
+        matched ? (details.artworkUrl ?? null) : null,
+        matched ? (details.albumName ?? null) : null,
+        matched ? (details.releaseYear ?? null) : null,
+      ],
+    );
+  });
+}
+
 /** The ID of the one row with this name, in one of the catalog's tables. */
 async function idOf(
   table: "artists" | "songs" | "productions",
@@ -237,6 +275,7 @@ async function newPageOfTheirOwn(browser: Browser): Promise<Page> {
 
 export {
   arrangeSong,
+  arrangeSongDetails,
   newPageOfTheirOwn,
   signedInAs,
   createPerson,

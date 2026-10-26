@@ -83,6 +83,7 @@ describe("database integration", () => {
       "song_advocates",
       "song_covers",
       "song_featured_artists",
+      "song_metadata",
       "song_productions",
       "songs",
       "users",

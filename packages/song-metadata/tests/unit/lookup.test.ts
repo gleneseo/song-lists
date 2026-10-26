@@ -1,0 +1,236 @@
+import { describe, expect, it, vi } from "vitest";
+import { combineLookups, createSongLookup } from "../../src/lookup.js";
+import type { SongLookupResult } from "../../src/result.js";
+
+const wanted = { title: "Hold On Loosely", artistName: ".38 Special" };
+
+const itunes: SongLookupResult = {
+  status: "matched",
+  source: "itunes",
+  sourceTrackId: "1",
+  artworkUrl: "https://example.test/art/100x100bb.jpg",
+  albumName: "Wild-Eyed Southern Boys",
+  releaseYear: 1981,
+  isAlbum: true,
+};
+
+const musicbrainz: SongLookupResult = {
+  status: "matched",
+  source: "musicbrainz",
+  sourceTrackId: "abc",
+  artworkUrl: "https://coverartarchive.org/release-group/g/front",
+  albumName: "Wild-Eyed Southern Boys",
+  releaseYear: 1981,
+  isAlbum: true,
+};
+
+const notFound: SongLookupResult = { status: "not_found" };
+const failed: SongLookupResult = { status: "error", message: "down" };
+
+describe("combining lookups", () => {
+  it("should take iTunes when both found the same thing", () => {
+    expect(combineLookups(itunes, musicbrainz)).toEqual(itunes);
+  });
+
+  it("should take whichever one found the song", () => {
+    expect(combineLookups(itunes, notFound)).toEqual(itunes);
+    expect(combineLookups(notFound, musicbrainz)).toEqual(musicbrainz);
+    expect(combineLookups(failed, musicbrainz)).toEqual(musicbrainz);
+    expect(combineLookups(itunes, failed)).toEqual(itunes);
+  });
+
+  it("should say not found when neither found it", () => {
+    expect(combineLookups(notFound, notFound)).toEqual({ status: "not_found" });
+  });
+
+  it("should report an error when one failed and the other found nothing", () => {
+    expect(combineLookups(failed, notFound)).toBe(failed);
+    expect(combineLookups(notFound, failed)).toBe(failed);
+  });
+
+  it("should prefer the album of its own to a single or compilation", () => {
+    const compilation = {
+      ...itunes,
+      albumName: "Greatest Hits",
+      isAlbum: false,
+    };
+    const single = { ...musicbrainz, releaseYear: 1990, isAlbum: false };
+
+    expect(combineLookups(compilation, musicbrainz)).toEqual(musicbrainz);
+    expect(combineLookups(itunes, single)).toEqual(itunes);
+  });
+
+  it("should prefer the release that came out first", () => {
+    const original = {
+      ...musicbrainz,
+      albumName: "Special Forces",
+      releaseYear: 1979,
+    };
+    const unknown = { ...musicbrainz, releaseYear: null };
+
+    expect(combineLookups(itunes, original)).toEqual(original);
+    expect(combineLookups(itunes, unknown)).toEqual(itunes);
+    expect(combineLookups({ ...itunes, releaseYear: null }, original)).toEqual(
+      original,
+    );
+    expect(
+      combineLookups(
+        { ...itunes, releaseYear: null },
+        { ...musicbrainz, albumName: "Another", releaseYear: null },
+      ),
+    ).toMatchObject({ source: "itunes", releaseYear: null });
+  });
+
+  it("should believe MusicBrainz about two different albums of the same year, but not two other releases", () => {
+    const compilation = {
+      ...itunes,
+      albumName: "Street Grooves",
+      releaseYear: 1989,
+    };
+    const album = {
+      ...musicbrainz,
+      albumName: "The Biz Never Sleeps",
+      releaseYear: 1989,
+    };
+
+    expect(combineLookups(compilation, album)).toEqual(album);
+    expect(
+      combineLookups(
+        { ...compilation, isAlbum: false },
+        { ...album, isAlbum: false },
+      ),
+    ).toMatchObject({ source: "itunes" });
+  });
+
+  it("should keep whichever name carries the number for a band's albums of the same name", () => {
+    const year = { releaseYear: 2008 };
+    const itunesNumbered = { ...itunes, albumName: "The Bronx (III)", ...year };
+    const itunesPlain = { ...itunes, albumName: "The Bronx", ...year };
+    const mbNumbered = {
+      ...musicbrainz,
+      albumName: "The Bronx (III)",
+      ...year,
+    };
+    const mbPlain = { ...musicbrainz, albumName: "The Bronx", ...year };
+
+    expect(combineLookups(itunesNumbered, mbPlain)).toEqual(itunesNumbered);
+    expect(combineLookups(itunesPlain, mbNumbered)).toEqual(mbNumbered);
+    expect(combineLookups(itunesPlain, mbPlain)).toEqual(itunesPlain);
+    expect(combineLookups(itunesNumbered, mbNumbered)).toEqual(itunesNumbered);
+  });
+
+  it("should keep the note on the name of a band's self-titled albums", () => {
+    const year = { releaseYear: 2001 };
+    const noted = { ...itunes, albumName: "Weezer (Green Album)", ...year };
+    const plain = { ...musicbrainz, albumName: "Weezer", ...year };
+
+    expect(combineLookups(noted, plain)).toEqual(noted);
+    expect(
+      combineLookups(
+        { ...noted, albumName: "Weezer" },
+        { ...plain, albumName: "Weezer (Green Album)" },
+      ),
+    ).toEqual({ ...plain, albumName: "Weezer (Green Album)" });
+  });
+
+  it("should not match a numbered album to a plain name of another year", () => {
+    const numbered = {
+      ...itunes,
+      albumName: "The Bronx (III)",
+      releaseYear: 2008,
+    };
+    const plain = { ...musicbrainz, albumName: "The Bronx", releaseYear: 2003 };
+
+    expect(combineLookups(numbered, plain)).toEqual(plain);
+  });
+
+  it("should save an album's name without its edition", () => {
+    expect(
+      combineLookups(
+        { ...itunes, albumName: "Wild-Eyed Southern Boys (Deluxe Edition)" },
+        notFound,
+      ),
+    ).toMatchObject({ albumName: "Wild-Eyed Southern Boys" });
+    expect(
+      combineLookups(
+        { ...itunes, albumName: null, releaseYear: null },
+        notFound,
+      ),
+    ).toMatchObject({ albumName: null, releaseYear: null });
+  });
+
+  it("should keep the earlier year when both name the same album", () => {
+    expect(
+      combineLookups(
+        {
+          ...itunes,
+          albumName: "Wild-Eyed Southern Boys (Expanded)",
+          releaseYear: 2011,
+        },
+        { ...musicbrainz, releaseYear: 1981 },
+      ),
+    ).toMatchObject({ source: "itunes", releaseYear: 1981 });
+  });
+
+  it("should take MusicBrainz's year for the album, not iTunes's earlier year for the track", () => {
+    const track = { ...itunes, albumName: "Seal [1991]", releaseYear: 1990 };
+    const album = { ...musicbrainz, albumName: "Seal", releaseYear: 1991 };
+
+    expect(combineLookups(track, album)).toMatchObject({
+      source: "itunes",
+      albumName: "Seal",
+      releaseYear: 1991,
+    });
+    expect(
+      combineLookups(track, { ...album, releaseYear: null }),
+    ).toMatchObject({ releaseYear: 1990 });
+  });
+
+  it("should treat an iTunes EP and MusicBrainz's name for it as the same album", () => {
+    expect(
+      combineLookups(
+        {
+          ...itunes,
+          albumName: "Crackers International - EP",
+          releaseYear: 1989,
+        },
+        {
+          ...musicbrainz,
+          albumName: "Crackers International",
+          releaseYear: 1988,
+        },
+      ),
+    ).toMatchObject({
+      source: "itunes",
+      albumName: "Crackers International - EP",
+      releaseYear: 1988,
+    });
+  });
+
+  it("should not take the other service's year for a different album", () => {
+    expect(
+      combineLookups(
+        { ...itunes, releaseYear: 1990 },
+        { ...musicbrainz, albumName: "Another", releaseYear: 1991 },
+      ),
+    ).toMatchObject({ releaseYear: 1990 });
+    expect(
+      combineLookups(itunes, { ...musicbrainz, albumName: null }),
+    ).toMatchObject({ releaseYear: 1981 });
+  });
+});
+
+describe("the combined lookup", () => {
+  it("should ask both services and settle on one answer", async () => {
+    const askItunes = vi.fn(() => Promise.resolve(itunes));
+    const askMusicBrainz = vi.fn(() => Promise.resolve(notFound));
+    const lookup = createSongLookup({
+      itunes: askItunes,
+      musicbrainz: askMusicBrainz,
+    });
+
+    await expect(lookup(wanted)).resolves.toEqual(itunes);
+    expect(askItunes).toHaveBeenCalledWith(wanted);
+    expect(askMusicBrainz).toHaveBeenCalledWith(wanted);
+  });
+});

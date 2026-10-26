@@ -12,6 +12,10 @@
       "types": "./src/migrate.ts",
       "default": "./src/migrate.ts"
     },
+    "./load-env": {
+      "types": "./src/load-env.ts",
+      "default": "./src/load-env.ts"
+    },
     "./list-extra-column": {
       "types": "./src/list-extra-column.ts",
       "default": "./src/list-extra-column.ts"
@@ -19,6 +23,10 @@
     "./user-role": {
       "types": "./src/user-role.ts",
       "default": "./src/user-role.ts"
+    },
+    "./song-metadata": {
+      "types": "./src/song-metadata.ts",
+      "default": "./src/song-metadata.ts"
     },
     "./migrations": "./migrations"
   },
@@ -29,7 +37,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/run-migrations.ts",
     "db:reset": "tsx src/reset-db.ts",
-    "db:docs": "tsx src/generate-docs.ts"
+    "db:docs": "tsx src/generate-docs.ts",
+    "db:studio": "tsx src/studio.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",

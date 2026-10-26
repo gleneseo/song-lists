@@ -1,13 +1,22 @@
 "use server";
 
 import { schema } from "@song-lists/db";
+import { after } from "next/server";
 import { getSession } from "@/lib/auth/auth";
 import { db } from "@/lib/queries/client";
+import {
+  recordSongMetadata,
+  saveSongDetails,
+} from "@/lib/queries/song-metadata";
 import {
   findExistingSong,
   type DuplicateCheckResult,
 } from "@/lib/queries/songs";
 import { findStyleIssues, type StyleIssue } from "@/lib/songs/name-style";
+import {
+  cleanSongDetails,
+  type SongDetailsInput,
+} from "@/lib/songs/song-details-input";
 import {
   resolveArtist,
   resolveCover,
@@ -32,6 +41,11 @@ interface CreateSongInput {
    * stylized and should be let through despite breaking our style.
    */
   styleOverrides?: string[];
+  /**
+   * Album details looked up and settled on in the form, to save with the song
+   * instead of leaving it to the automatic lookup.
+   */
+  details?: SongDetailsInput;
 }
 
 interface ExistingSongReference {
@@ -74,6 +88,12 @@ async function createSong(input: CreateSongInput): Promise<CreateSongResult> {
   const userId = session.user.id;
   const normalizedTitle = normalizeText(input.title);
 
+  const details = input.details ? cleanSongDetails(input.details) : null;
+
+  if (details?.status === "error") {
+    return { status: "error", message: details.message };
+  }
+
   if (!normalizedTitle) {
     return { status: "error", message: "Title is required." };
   }
@@ -102,8 +122,10 @@ async function createSong(input: CreateSongInput): Promise<CreateSongResult> {
     return { status: "style", issues: styleIssues };
   }
 
+  let songId: number;
+
   try {
-    return await db.transaction(async (tx) => {
+    songId = await db.transaction(async (tx) => {
       const newArtistsByName = new Map<string, number>();
       const artistId = await resolveArtist(
         tx,
@@ -196,6 +218,10 @@ async function createSong(input: CreateSongInput): Promise<CreateSongResult> {
         );
       }
 
+      if (details) {
+        await saveSongDetails(tx, song.id, details.details, userId);
+      }
+
       const advocateUserIds = new Set([userId, ...input.advocateUserIds]);
       await tx.insert(schema.songAdvocates).values(
         Array.from(advocateUserIds).map((advocateUserId) => ({
@@ -206,7 +232,7 @@ async function createSong(input: CreateSongInput): Promise<CreateSongResult> {
         })),
       );
 
-      return { status: "created", songId: song.id };
+      return song.id;
     });
   } catch (error) {
     return {
@@ -215,6 +241,14 @@ async function createSong(input: CreateSongInput): Promise<CreateSongResult> {
         error instanceof Error ? error.message : "Failed to add the song.",
     };
   }
+
+  // Once the response is on its way, so the art and album never hold up
+  // adding a song (or fail it). Someone who set the details has no need.
+  if (!details) {
+    after(() => recordSongMetadata(songId));
+  }
+
+  return { status: "created", songId };
 }
 
 export { checkDuplicateSong, createSong };

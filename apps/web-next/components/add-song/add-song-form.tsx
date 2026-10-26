@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type SubmitEvent } from "react";
+import { useEffect, useRef, useState, type SubmitEvent } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import {
@@ -24,6 +24,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { SongDetailsFields } from "@/components/songs/song-details-fields";
+import {
+  detailsToSave,
+  EMPTY_SONG_DETAILS,
+} from "@/lib/songs/song-details-input";
 import { CheckboxList } from "./checkbox-list";
 import { CoverField } from "./cover-field";
 import {
@@ -34,6 +39,7 @@ import {
 } from "./creatable-autocomplete";
 import { CreatableCombobox } from "./creatable-combobox";
 import { NameStylePanel } from "./name-style-panel";
+import { SimilarSongNotice } from "./similar-song-notice";
 import { ProductionField } from "./production-field";
 import { searchArtistOptions } from "@/lib/actions/search-adapters";
 
@@ -86,6 +92,9 @@ function AddSongForm({
   );
   const [advocateIds, setAdvocateIds] = useState<string[]>([]);
 
+  const [details, setDetails] = useState(EMPTY_SONG_DETAILS);
+  const [lookingUp, setLookingUp] = useState(false);
+
   const [duplicateCheck, setDuplicateCheck] =
     useState<DuplicateCheckResult | null>(null);
   const [styleIssues, setStyleIssues] = useState<StyleIssue[]>([]);
@@ -131,6 +140,41 @@ function AddSongForm({
       cancelled = true;
     };
   }, [artist, debouncedTitle]);
+
+  /** Back to an empty form, as when it was first opened. */
+  function resetForm() {
+    setArtist(null);
+    setTitle("");
+    setBio("");
+    setFeaturedArtists([]);
+    setProductionChoice(null);
+    setReleaseYear("");
+    setTypeId(productionTypes[0]?.id ?? null);
+    setCoverChoice(null);
+    setCoverNewArtist(null);
+    setCoverNewTitle("");
+    setListIds(lists[0] ? [lists[0].id] : []);
+    setAdvocateIds([]);
+    setDetails(EMPTY_SONG_DETAILS);
+    setDuplicateCheck(null);
+    setStyleIssues([]);
+    setStyleOverrides([]);
+  }
+
+  // Next keeps a page's state alive while it's out of sight, so that going
+  // back finds it as it was. A form half filled in and then cancelled would
+  // come back that way, so it's emptied as it goes out of sight.
+  const resetOnLeave = useRef<() => void>(() => undefined);
+
+  useEffect(() => {
+    resetOnLeave.current = () => {
+      resetForm();
+      setSummary(null);
+      setError("");
+    };
+  });
+
+  useEffect(() => () => resetOnLeave.current(), []);
 
   /** Leaves the form for wherever the person came from, or the dashboard if they landed here directly. */
   function cancel() {
@@ -214,6 +258,7 @@ function AddSongForm({
         listIds,
         advocateUserIds: advocateIds,
         styleOverrides,
+        ...(detailsToSave(details) ? { details: detailsToSave(details) } : {}),
       };
 
       const result = await createSong(input);
@@ -248,21 +293,7 @@ function AddSongForm({
           ],
         });
 
-        setArtist(null);
-        setTitle("");
-        setBio("");
-        setFeaturedArtists([]);
-        setProductionChoice(null);
-        setReleaseYear("");
-        setTypeId(productionTypes[0]?.id ?? null);
-        setCoverChoice(null);
-        setCoverNewArtist(null);
-        setCoverNewTitle("");
-        setListIds(lists[0] ? [lists[0].id] : []);
-        setAdvocateIds([]);
-        setDuplicateCheck(null);
-        setStyleIssues([]);
-        setStyleOverrides([]);
+        resetForm();
         return;
       }
 
@@ -384,11 +415,11 @@ function AddSongForm({
           </p>
         )}
         {!duplicateCheck?.exact && duplicateCheck?.near && (
-          <p className="text-sm text-muted-foreground">
-            Did you mean the existing song &ldquo;{duplicateCheck.near.title}
-            &rdquo; by {duplicateCheck.near.artistName}? You can still continue
-            if this is a different song.
-          </p>
+          <SimilarSongNotice
+            match={duplicateCheck.near}
+            onCancel={cancel}
+            disabled={submitting}
+          />
         )}
         <div className="flex flex-col gap-2">
           <Label htmlFor="song-bio">Bio / notes (optional)</Label>
@@ -442,12 +473,31 @@ function AddSongForm({
       </section>
 
       <section className="flex flex-col gap-4">
+        <h2 className="text-lg font-semibold">Album details</h2>
+        <p className="text-sm text-muted-foreground">
+          Look the song up to fill in its album, year, and cover art, then
+          correct anything before adding it. Left blank, they&rsquo;re looked up
+          automatically once the song is added.
+        </p>
+        <SongDetailsFields
+          idPrefix="song-details"
+          title={title}
+          artistName={artist ? selectionLabel(artist) : ""}
+          value={details}
+          onChange={setDetails}
+          onBusyChange={setLookingUp}
+          onUseTitle={setTitle}
+        />
+      </section>
+
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">Lists</h2>
         <CheckboxList
           label="Add this song to"
           options={lists}
           selectedIds={listIds}
           onChange={setListIds}
+          maxRows={3}
         />
       </section>
 
@@ -462,6 +512,8 @@ function AddSongForm({
           options={advocateCandidates}
           selectedIds={advocateIds}
           onChange={setAdvocateIds}
+          layout="tiles"
+          maxRows={3}
         />
       </section>
 
@@ -487,7 +539,7 @@ function AddSongForm({
         <Button
           type="submit"
           className="flex-1"
-          disabled={submitting || !!duplicateCheck?.exact}
+          disabled={submitting || lookingUp || !!duplicateCheck?.exact}
         >
           {submitting ? "Adding song…" : "Add song"}
         </Button>

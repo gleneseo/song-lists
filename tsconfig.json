@@ -9,6 +9,7 @@
   "references": [
     { "path": "./packages/db" },
     { "path": "./packages/auth" },
+    { "path": "./packages/song-metadata" },
     { "path": "./apps/cli" }
   ]
 }

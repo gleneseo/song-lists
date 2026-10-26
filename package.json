@@ -17,6 +17,7 @@
     "db:migrate": "npm run db:migrate -w @song-lists/db",
     "db:reset": "npm run db:reset -w @song-lists/db",
     "db:docs": "npm run db:docs -w @song-lists/db",
+    "db:studio": "npm run db:studio -w @song-lists/db",
     "test": "vitest --run",
     "test:coverage": "vitest --run --coverage",
     "test:unit": "vitest --run --project 'unit-*'",

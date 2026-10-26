@@ -585,3 +585,240 @@ test.describe("starting over", () => {
     await expect(page.getByLabel("Bio / notes (optional)")).toHaveValue("");
   });
 });
+
+const detailsSection = (page: Page): Locator => section(page, "Album details");
+const lookUpButton = (page: Page): Locator =>
+  page.getByRole("button", { name: /^Look up album details|^Looking up/ });
+const albumField = (page: Page): Locator =>
+  detailsSection(page).getByLabel("Album", { exact: true });
+const yearField = (page: Page): Locator =>
+  detailsSection(page).getByLabel("Year", { exact: true });
+const coverField = (page: Page): Locator =>
+  detailsSection(page).getByLabel("Cover art address");
+
+/** What the song's saved album details are, straight from the database. */
+async function savedDetails(title: string) {
+  return withDatabase(async (pool) => {
+    const { rows } = await pool.query<{
+      status: string;
+      album_name: string | null;
+      release_year: number | null;
+      artwork_url: string | null;
+      source: string | null;
+      matched_by: string;
+    }>(
+      `select m.status, m.album_name, m.release_year, m.artwork_url, m.source, m.matched_by
+       from song_lists.song_metadata m join song_lists.songs s on s.id = m.song_id
+       where s.title = $1`,
+      [title],
+    );
+
+    return rows;
+  });
+}
+
+test.describe("looking up album details while adding a song", () => {
+  test("only an admin is offered the lookup", async ({ as }) => {
+    for (const role of ["manager", "user"] as const) {
+      const page = await as(role);
+      await startNewSong(page);
+
+      await expect(
+        page.getByRole("heading", { name: "Album details", level: 2 }),
+        role,
+      ).toHaveCount(0);
+      await expect(lookUpButton(page), role).toHaveCount(0);
+    }
+
+    const admin = await as("admin");
+    await startNewSong(admin);
+
+    await expect(detailsSection(admin)).toBeVisible();
+    await expect(lookUpButton(admin)).toBeVisible();
+  });
+
+  test("the lookup waits until the song has a title and an artist", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    await startNewSong(page);
+    await expect(lookUpButton(page)).toBeDisabled();
+    await expect(
+      page.getByText("Give the song a title and an artist first."),
+    ).toBeVisible();
+
+    await titleField(page).fill(freshName("Song"));
+    await expect(lookUpButton(page)).toBeDisabled();
+    await create(artistField(page), freshName("Band"));
+
+    await expect(lookUpButton(page)).toBeEnabled();
+  });
+
+  test("shows that a lookup is under way until the answer is back, then fills in the details to correct before adding the song", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    const artist = freshName("Band");
+    const title = freshName("Song");
+    await startNewSong(page);
+    await create(artistField(page), artist);
+    await titleField(page).fill(title);
+
+    await lookUpButton(page).click();
+
+    await expect(
+      page.getByRole("button", { name: "Looking up…" }),
+    ).toBeDisabled();
+    await expect(
+      page.getByText(/Looking up album details on iTunes and MusicBrainz/),
+    ).toBeVisible();
+    await expect(submit(page)).toBeDisabled();
+    await expect(albumField(page)).toBeDisabled();
+
+    await expect(
+      page.getByText(/Found\. Check the details below/),
+    ).toBeVisible();
+    await expect(lookUpButton(page)).toHaveText("Look up album details");
+    await expect(submit(page)).toBeEnabled();
+    await expect(albumField(page)).toHaveValue(`Stub Album for ${title}`);
+    await expect(yearField(page)).toHaveValue("1999");
+    await expect(coverField(page)).toHaveValue(
+      "https://example.test/stub/100x100bb.jpg",
+    );
+    await expect(page.getByText("Album details via iTunes")).toBeVisible();
+
+    await albumField(page).fill("The Corrected Album");
+    await yearField(page).fill("2001");
+    await submit(page).click();
+
+    await expect(
+      page.getByText(`“${title}” by ${artist} was added successfully.`),
+    ).toBeVisible();
+    expect(await savedDetails(title)).toEqual([
+      {
+        status: "matched",
+        album_name: "The Corrected Album",
+        release_year: 2001,
+        artwork_url: "https://example.test/stub/100x100bb.jpg",
+        source: "itunes",
+        matched_by: "manual",
+      },
+    ]);
+  });
+
+  test("changing the cover art by hand takes the song's details off the service's name", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    const title = freshName("Song");
+    await startNewSong(page);
+    await create(artistField(page), freshName("Band"));
+    await titleField(page).fill(title);
+    await lookUpButton(page).click();
+    await expect(albumField(page)).toHaveValue(`Stub Album for ${title}`);
+    await expect(page.getByText("Album details via iTunes")).toBeVisible();
+
+    await coverField(page).fill("https://example.test/mine/cover.jpg");
+
+    await expect(page.getByText("Album details via iTunes")).toHaveCount(0);
+    await submit(page).click();
+    await expect(page.getByText(/was added successfully/)).toBeVisible();
+    expect(await savedDetails(title)).toMatchObject([
+      { artwork_url: "https://example.test/mine/cover.jpg", source: null },
+    ]);
+  });
+
+  test("details typed in by hand are saved without a lookup", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    const title = freshName("Song");
+    await startNewSong(page);
+    await create(artistField(page), freshName("Band"));
+    await titleField(page).fill(title);
+
+    await albumField(page).fill("Typed By Hand");
+    await yearField(page).fill("1977");
+    await submit(page).click();
+
+    await expect(page.getByText(/was added successfully/)).toBeVisible();
+    expect(await savedDetails(title)).toMatchObject([
+      {
+        status: "matched",
+        album_name: "Typed By Hand",
+        release_year: 1977,
+        artwork_url: null,
+        matched_by: "manual",
+      },
+    ]);
+  });
+
+  test("a song added with no details has none saved by the form", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    const title = freshName("Song");
+    await startNewSong(page);
+    await create(artistField(page), freshName("Band"));
+    await titleField(page).fill(title);
+    await submit(page).click();
+
+    await expect(page.getByText(/was added successfully/)).toBeVisible();
+    expect(await savedDetails(title)).toEqual([]);
+  });
+
+  test("a lookup that finds nothing says so, and the details can be filled in by hand", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    await startNewSong(page);
+    await create(artistField(page), freshName("Band"));
+    await titleField(page).fill(freshName("Nothing Found Song"));
+
+    await lookUpButton(page).click();
+
+    await expect(page.getByText(/Nothing matched/)).toBeVisible();
+    await expect(albumField(page)).toHaveValue("");
+    await expect(albumField(page)).toBeEnabled();
+  });
+
+  test("a lookup that fails says so, and can be tried again", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    await startNewSong(page);
+    await create(artistField(page), freshName("Band"));
+    await titleField(page).fill(freshName("Lookup Failure Song"));
+
+    await lookUpButton(page).click();
+
+    await expect(
+      page.getByRole("alert").filter({ hasText: "The lookup didn't work" }),
+    ).toBeVisible();
+    await expect(lookUpButton(page)).toBeEnabled();
+    await expect(submit(page)).toBeEnabled();
+  });
+
+  test("details that don't check out are refused, and the song is not added", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    const title = freshName("Song");
+    await startNewSong(page);
+    await create(artistField(page), freshName("Band"));
+    await titleField(page).fill(title);
+    await albumField(page).fill("Some Album");
+    await yearField(page).fill("19");
+
+    await submit(page).click();
+
+    await expect(page.getByText(/The year must be four digits/)).toBeVisible();
+    await withDatabase(async (pool) => {
+      const { rowCount } = await pool.query(
+        "select 1 from song_lists.songs where title = $1",
+        [title],
+      );
+      expect(rowCount).toBe(0);
+    });
+  });
+});

@@ -81,6 +81,8 @@ async function globalSetup(): Promise<() => Promise<void>> {
     // Adding a song would otherwise look it up on iTunes, and the tests must
     // not depend on (or call out to) the network.
     SONG_METADATA_LOOKUP: "off",
+    // The album-details lookup an admin can start from the song forms, answered by a stand-in.
+    SONG_METADATA_PREVIEW: "stub",
     // Blank, so the app has its default name whatever the repo's .env files
     // (a developer's own .env.local, say) set it to; the tests look for it.
     NEXT_PUBLIC_APP_TITLE: "",

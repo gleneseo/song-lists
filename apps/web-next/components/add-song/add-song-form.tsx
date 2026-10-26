@@ -24,6 +24,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { SongDetailsFields } from "@/components/songs/song-details-fields";
+import {
+  detailsToSave,
+  EMPTY_SONG_DETAILS,
+} from "@/lib/songs/song-details-input";
 import { CheckboxList } from "./checkbox-list";
 import { CoverField } from "./cover-field";
 import {
@@ -52,12 +57,15 @@ interface AddSongFormProps {
   lists: ListOption[];
   productionTypes: ProductionTypeOption[];
   advocateCandidates: UserOption[];
+  /** Admins can look up and set the song's album details; everyone else leaves them to the automatic lookup. */
+  isAdmin?: boolean;
 }
 
 function AddSongForm({
   lists,
   productionTypes,
   advocateCandidates,
+  isAdmin = false,
 }: AddSongFormProps) {
   const router = useRouter();
 
@@ -86,6 +94,9 @@ function AddSongForm({
     lists[0] ? [lists[0].id] : [],
   );
   const [advocateIds, setAdvocateIds] = useState<string[]>([]);
+
+  const [details, setDetails] = useState(EMPTY_SONG_DETAILS);
+  const [lookingUp, setLookingUp] = useState(false);
 
   const [duplicateCheck, setDuplicateCheck] =
     useState<DuplicateCheckResult | null>(null);
@@ -147,6 +158,7 @@ function AddSongForm({
     setCoverNewTitle("");
     setListIds(lists[0] ? [lists[0].id] : []);
     setAdvocateIds([]);
+    setDetails(EMPTY_SONG_DETAILS);
     setDuplicateCheck(null);
     setStyleIssues([]);
     setStyleOverrides([]);
@@ -249,6 +261,9 @@ function AddSongForm({
         listIds,
         advocateUserIds: advocateIds,
         styleOverrides,
+        ...(isAdmin && detailsToSave(details)
+          ? { details: detailsToSave(details) }
+          : {}),
       };
 
       const result = await createSong(input);
@@ -462,6 +477,25 @@ function AddSongForm({
         />
       </section>
 
+      {isAdmin && (
+        <section className="flex flex-col gap-4">
+          <h2 className="text-lg font-semibold">Album details</h2>
+          <p className="text-sm text-muted-foreground">
+            Look the song up to fill in its album, year, and cover art, then
+            correct anything before adding it. Left blank, they&rsquo;re looked
+            up automatically once the song is added.
+          </p>
+          <SongDetailsFields
+            idPrefix="song-details"
+            title={title}
+            artistName={artist ? selectionLabel(artist) : ""}
+            value={details}
+            onChange={setDetails}
+            onBusyChange={setLookingUp}
+          />
+        </section>
+      )}
+
       <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">Lists</h2>
         <CheckboxList
@@ -508,7 +542,7 @@ function AddSongForm({
         <Button
           type="submit"
           className="flex-1"
-          disabled={submitting || !!duplicateCheck?.exact}
+          disabled={submitting || lookingUp || !!duplicateCheck?.exact}
         >
           {submitting ? "Adding song…" : "Add song"}
         </Button>

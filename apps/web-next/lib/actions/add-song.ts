@@ -2,14 +2,22 @@
 
 import { schema } from "@song-lists/db";
 import { after } from "next/server";
+import { getAdminUserId } from "@/lib/auth/admin";
 import { getSession } from "@/lib/auth/auth";
 import { db } from "@/lib/queries/client";
-import { recordSongMetadata } from "@/lib/queries/song-metadata";
+import {
+  recordSongMetadata,
+  saveSongDetails,
+} from "@/lib/queries/song-metadata";
 import {
   findExistingSong,
   type DuplicateCheckResult,
 } from "@/lib/queries/songs";
 import { findStyleIssues, type StyleIssue } from "@/lib/songs/name-style";
+import {
+  cleanSongDetails,
+  type SongDetailsInput,
+} from "@/lib/songs/song-details-input";
 import {
   resolveArtist,
   resolveCover,
@@ -34,6 +42,11 @@ interface CreateSongInput {
    * stylized and should be let through despite breaking our style.
    */
   styleOverrides?: string[];
+  /**
+   * Album details an admin looked up and settled on, to save with the song
+   * instead of leaving it to the automatic lookup. Admins only.
+   */
+  details?: SongDetailsInput;
 }
 
 interface ExistingSongReference {
@@ -75,6 +88,19 @@ async function createSong(input: CreateSongInput): Promise<CreateSongResult> {
 
   const userId = session.user.id;
   const normalizedTitle = normalizeText(input.title);
+
+  const details = input.details ? cleanSongDetails(input.details) : null;
+
+  if (details && !(await getAdminUserId())) {
+    return {
+      status: "error",
+      message: "Only admins can set a song's album details.",
+    };
+  }
+
+  if (details?.status === "error") {
+    return { status: "error", message: details.message };
+  }
 
   if (!normalizedTitle) {
     return { status: "error", message: "Title is required." };
@@ -200,6 +226,10 @@ async function createSong(input: CreateSongInput): Promise<CreateSongResult> {
         );
       }
 
+      if (details) {
+        await saveSongDetails(tx, song.id, details.details, userId);
+      }
+
       const advocateUserIds = new Set([userId, ...input.advocateUserIds]);
       await tx.insert(schema.songAdvocates).values(
         Array.from(advocateUserIds).map((advocateUserId) => ({
@@ -221,8 +251,10 @@ async function createSong(input: CreateSongInput): Promise<CreateSongResult> {
   }
 
   // Once the response is on its way, so the art and album never hold up
-  // adding a song (or fail it).
-  after(() => recordSongMetadata(songId));
+  // adding a song (or fail it). An admin who set the details has no need.
+  if (!details) {
+    after(() => recordSongMetadata(songId));
+  }
 
   return { status: "created", songId };
 }

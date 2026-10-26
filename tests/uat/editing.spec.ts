@@ -1,5 +1,10 @@
 import type { Page } from "@playwright/test";
-import { arrangeSong, type ArrangedSong, withDatabase } from "./support/app.js";
+import {
+  arrangeSong,
+  arrangeSongDetails,
+  type ArrangedSong,
+  withDatabase,
+} from "./support/app.js";
 import { expect, test } from "./support/test.js";
 
 const dialog = (page: Page) => page.getByRole("dialog");
@@ -596,5 +601,166 @@ test.describe("an admin editing an artist or a production", () => {
     await page.getByRole("button", { name: "Save changes" }).click();
 
     await expect(page.getByText("Enter a valid release year.")).toBeVisible();
+  });
+});
+
+test.describe("an admin editing a song's album details", () => {
+  const albumField = (page: Page) =>
+    dialog(page).getByRole("textbox", { name: "Album", exact: true });
+  const yearField = (page: Page) =>
+    dialog(page).getByRole("textbox", { name: "Year", exact: true });
+  const lookUpButton = (page: Page) =>
+    dialog(page).getByRole("button", {
+      name: /^Look up album details|^Looking up/,
+    });
+
+  async function savedDetails(song: ArrangedSong) {
+    return withDatabase(async (pool) => {
+      const { rows } = await pool.query<{
+        album_name: string | null;
+        release_year: number | null;
+        matched_by: string;
+        source: string | null;
+      }>(
+        `select album_name, release_year, matched_by, source
+         from song_lists.song_metadata where song_id = $1`,
+        [song.id],
+      );
+
+      return rows;
+    });
+  }
+
+  test("shows the details the song has now, ready to tighten up", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    const song = await arrangeSong();
+    await arrangeSongDetails(song, {
+      source: "itunes",
+      artworkUrl: "https://example.test/old/100x100bb.jpg",
+      albumName: "Old Album",
+      releaseYear: 1975,
+    });
+    await openSong(page, song);
+
+    await dialog(page).getByRole("button", { name: "Edit" }).click();
+
+    await expect(albumField(page)).toHaveValue("Old Album");
+    await expect(yearField(page)).toHaveValue("1975");
+    await expect(
+      dialog(page).getByRole("textbox", { name: "Cover art address" }),
+    ).toHaveValue("https://example.test/old/100x100bb.jpg");
+  });
+
+  test("saves a corrected album as set by hand, so it stays", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    const song = await arrangeSong();
+    await arrangeSongDetails(song, {
+      source: "itunes",
+      albumName: "Old Album",
+      releaseYear: 1975,
+    });
+    await openSong(page, song);
+    await dialog(page).getByRole("button", { name: "Edit" }).click();
+
+    await albumField(page).fill("The Right Album");
+    await dialog(page).getByRole("button", { name: "Save changes" }).click();
+
+    await expect(
+      dialog(page).getByText("The Right Album · 1975"),
+    ).toBeVisible();
+    expect(await savedDetails(song)).toEqual([
+      {
+        album_name: "The Right Album",
+        release_year: 1975,
+        matched_by: "manual",
+        source: "itunes",
+      },
+    ]);
+  });
+
+  test("looks the song up again, waiting for the answer, and saves what comes back", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    const song = await arrangeSong();
+    await arrangeSongDetails(song, {
+      albumName: "Old Album",
+      releaseYear: 1975,
+    });
+    await openSong(page, song);
+    await dialog(page).getByRole("button", { name: "Edit" }).click();
+
+    await lookUpButton(page).click();
+
+    await expect(
+      dialog(page).getByRole("button", { name: "Looking up…" }),
+    ).toBeDisabled();
+    await expect(
+      dialog(page).getByRole("button", { name: "Save changes" }),
+    ).toBeDisabled();
+    await expect(
+      dialog(page).getByText(/Looking up album details on iTunes/),
+    ).toBeVisible();
+
+    await expect(albumField(page)).toHaveValue(`Stub Album for ${song.title}`);
+    await expect(yearField(page)).toHaveValue("1999");
+    await dialog(page).getByRole("button", { name: "Save changes" }).click();
+
+    await expect(
+      dialog(page).getByText(`Stub Album for ${song.title} · 1999`),
+    ).toBeVisible();
+    expect(await savedDetails(song)).toMatchObject([
+      { release_year: 1999, matched_by: "manual", source: "itunes" },
+    ]);
+  });
+
+  test("leaves a song's details alone when the form's are untouched", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    const song = await arrangeSong();
+    await arrangeSongDetails(song, {
+      albumName: "Old Album",
+      releaseYear: 1975,
+    });
+    await openSong(page, song);
+    await dialog(page).getByRole("button", { name: "Edit" }).click();
+
+    await dialog(page)
+      .getByRole("textbox", { name: "Add a note", exact: true })
+      .fill("Only a note.");
+    await dialog(page).getByRole("button", { name: "Save changes" }).click();
+
+    await expect(noteLines(page)).toHaveCount(1);
+    expect(await savedDetails(song)).toMatchObject([
+      { album_name: "Old Album", matched_by: "auto" },
+    ]);
+  });
+
+  test("fills in details for a song that had none", async ({ as }) => {
+    const page = await as("admin");
+    const song = await arrangeSong();
+    await openSong(page, song);
+    await dialog(page).getByRole("button", { name: "Edit" }).click();
+    await expect(albumField(page)).toHaveValue("");
+
+    await albumField(page).fill("Brand New Album");
+    await yearField(page).fill("2024");
+    await dialog(page).getByRole("button", { name: "Save changes" }).click();
+
+    await expect(
+      dialog(page).getByText("Brand New Album · 2024"),
+    ).toBeVisible();
+    expect(await savedDetails(song)).toMatchObject([
+      {
+        album_name: "Brand New Album",
+        release_year: 2024,
+        matched_by: "manual",
+      },
+    ]);
   });
 });

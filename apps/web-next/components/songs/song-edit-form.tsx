@@ -339,6 +339,7 @@ function LoadedForm({
           options={data.lists}
           selectedIds={listIds}
           onChange={setListIds}
+          maxRows={3}
         />
       </FormSection>
 
@@ -348,6 +349,8 @@ function LoadedForm({
           options={data.advocateOptions}
           selectedIds={advocateIds}
           onChange={setAdvocateIds}
+          layout="tiles"
+          maxRows={3}
         />
       </FormSection>
 

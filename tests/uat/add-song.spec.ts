@@ -838,3 +838,56 @@ test.describe("looking up album details while adding a song", () => {
     });
   });
 });
+
+test.describe("keeping the form short", () => {
+  /** Where the boxes of choices are on the page, and whether they scroll. */
+  const groupBox = (page: Page, name: string) =>
+    page.getByRole("group", { name, exact: true });
+
+  test("the lists box shows about three at a time and scrolls for the rest, with the Master List ticked", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    await startNewSong(page);
+    const lists = groupBox(page, "Add this song to");
+
+    const size = await lists.evaluate((element) => ({
+      shown: element.clientHeight,
+      all: element.scrollHeight,
+    }));
+
+    expect(size.shown).toBeLessThanOrEqual(100);
+    expect(size.all).toBeGreaterThan(size.shown);
+    await expect(
+      lists.getByRole("checkbox", { name: "The Master List" }),
+    ).toBeChecked();
+    await expect(lists.getByRole("checkbox", { checked: true })).toHaveCount(1);
+    // The ones below are still there to tick.
+    await lists.getByRole("checkbox", { name: "Getting Lit" }).check();
+    await expect(
+      lists.getByRole("checkbox", { name: "Getting Lit" }),
+    ).toBeChecked();
+  });
+
+  test("the advocates are laid out side by side, in a box that also scrolls", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    await startNewSong(page);
+    const advocates = groupBox(page, "Additional advocates");
+    const names = advocates.locator("label");
+
+    const [first, second] = await Promise.all([
+      names.nth(0).boundingBox(),
+      names.nth(1).boundingBox(),
+    ]);
+    const size = await advocates.evaluate((element) => ({
+      shown: element.clientHeight,
+      all: element.scrollHeight,
+    }));
+
+    expect(second?.y).toBeCloseTo(first?.y ?? -1, 0);
+    expect(second?.x).toBeGreaterThan(first?.x ?? 0);
+    expect(size.shown).toBeLessThanOrEqual(100);
+  });
+});

@@ -496,6 +496,7 @@ function AddSongForm({
           options={lists}
           selectedIds={listIds}
           onChange={setListIds}
+          maxRows={3}
         />
       </section>
 
@@ -510,6 +511,8 @@ function AddSongForm({
           options={advocateCandidates}
           selectedIds={advocateIds}
           onChange={setAdvocateIds}
+          layout="tiles"
+          maxRows={3}
         />
       </section>
 

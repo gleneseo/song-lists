@@ -920,3 +920,36 @@ test.describe("an admin editing a song's album details", () => {
     await expect(sentence).toHaveClass(/text-amber-/);
   });
 });
+
+test.describe("the edit form's lists and advocates", () => {
+  test("take little room: the lists scroll and the advocates sit side by side", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    const song = await arrangeSong();
+    await openSong(page, song);
+    await dialog(page).getByRole("button", { name: "Edit" }).click();
+
+    const lists = dialog(page).getByRole("group", { name: "On these lists" });
+    const advocates = dialog(page).getByRole("group", {
+      name: "Championed by",
+    });
+    const size = await lists.evaluate((element) => ({
+      shown: element.clientHeight,
+      all: element.scrollHeight,
+    }));
+    const [first, second] = await Promise.all([
+      advocates.locator("label").nth(0).boundingBox(),
+      advocates.locator("label").nth(1).boundingBox(),
+    ]);
+
+    expect(size.shown).toBeLessThanOrEqual(100);
+    expect(size.all).toBeGreaterThan(size.shown);
+    expect(second?.y).toBeCloseTo(first?.y ?? -1, 0);
+    await lists.getByRole("checkbox", { name: "Getting Lit" }).check();
+    await dialog(page).getByRole("button", { name: "Save changes" }).click();
+    await expect(
+      dialog(page).getByRole("link", { name: "Getting Lit" }),
+    ).toBeVisible();
+  });
+});

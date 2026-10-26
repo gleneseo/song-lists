@@ -569,6 +569,8 @@ function createMusicBrainzLookup({
             status: SONG_METADATA_STATUS.MATCHED,
             source: SONG_METADATA_SOURCE.MUSICBRAINZ,
             sourceTrackId: match.recordingId,
+            matchedTitle: match.title,
+            matchedArtistName: match.artistName,
             artworkUrl: `${COVER_ART_URL}/${match.releaseGroupId}/front`,
             albumName: album.title ?? match.albumName,
             releaseYear: album.year ?? match.releaseYear,

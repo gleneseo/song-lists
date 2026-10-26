@@ -35,6 +35,8 @@ describe("iTunes lookup", () => {
       status: "matched",
       source: "itunes",
       sourceTrackId: "1234",
+      matchedTitle: "Hold On Loosely",
+      matchedArtistName: ".38 Special",
       artworkUrl: "https://example.test/art/100x100bb.jpg",
       albumName: "Wild-Eyed Southern Boys",
       releaseYear: 1981,
@@ -133,6 +135,8 @@ describe("iTunes lookup", () => {
       status: "matched",
       source: "itunes",
       sourceTrackId: "7",
+      matchedTitle: "Hold On Loosely",
+      matchedArtistName: ".38 Special",
       artworkUrl: null,
       albumName: null,
       releaseYear: null,
@@ -167,6 +171,8 @@ describe("iTunes lookup", () => {
     await expect(lookup(wanted)).resolves.toMatchObject({
       status: "matched",
       sourceTrackId: "1234",
+      matchedTitle: "Hold On Loosely",
+      matchedArtistName: ".38 Special",
     });
   });
 

@@ -126,6 +126,8 @@ function createItunesLookup({
             status: SONG_METADATA_STATUS.MATCHED,
             source: SONG_METADATA_SOURCE.ITUNES,
             sourceTrackId: String(match.trackId),
+            matchedTitle: match.title,
+            matchedArtistName: match.artistName,
             artworkUrl: match.artworkUrl,
             albumName: match.albumName,
             releaseYear: match.releaseYear,

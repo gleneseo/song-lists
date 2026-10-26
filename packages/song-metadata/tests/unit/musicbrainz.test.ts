@@ -123,6 +123,8 @@ describe("MusicBrainz lookup", () => {
       status: "matched",
       source: "musicbrainz",
       sourceTrackId: "rec-1",
+      matchedTitle: "Hold On Loosely",
+      matchedArtistName: ".38 Special",
       artworkUrl: "https://coverartarchive.org/release-group/g1/front",
       albumName: "Wild-Eyed Southern Boys",
       releaseYear: 1981,

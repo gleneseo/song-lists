@@ -86,6 +86,8 @@ async function lookUpSongDetails(
     status: SONG_METADATA_STATUS.MATCHED,
     source: SONG_METADATA_SOURCE.ITUNES,
     sourceTrackId: "stub-track",
+    matchedTitle: wanted.title,
+    matchedArtistName: wanted.artistName,
     artworkUrl: "https://example.test/stub/100x100bb.jpg",
     albumName: `Stub Album for ${wanted.title}`,
     releaseYear: 1999,

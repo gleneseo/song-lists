@@ -676,7 +676,9 @@ test.describe("looking up album details while adding a song", () => {
     await expect(albumField(page)).toBeDisabled();
 
     await expect(
-      page.getByText(/Found\. Check the details below/),
+      page.getByText(
+        new RegExp(`Found “${title}” by ${artist}\\. Check the details below`),
+      ),
     ).toBeVisible();
     await expect(lookUpButton(page)).toHaveText("Look up album details");
     await expect(submit(page)).toBeEnabled();

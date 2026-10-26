@@ -882,10 +882,13 @@ test.describe("an admin editing a song's album details", () => {
     await lookUpButton(page).click();
 
     await expect(
-      dialog(page).getByText(
-        "Found. It matches the details already here, so there's nothing to change.",
-      ),
+      dialog(page).getByText(`Found “${song.title}” by`),
     ).toBeVisible();
+    const sentence = dialog(page).getByText(
+      "It matches the details already here, so there’s nothing to change.",
+    );
+    await expect(sentence).toBeVisible();
+    await expect(sentence).toHaveClass(/text-green-/);
     await expect(albumField(page)).toHaveValue(`Stub Album for ${song.title}`);
   });
 
@@ -905,8 +908,11 @@ test.describe("an admin editing a song's album details", () => {
 
     await expect(
       dialog(page).getByText(
-        "Found. Check the details below and correct anything before saving.",
+        /Found “.+” by .+\. Check the details below and correct anything before saving\./,
       ),
     ).toBeVisible();
+    await expect(
+      dialog(page).getByText("It matches the details already here"),
+    ).toHaveCount(0);
   });
 });

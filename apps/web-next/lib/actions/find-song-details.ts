@@ -7,7 +7,12 @@ import type { SongDetailsInput } from "@/lib/songs/song-details-input";
 import { normalizeText } from "@/lib/text/normalize";
 
 type FindSongDetailsResult =
-  | { status: "found"; details: SongDetailsInput }
+  | {
+      status: "found";
+      details: SongDetailsInput;
+      /** The song the service matched, whose spelling can differ a little from what was asked for. */
+      matched: { title: string; artistName: string };
+    }
   | { status: "not_found" }
   | { status: "error"; message: string };
 
@@ -52,6 +57,10 @@ async function findSongDetails(song: {
 
   return {
     status: "found",
+    matched: {
+      title: result.matchedTitle ?? title,
+      artistName: result.matchedArtistName ?? artistName,
+    },
     details: {
       albumName: result.albumName ?? "",
       releaseYear:

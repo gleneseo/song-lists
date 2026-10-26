@@ -165,6 +165,7 @@ describe("an admin looking up and setting a song's album details, down to the da
         }),
       ).resolves.toEqual({
         status: "found",
+        matched: { title: "Some Song", artistName: "Some Band" },
         details: {
           albumName: "An Album",
           releaseYear: "1981",
@@ -180,6 +181,28 @@ describe("an admin looking up and setting a song's album details, down to the da
       expect(
         await pool.query("select count(*) from song_lists.song_metadata"),
       ).toEqual(before);
+    });
+
+    it("should say which song the service matched, when its spelling differs from the one asked for", async () => {
+      session.userId = al;
+      background.lookup.mockResolvedValue({
+        ...found,
+        matchedTitle: "Take Shots With Alcohol",
+        matchedArtistName: "Alkaline Trio",
+      });
+
+      await expect(
+        find.findSongDetails({
+          title: "Take Lots With Alcohol",
+          artistName: "Alkaline Trio",
+        }),
+      ).resolves.toMatchObject({
+        status: "found",
+        matched: {
+          title: "Take Shots With Alcohol",
+          artistName: "Alkaline Trio",
+        },
+      });
     });
 
     it("should give back blanks for what the lookup left out", async () => {

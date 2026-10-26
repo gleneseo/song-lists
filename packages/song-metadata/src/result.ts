@@ -11,6 +11,9 @@ type SongLookupResult =
         | typeof SONG_METADATA_SOURCE.ITUNES
         | typeof SONG_METADATA_SOURCE.MUSICBRAINZ;
       sourceTrackId: string;
+      /** The title and artist the service has for the song it matched, which can differ a little from the ones asked for. */
+      matchedTitle?: string;
+      matchedArtistName?: string;
       artworkUrl: string | null;
       albumName: string | null;
       releaseYear: number | null;

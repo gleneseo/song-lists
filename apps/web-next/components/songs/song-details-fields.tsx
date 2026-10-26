@@ -19,7 +19,11 @@ const PREVIEW_SIZE = 96;
 type LookupState =
   | { status: "idle" }
   | { status: "looking" }
-  | { status: "found"; unchanged: boolean }
+  | {
+      status: "found";
+      unchanged: boolean;
+      matched: { title: string; artistName: string };
+    }
   | { status: "not_found" }
   | { status: "error"; message: string };
 
@@ -82,7 +86,7 @@ function SongDetailsFields({
         const unchanged = sameSongDetails(value, result.details);
 
         onChange(result.details);
-        setLookup({ status: "found", unchanged });
+        setLookup({ status: "found", unchanged, matched: result.matched });
       } else {
         setLookup(
           result.status === "not_found"
@@ -129,9 +133,16 @@ function SongDetailsFields({
         )}
         {lookup.status === "found" && (
           <p className="text-muted-foreground">
-            {lookup.unchanged
-              ? "Found. It matches the details already here, so there's nothing to change."
-              : "Found. Check the details below and correct anything before saving."}
+            Found &ldquo;{lookup.matched.title}&rdquo; by{" "}
+            {lookup.matched.artistName}.{" "}
+            {lookup.unchanged ? (
+              <span className="font-medium text-green-700 dark:text-green-400">
+                It matches the details already here, so there&rsquo;s nothing to
+                change.
+              </span>
+            ) : (
+              "Check the details below and correct anything before saving."
+            )}
           </p>
         )}
         {lookup.status === "not_found" && (

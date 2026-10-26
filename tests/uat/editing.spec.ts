@@ -914,5 +914,9 @@ test.describe("an admin editing a song's album details", () => {
     await expect(
       dialog(page).getByText("It matches the details already here"),
     ).toHaveCount(0);
+    const sentence = dialog(page).getByText(
+      "Check the details below and correct anything before saving.",
+    );
+    await expect(sentence).toHaveClass(/text-amber-/);
   });
 });

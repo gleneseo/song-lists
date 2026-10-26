@@ -141,7 +141,9 @@ function SongDetailsFields({
                 change.
               </span>
             ) : (
-              "Check the details below and correct anything before saving."
+              <span className="font-medium text-amber-700 dark:text-amber-400">
+                Check the details below and correct anything before saving.
+              </span>
             )}
           </p>
         )}

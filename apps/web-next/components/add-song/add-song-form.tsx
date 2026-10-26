@@ -57,15 +57,12 @@ interface AddSongFormProps {
   lists: ListOption[];
   productionTypes: ProductionTypeOption[];
   advocateCandidates: UserOption[];
-  /** Admins can look up and set the song's album details; everyone else leaves them to the automatic lookup. */
-  isAdmin?: boolean;
 }
 
 function AddSongForm({
   lists,
   productionTypes,
   advocateCandidates,
-  isAdmin = false,
 }: AddSongFormProps) {
   const router = useRouter();
 
@@ -261,9 +258,7 @@ function AddSongForm({
         listIds,
         advocateUserIds: advocateIds,
         styleOverrides,
-        ...(isAdmin && detailsToSave(details)
-          ? { details: detailsToSave(details) }
-          : {}),
+        ...(detailsToSave(details) ? { details: detailsToSave(details) } : {}),
       };
 
       const result = await createSong(input);
@@ -477,24 +472,22 @@ function AddSongForm({
         />
       </section>
 
-      {isAdmin && (
-        <section className="flex flex-col gap-4">
-          <h2 className="text-lg font-semibold">Album details</h2>
-          <p className="text-sm text-muted-foreground">
-            Look the song up to fill in its album, year, and cover art, then
-            correct anything before adding it. Left blank, they&rsquo;re looked
-            up automatically once the song is added.
-          </p>
-          <SongDetailsFields
-            idPrefix="song-details"
-            title={title}
-            artistName={artist ? selectionLabel(artist) : ""}
-            value={details}
-            onChange={setDetails}
-            onBusyChange={setLookingUp}
-          />
-        </section>
-      )}
+      <section className="flex flex-col gap-4">
+        <h2 className="text-lg font-semibold">Album details</h2>
+        <p className="text-sm text-muted-foreground">
+          Look the song up to fill in its album, year, and cover art, then
+          correct anything before adding it. Left blank, they&rsquo;re looked up
+          automatically once the song is added.
+        </p>
+        <SongDetailsFields
+          idPrefix="song-details"
+          title={title}
+          artistName={artist ? selectionLabel(artist) : ""}
+          value={details}
+          onChange={setDetails}
+          onBusyChange={setLookingUp}
+        />
+      </section>
 
       <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">Lists</h2>

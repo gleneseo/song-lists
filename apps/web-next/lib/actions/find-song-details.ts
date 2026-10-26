@@ -1,7 +1,7 @@
 "use server";
 
 import { SONG_METADATA_STATUS } from "@song-lists/db";
-import { getAdminUserId } from "@/lib/auth/admin";
+import { getSession } from "@/lib/auth/auth";
 import { lookUpSongDetails } from "@/lib/queries/song-metadata";
 import type { SongDetailsInput } from "@/lib/songs/song-details-input";
 import { normalizeText } from "@/lib/text/normalize";
@@ -17,18 +17,21 @@ type FindSongDetailsResult =
   | { status: "error"; message: string };
 
 /**
- * Asks the music services what they know about a song, for an admin to look
- * over and correct before saving it. Nothing is saved here. The lookup can
- * take several seconds, so the form starts it from a button and waits.
+ * Asks the music services what they know about a song, for whoever is adding
+ * or editing it to look over and correct before saving. Nothing is saved
+ * here. The lookup can take several seconds, so the form starts it from a
+ * button and waits. Anyone signed in can ask, as anyone can add a song.
  */
 async function findSongDetails(song: {
   title: string;
   artistName: string;
 }): Promise<FindSongDetailsResult> {
-  if (!(await getAdminUserId())) {
+  const session = await getSession();
+
+  if (!session?.user) {
     return {
       status: "error",
-      message: "Only admins can look up album details.",
+      message: "You must be signed in to look up album details.",
     };
   }
 

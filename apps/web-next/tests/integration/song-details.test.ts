@@ -58,7 +58,7 @@ const typed: SongDetailsInput = {
   sourceTrackId: null,
 };
 
-describe("an admin looking up and setting a song's album details, down to the database", () => {
+describe("looking up and setting a song's album details, down to the database", () => {
   let pool: Pool;
   let find: typeof import("@/lib/actions/find-song-details");
   let add: typeof import("@/lib/actions/add-song");
@@ -122,18 +122,18 @@ describe("an admin looking up and setting a song's album details, down to the da
         find.findSongDetails({ title: "Anything", artistName: "Anyone" }),
       ).resolves.toEqual({
         status: "error",
-        message: "Only admins can look up album details.",
+        message: "You must be signed in to look up album details.",
       });
       expect(background.lookup).not.toHaveBeenCalled();
     });
 
-    it("should turn away a signed-in person who isn't an admin", async () => {
+    it("should let a signed-in person who isn't an admin look a song up too", async () => {
       session.userId = cliff;
+      background.lookup.mockResolvedValue(found);
 
       await expect(
         find.findSongDetails({ title: "Anything", artistName: "Anyone" }),
-      ).resolves.toMatchObject({ status: "error" });
-      expect(background.lookup).not.toHaveBeenCalled();
+      ).resolves.toMatchObject({ status: "found" });
     });
 
     it("should ask for a title and an artist", async () => {
@@ -341,22 +341,22 @@ describe("an admin looking up and setting a song's album details, down to the da
       expect(background.tasks).toHaveLength(1);
     });
 
-    it("should refuse details from someone who isn't an admin, and add nothing", async () => {
+    it("should save a manager's details too, as chosen by hand", async () => {
       session.userId = cliff;
 
       const result = await add.createSong(newSong("Zz Manager Added", typed));
 
-      expect(result).toEqual({
-        status: "error",
-        message: "Only admins can set a song's album details.",
-      });
+      expect(result.status).toBe("created");
       expect(
-        (
-          await pool.query(
-            "select 1 from song_lists.songs where title = 'Zz Manager Added'",
-          )
-        ).rowCount,
-      ).toBe(0);
+        await rowsOf(await songId(pool, "Zz Manager Added", "Zz Details Band")),
+      ).toEqual([
+        expect.objectContaining({
+          album_name: "A Tightened Album",
+          matched_by: "manual",
+          updated_by: cliff,
+        }),
+      ]);
+      expect(background.tasks).toHaveLength(0);
     });
 
     it("should refuse details that don't check out, and add nothing", async () => {

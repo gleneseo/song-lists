@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { AddSongForm } from "@/components/add-song/add-song-form";
-import { getAdminUserId } from "@/lib/auth/admin";
 import { getSession } from "@/lib/auth/auth";
 import { getLists } from "@/lib/queries/lists";
 import { getProductionTypes } from "@/lib/queries/productions";
@@ -14,20 +13,17 @@ async function NewSong() {
     redirect("/sign-in");
   }
 
-  const [lists, productionTypes, advocateCandidates, adminUserId] =
-    await Promise.all([
-      getLists(),
-      getProductionTypes(),
-      getAdvocateCandidates(session.user.id),
-      getAdminUserId(),
-    ]);
+  const [lists, productionTypes, advocateCandidates] = await Promise.all([
+    getLists(),
+    getProductionTypes(),
+    getAdvocateCandidates(session.user.id),
+  ]);
 
   return (
     <AddSongForm
       lists={lists}
       productionTypes={productionTypes}
       advocateCandidates={advocateCandidates}
-      isAdmin={adminUserId !== null}
     />
   );
 }

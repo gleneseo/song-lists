@@ -2,7 +2,6 @@
 
 import { schema } from "@song-lists/db";
 import { after } from "next/server";
-import { getAdminUserId } from "@/lib/auth/admin";
 import { getSession } from "@/lib/auth/auth";
 import { db } from "@/lib/queries/client";
 import {
@@ -43,8 +42,8 @@ interface CreateSongInput {
    */
   styleOverrides?: string[];
   /**
-   * Album details an admin looked up and settled on, to save with the song
-   * instead of leaving it to the automatic lookup. Admins only.
+   * Album details looked up and settled on in the form, to save with the song
+   * instead of leaving it to the automatic lookup.
    */
   details?: SongDetailsInput;
 }
@@ -90,13 +89,6 @@ async function createSong(input: CreateSongInput): Promise<CreateSongResult> {
   const normalizedTitle = normalizeText(input.title);
 
   const details = input.details ? cleanSongDetails(input.details) : null;
-
-  if (details && !(await getAdminUserId())) {
-    return {
-      status: "error",
-      message: "Only admins can set a song's album details.",
-    };
-  }
 
   if (details?.status === "error") {
     return { status: "error", message: details.message };
@@ -251,7 +243,7 @@ async function createSong(input: CreateSongInput): Promise<CreateSongResult> {
   }
 
   // Once the response is on its way, so the art and album never hold up
-  // adding a song (or fail it). An admin who set the details has no need.
+  // adding a song (or fail it). Someone who set the details has no need.
   if (!details) {
     after(() => recordSongMetadata(songId));
   }

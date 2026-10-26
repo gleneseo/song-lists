@@ -618,23 +618,37 @@ async function savedDetails(title: string) {
 }
 
 test.describe("looking up album details while adding a song", () => {
-  test("only an admin is offered the lookup", async ({ as }) => {
-    for (const role of ["manager", "user"] as const) {
+  test("everyone who can add a song is offered the lookup", async ({ as }) => {
+    for (const role of ["admin", "manager", "user"] as const) {
       const page = await as(role);
       await startNewSong(page);
 
-      await expect(
-        page.getByRole("heading", { name: "Album details", level: 2 }),
-        role,
-      ).toHaveCount(0);
-      await expect(lookUpButton(page), role).toHaveCount(0);
+      await expect(detailsSection(page), role).toBeVisible();
+      await expect(lookUpButton(page), role).toBeVisible();
     }
+  });
 
-    const admin = await as("admin");
-    await startNewSong(admin);
+  test("a person who isn't an admin looks a song up and adds it with the details", async ({
+    as,
+  }) => {
+    const page = await as("user");
+    const title = freshName("Song");
+    await startNewSong(page);
+    await create(artistField(page), freshName("Band"));
+    await titleField(page).fill(title);
 
-    await expect(detailsSection(admin)).toBeVisible();
-    await expect(lookUpButton(admin)).toBeVisible();
+    await lookUpButton(page).click();
+
+    await expect(albumField(page)).toHaveValue(`Stub Album for ${title}`);
+    await submit(page).click();
+    await expect(page.getByText(/was added successfully/)).toBeVisible();
+    expect(await savedDetails(title)).toMatchObject([
+      {
+        album_name: `Stub Album for ${title}`,
+        release_year: 1999,
+        matched_by: "manual",
+      },
+    ]);
   });
 
   test("the lookup waits until the song has a title and an artist", async ({

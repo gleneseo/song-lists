@@ -59,8 +59,10 @@ const STUB_LOOKUP_MS = 800;
  * Setting `SONG_METADATA_PREVIEW=stub` answers from a fixed stand-in instead,
  * which is how the browser tests try it without calling out: any song is
  * found on "Stub Album for <title>", except a title containing "Nothing Found"
- * (not found) or "Lookup Failure" (the service failed). The stand-in takes a
- * moment, as a real lookup does, so a test can see the form wait for it.
+ * (not found) or "Lookup Failure" (the service failed), and a title containing
+ * "Misspelled" is matched under the same title with "Correct" in its place.
+ * The stand-in takes a moment, as a real lookup does, so a test can see the
+ * form wait for it.
  */
 async function lookUpSongDetails(
   wanted: WantedSong,
@@ -86,7 +88,7 @@ async function lookUpSongDetails(
     status: SONG_METADATA_STATUS.MATCHED,
     source: SONG_METADATA_SOURCE.ITUNES,
     sourceTrackId: "stub-track",
-    matchedTitle: wanted.title,
+    matchedTitle: wanted.title.replace("Misspelled", "Correct"),
     matchedArtistName: wanted.artistName,
     artworkUrl: "https://example.test/stub/100x100bb.jpg",
     albumName: `Stub Album for ${wanted.title}`,

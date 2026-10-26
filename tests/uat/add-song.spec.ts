@@ -890,4 +890,66 @@ test.describe("keeping the form short", () => {
     expect(second?.x).toBeGreaterThan(first?.x ?? 0);
     expect(size.shown).toBeLessThanOrEqual(100);
   });
+
+  test("the album details put the year and the cover art address on one row", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    await startNewSong(page);
+
+    const [album, year, cover] = await Promise.all([
+      albumField(page).boundingBox(),
+      yearField(page).boundingBox(),
+      coverField(page).boundingBox(),
+    ]);
+
+    expect(year?.y).toBeCloseTo(cover?.y ?? -1, 0);
+    expect(cover?.x).toBeGreaterThan((year?.x ?? 0) + (year?.width ?? 0));
+    expect(year?.y).toBeGreaterThan(album?.y ?? Infinity);
+  });
+});
+
+test.describe("when a lookup spells the title differently", () => {
+  const useTitleLink = (page: Page): Locator =>
+    page.getByRole("button", { name: /^Use “.+” as the title$/ });
+
+  test("offers a link that puts the service's title in the title field", async ({
+    as,
+  }) => {
+    const page = await as("user");
+    const word = freshWord();
+    const title = `Misspelled Song ${word}`;
+    const correct = `Correct Song ${word}`;
+    await startNewSong(page);
+    await create(artistField(page), freshName("Band"));
+    await titleField(page).fill(title);
+
+    await lookUpButton(page).click();
+
+    await expect(
+      page.getByText("The service spells the title differently."),
+    ).toBeVisible();
+    await expect(useTitleLink(page)).toHaveText(
+      `Use “${correct}” as the title`,
+    );
+    await useTitleLink(page).click();
+
+    await expect(titleField(page)).toHaveValue(correct);
+    await expect(useTitleLink(page)).toHaveCount(0);
+    await submit(page).click();
+    await expect(page.getByText(/was added successfully/)).toBeVisible();
+    expect(await savedDetails(correct)).toHaveLength(1);
+  });
+
+  test("offers no link when the title is spelled the same", async ({ as }) => {
+    const page = await as("user");
+    await startNewSong(page);
+    await create(artistField(page), freshName("Band"));
+    await titleField(page).fill(freshName("Song"));
+
+    await lookUpButton(page).click();
+
+    await expect(page.getByText(/Found “/)).toBeVisible();
+    await expect(useTitleLink(page)).toHaveCount(0);
+  });
 });

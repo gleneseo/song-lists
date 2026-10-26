@@ -486,6 +486,7 @@ function AddSongForm({
           value={details}
           onChange={setDetails}
           onBusyChange={setLookingUp}
+          onUseTitle={setTitle}
         />
       </section>
 

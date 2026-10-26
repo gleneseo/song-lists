@@ -263,6 +263,21 @@ describe("looking up and setting a song's album details, down to the database", 
         expect(background.lookup).not.toHaveBeenCalled();
       });
 
+      it("should match a misspelled title under the correct one", async () => {
+        session.userId = al;
+        vi.stubEnv("SONG_METADATA_PREVIEW", "stub");
+
+        await expect(
+          find.findSongDetails({
+            title: "Misspelled Song",
+            artistName: "Some Band",
+          }),
+        ).resolves.toMatchObject({
+          status: "found",
+          matched: { title: "Correct Song", artistName: "Some Band" },
+        });
+      });
+
       it("should not find a title that asks for nothing to be found", async () => {
         session.userId = al;
         vi.stubEnv("SONG_METADATA_PREVIEW", "stub");

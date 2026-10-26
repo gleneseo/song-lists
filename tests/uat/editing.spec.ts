@@ -953,3 +953,35 @@ test.describe("the edit form's lists and advocates", () => {
     ).toBeVisible();
   });
 });
+
+test.describe("an admin editing a song whose title the lookup spells differently", () => {
+  test("can take the service's title with one click", async ({ as }) => {
+    const page = await as("admin");
+    const song = await arrangeSong();
+    await openSong(page, song);
+    await dialog(page).getByRole("button", { name: "Edit" }).click();
+    const title = dialog(page).getByRole("textbox", {
+      name: "Title",
+      exact: true,
+    });
+    await title.fill(`${song.title} Misspelled`);
+
+    await dialog(page)
+      .getByRole("button", { name: "Look up album details" })
+      .click();
+    await dialog(page)
+      .getByRole("button", {
+        name: `Use “${song.title} Correct” as the title`,
+      })
+      .click();
+
+    await expect(title).toHaveValue(`${song.title} Correct`);
+    await dialog(page).getByRole("button", { name: "Save changes" }).click();
+    await expect(
+      dialog(page).getByRole("heading", {
+        name: `${song.title} Correct`,
+        level: 2,
+      }),
+    ).toBeVisible();
+  });
+});

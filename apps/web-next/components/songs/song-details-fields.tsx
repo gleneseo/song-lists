@@ -40,6 +40,7 @@ function SongDetailsFields({
   value,
   onChange,
   onBusyChange,
+  onUseTitle,
 }: {
   idPrefix: string;
   /** The song's title and artist as the form has them now, which is what is looked up. */
@@ -49,6 +50,8 @@ function SongDetailsFields({
   onChange: (details: SongDetailsInput) => void;
   /** Told when a lookup starts and ends, so the form can hold its Save button until the answer is in. */
   onBusyChange: (busy: boolean) => void;
+  /** Puts a title in the form's title field, for when the service spells it differently. */
+  onUseTitle: (title: string) => void;
 }) {
   const [lookup, setLookup] = useState<LookupState>({ status: "idle" });
   const mounted = useRef(true);
@@ -69,6 +72,10 @@ function SongDetailsFields({
 
   const canLookUp = title.trim() !== "" && artistName.trim() !== "";
   const credit = metadataCredit(value.source);
+  const differentTitle =
+    lookup.status === "found" && lookup.matched.title.trim() !== title.trim()
+      ? lookup.matched.title
+      : null;
   const showsArtwork = /^https?:\/\//.test(value.artworkUrl);
 
   async function lookUp() {
@@ -124,7 +131,7 @@ function SongDetailsFields({
         )}
       </div>
 
-      <div role="status" aria-live="polite" className="text-sm">
+      <div role="status" aria-live="polite" className="text-sm empty:sr-only">
         {looking && (
           <p className="text-muted-foreground">
             Looking up album details on iTunes and MusicBrainz. This can take a
@@ -153,6 +160,21 @@ function SongDetailsFields({
           </p>
         )}
       </div>
+
+      {differentTitle !== null && (
+        <p className="text-sm">
+          The service spells the title differently.{" "}
+          <Button
+            type="button"
+            variant="link"
+            className="h-auto p-0 text-sm whitespace-normal"
+            onClick={() => onUseTitle(differentTitle)}
+          >
+            Use &ldquo;{differentTitle}&rdquo; as the title
+          </Button>
+        </p>
+      )}
+
       {lookup.status === "error" && (
         <p
           role="alert"
@@ -185,37 +207,39 @@ function SongDetailsFields({
               disabled={looking}
             />
           </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={`${idPrefix}-year`}>Year</Label>
-            <Input
-              id={`${idPrefix}-year`}
-              value={value.releaseYear}
-              onChange={(event) =>
-                onChange({ ...value, releaseYear: event.target.value })
-              }
-              inputMode="numeric"
-              maxLength={4}
-              className="w-24"
-              disabled={looking}
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={`${idPrefix}-art`}>Cover art address</Label>
-            <Input
-              id={`${idPrefix}-art`}
-              value={value.artworkUrl}
-              onChange={(event) =>
-                // Changed by hand, so it is no longer a service's.
-                onChange({
-                  ...value,
-                  artworkUrl: event.target.value,
-                  source: null,
-                  sourceTrackId: null,
-                })
-              }
-              placeholder="https://…"
-              disabled={looking}
-            />
+          <div className="flex gap-3">
+            <div className="flex shrink-0 flex-col gap-2">
+              <Label htmlFor={`${idPrefix}-year`}>Year</Label>
+              <Input
+                id={`${idPrefix}-year`}
+                value={value.releaseYear}
+                onChange={(event) =>
+                  onChange({ ...value, releaseYear: event.target.value })
+                }
+                inputMode="numeric"
+                maxLength={4}
+                className="w-20"
+                disabled={looking}
+              />
+            </div>
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+              <Label htmlFor={`${idPrefix}-art`}>Cover art address</Label>
+              <Input
+                id={`${idPrefix}-art`}
+                value={value.artworkUrl}
+                onChange={(event) =>
+                  // Changed by hand, so it is no longer a service's.
+                  onChange({
+                    ...value,
+                    artworkUrl: event.target.value,
+                    source: null,
+                    sourceTrackId: null,
+                  })
+                }
+                placeholder="https://…"
+                disabled={looking}
+              />
+            </div>
           </div>
           {credit && (
             <p className="text-xs text-muted-foreground">

@@ -763,4 +763,105 @@ test.describe("an admin editing a song's album details", () => {
       },
     ]);
   });
+
+  const removeButton = (page: Page) =>
+    dialog(page).getByRole("button", { name: "Remove album details" });
+
+  test("removes a song's details, which then no longer show on it", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    const song = await arrangeSong();
+    await arrangeSongDetails(song, {
+      source: "itunes",
+      albumName: "Doomed Album",
+      releaseYear: 1975,
+    });
+    await openSong(page, song);
+    await expect(dialog(page).getByText("Doomed Album · 1975")).toBeVisible();
+    await dialog(page).getByRole("button", { name: "Edit" }).click();
+
+    await removeButton(page).click();
+
+    await expect(
+      dialog(page).getByText(
+        "The album details will be removed when you save.",
+      ),
+    ).toBeVisible();
+    await expect(albumField(page)).toHaveValue("");
+    await dialog(page).getByRole("button", { name: "Save changes" }).click();
+
+    await expect(
+      dialog(page).getByRole("heading", { name: song.title, level: 2 }),
+    ).toBeVisible();
+    await expect(dialog(page).getByText("Doomed Album")).toHaveCount(0);
+    expect(await savedDetails(song)).toEqual([
+      {
+        album_name: null,
+        release_year: null,
+        matched_by: "manual",
+        source: null,
+      },
+    ]);
+  });
+
+  test("changes its mind about removing the details", async ({ as }) => {
+    const page = await as("admin");
+    const song = await arrangeSong();
+    await arrangeSongDetails(song, {
+      albumName: "Spared Album",
+      releaseYear: 1975,
+    });
+    await openSong(page, song);
+    await dialog(page).getByRole("button", { name: "Edit" }).click();
+    await removeButton(page).click();
+
+    await dialog(page).getByRole("button", { name: "Keep them" }).click();
+
+    await expect(albumField(page)).toHaveValue("Spared Album");
+    await expect(removeButton(page)).toBeVisible();
+    await dialog(page).getByRole("button", { name: "Save changes" }).click();
+    await expect(dialog(page).getByText("Spared Album · 1975")).toBeVisible();
+    expect(await savedDetails(song)).toMatchObject([
+      { album_name: "Spared Album", matched_by: "auto" },
+    ]);
+  });
+
+  test("typing new details after asking to remove them keeps the song's details instead", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    const song = await arrangeSong();
+    await arrangeSongDetails(song, {
+      albumName: "Old Album",
+      releaseYear: 1975,
+    });
+    await openSong(page, song);
+    await dialog(page).getByRole("button", { name: "Edit" }).click();
+    await removeButton(page).click();
+
+    await albumField(page).fill("Replacement Album");
+
+    await expect(
+      dialog(page).getByText(
+        "The album details will be removed when you save.",
+      ),
+    ).toHaveCount(0);
+    await yearField(page).fill("1980");
+    await dialog(page).getByRole("button", { name: "Save changes" }).click();
+    await expect(
+      dialog(page).getByText("Replacement Album · 1980"),
+    ).toBeVisible();
+  });
+
+  test("offers no removal for a song with no details", async ({ as }) => {
+    const page = await as("admin");
+    const song = await arrangeSong();
+    await openSong(page, song);
+
+    await dialog(page).getByRole("button", { name: "Edit" }).click();
+
+    await expect(albumField(page)).toBeVisible();
+    await expect(removeButton(page)).toHaveCount(0);
+  });
 });

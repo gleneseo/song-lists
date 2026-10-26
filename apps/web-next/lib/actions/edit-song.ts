@@ -9,7 +9,10 @@ import {
   getSongLinks,
   type SongEditData,
 } from "@/lib/queries/song-edit";
-import { saveSongDetails } from "@/lib/queries/song-metadata";
+import {
+  removeSongDetails,
+  saveSongDetails,
+} from "@/lib/queries/song-metadata";
 import { findExistingSong, type ExistingSongMatch } from "@/lib/queries/songs";
 import { getUserAccess } from "@/lib/queries/users";
 import { diffIds } from "@/lib/songs/diff-ids";
@@ -52,6 +55,8 @@ interface UpdateSongInput {
    * lookup never replaces them.
    */
   details?: SongDetailsInput;
+  /** Take the song's album details away (instead of saving `details`). */
+  removeDetails?: boolean;
 }
 
 type LoadSongForEditResult =
@@ -99,7 +104,10 @@ async function updateSong(input: UpdateSongInput): Promise<UpdateSongResult> {
     return { status: "error", message: "Title is required." };
   }
 
-  const details = input.details ? cleanSongDetails(input.details) : null;
+  const details =
+    input.details && !input.removeDetails
+      ? cleanSongDetails(input.details)
+      : null;
 
   if (details?.status === "error") {
     return { status: "error", message: details.message };
@@ -186,7 +194,9 @@ async function updateSong(input: UpdateSongInput): Promise<UpdateSongResult> {
         })
         .where(eq(schema.songs.id, input.songId));
 
-      if (details) {
+      if (input.removeDetails) {
+        await removeSongDetails(tx, input.songId, userId);
+      } else if (details) {
         await saveSongDetails(tx, input.songId, details.details, userId);
       }
 

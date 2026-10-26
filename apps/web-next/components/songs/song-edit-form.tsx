@@ -98,6 +98,7 @@ function LoadedForm({
 
   const [details, setDetails] = useState(data.details ?? EMPTY_SONG_DETAILS);
   const [lookingUp, setLookingUp] = useState(false);
+  const [removeDetails, setRemoveDetails] = useState(false);
 
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -137,9 +138,11 @@ function LoadedForm({
         addCover: toCoverSelection(coverChoice, coverNewArtist, coverNewTitle),
         listIds,
         advocateUserIds: advocateIds,
-        ...(detailsToSave(details, data.details)
-          ? { details: detailsToSave(details, data.details) }
-          : {}),
+        ...(removeDetails
+          ? { removeDetails: true }
+          : detailsToSave(details, data.details)
+            ? { details: detailsToSave(details, data.details) }
+            : {}),
       };
 
       const result = await updateSong(input);
@@ -226,9 +229,48 @@ function LoadedForm({
           title={title}
           artistName={artist ? selectionLabel(artist) : ""}
           value={details}
-          onChange={setDetails}
+          onChange={(next) => {
+            // Typing or looking up again means the details are wanted after all.
+            setDetails(next);
+            setRemoveDetails(false);
+          }}
           onBusyChange={setLookingUp}
         />
+        {removeDetails ? (
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            <p className="text-muted-foreground" role="status">
+              The album details will be removed when you save.
+            </p>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setDetails(data.details ?? EMPTY_SONG_DETAILS);
+                setRemoveDetails(false);
+              }}
+            >
+              Keep them
+            </Button>
+          </div>
+        ) : (
+          data.details && (
+            <div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={lookingUp}
+                onClick={() => {
+                  setDetails(EMPTY_SONG_DETAILS);
+                  setRemoveDetails(true);
+                }}
+              >
+                Remove album details
+              </Button>
+            </div>
+          )
+        )}
       </FormSection>
 
       <FormSection title="Featured artists">

@@ -124,4 +124,40 @@ async function saveSongDetails(
     });
 }
 
-export { lookUpSongDetails, recordSongMetadata, saveSongDetails };
+/**
+ * Takes a song's album details away, on an admin's say-so. The song keeps a
+ * row that says it has none, chosen by hand, so no automatic lookup puts
+ * details back.
+ */
+async function removeSongDetails(
+  tx: Pick<typeof db, "insert">,
+  songId: number,
+  userId: string,
+): Promise<void> {
+  const now = new Date();
+  const values = {
+    status: SONG_METADATA_STATUS.NOT_FOUND,
+    source: null,
+    sourceTrackId: null,
+    artworkUrl: null,
+    albumName: null,
+    releaseYear: null,
+    matchedBy: SONG_METADATA_MATCHED_BY.MANUAL,
+    fetchedAt: now,
+  };
+
+  await tx
+    .insert(schema.songMetadata)
+    .values({ songId, ...values, createdBy: userId, updatedBy: userId })
+    .onConflictDoUpdate({
+      target: schema.songMetadata.songId,
+      set: { ...values, updatedAt: now, updatedBy: userId },
+    });
+}
+
+export {
+  lookUpSongDetails,
+  recordSongMetadata,
+  removeSongDetails,
+  saveSongDetails,
+};

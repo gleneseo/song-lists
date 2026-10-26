@@ -64,6 +64,7 @@ describe("an admin looking up and setting a song's album details, down to the da
   let add: typeof import("@/lib/actions/add-song");
   let edit: typeof import("@/lib/actions/edit-song");
   let editData: typeof import("@/lib/queries/song-edit");
+  let metadata: typeof import("@/lib/queries/song-metadata");
   let al: string;
   let cliff: string;
 
@@ -73,6 +74,7 @@ describe("an admin looking up and setting a song's album details, down to the da
     add = await import("@/lib/actions/add-song");
     edit = await import("@/lib/actions/edit-song");
     editData = await import("@/lib/queries/song-edit");
+    metadata = await import("@/lib/queries/song-metadata");
     al = await userId(pool, "Al");
     cliff = await userId(pool, "Cliff");
   });
@@ -475,6 +477,65 @@ describe("an admin looking up and setting a song's album details, down to the da
 
       expect(await rowsOf(id)).toEqual([
         expect.objectContaining({ album_name: "A Tightened Album" }),
+      ]);
+    });
+
+    it("should take a song's details away, leaving a row that says none were found, by hand", async () => {
+      const id = await makeSong("Zz Loses Details");
+      await edit.updateSong(editInput(id, { details: typed }));
+
+      const result = await edit.updateSong(
+        editInput(id, { removeDetails: true }),
+      );
+
+      expect(result).toEqual({ status: "updated" });
+      expect(await rowsOf(id)).toEqual([
+        expect.objectContaining({
+          status: "not_found",
+          source: null,
+          source_track_id: null,
+          artwork_url: null,
+          album_name: null,
+          release_year: null,
+          matched_by: "manual",
+          updated_by: al,
+        }),
+      ]);
+      expect((await editData.getSongEditData(id))?.details).toBeNull();
+    });
+
+    it("should not let an automatic lookup put removed details back", async () => {
+      const id = await makeSong("Zz Stays Removed");
+      await edit.updateSong(editInput(id, { details: typed }));
+      await edit.updateSong(editInput(id, { removeDetails: true }));
+      background.lookup.mockResolvedValue(found);
+
+      await metadata.recordSongMetadata(id);
+
+      expect(await rowsOf(id)).toEqual([
+        expect.objectContaining({ status: "not_found", album_name: null }),
+      ]);
+    });
+
+    it("should remove details even from a song that had none yet", async () => {
+      const id = await makeSong("Zz Never Had Details");
+
+      await edit.updateSong(editInput(id, { removeDetails: true }));
+
+      expect(await rowsOf(id)).toEqual([
+        expect.objectContaining({ status: "not_found", matched_by: "manual" }),
+      ]);
+    });
+
+    it("should remove, rather than save, when the form asks for both", async () => {
+      const id = await makeSong("Zz Asked For Both");
+
+      await edit.updateSong(
+        editInput(id, { details: typed, removeDetails: true }),
+      );
+
+      expect(await rowsOf(id)).toEqual([
+        expect.objectContaining({ status: "not_found", album_name: null }),
       ]);
     });
 

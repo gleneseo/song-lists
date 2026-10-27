@@ -14,6 +14,7 @@
 | [song_featured_artists](#song_featured_artists) | 8 |
 | [song_metadata](#song_metadata) | 15 |
 | [song_productions](#song_productions) | 8 |
+| [song_search](#song_search) | 2 |
 | [songs](#songs) | 9 |
 | [users](#users) | 14 |
 | [verifications](#verifications) | 6 |
@@ -441,13 +442,42 @@
 
 ---
 
+## song_search
+
+### Columns
+
+| Name | Type | Default | Nullable | Children | Parents |
+|------|------|---------|----------|----------|---------|
+| **song_id** | integer | - | NO | - | [songs.id](#songs) |
+| document | tsvector | - | NO | - | - |
+
+### Constraints
+
+| Name | Type | Definition |
+|------|------|------------|
+| song_search_song_id_songs_id_fk | FOREIGN KEY | (song_id) → songs(id) |
+
+### Indexes
+
+| Name | Columns | Unique | Type |
+|------|---------|--------|------|
+| song_search_document_idx | document | NO | gin |
+
+### Relations
+
+| Parent | Child | Type |
+|--------|-------|------|
+| [songs.id](#songs) | **[song_search.song_id](#song_search)** | Many to One |
+
+---
+
 ## songs
 
 ### Columns
 
 | Name | Type | Default | Nullable | Children | Parents |
 |------|------|---------|----------|----------|---------|
-| **id** | serial | - | NO | [list_songs.song_id](#list_songs), [song_advocates.song_id](#song_advocates), [song_covers.original_song_id](#song_covers), [song_covers.song_id](#song_covers), [song_featured_artists.song_id](#song_featured_artists), [song_metadata.song_id](#song_metadata), [song_productions.song_id](#song_productions) | - |
+| **id** | serial | - | NO | [list_songs.song_id](#list_songs), [song_advocates.song_id](#song_advocates), [song_covers.original_song_id](#song_covers), [song_covers.song_id](#song_covers), [song_featured_artists.song_id](#song_featured_artists), [song_metadata.song_id](#song_metadata), [song_productions.song_id](#song_productions), [song_search.song_id](#song_search) | - |
 | resource_id | uuid | `uuidv7()` | NO | - | - |
 | title | text | - | NO | - | - |
 | artist_id | integer | - | NO | - | [artists.id](#artists) |
@@ -476,6 +506,7 @@
 | **[songs.id](#songs)** | [song_featured_artists.song_id](#song_featured_artists) | Many to One |
 | **[songs.id](#songs)** | [song_metadata.song_id](#song_metadata) | Many to One |
 | **[songs.id](#songs)** | [song_productions.song_id](#song_productions) | Many to One |
+| **[songs.id](#songs)** | [song_search.song_id](#song_search) | Many to One |
 | [artists.id](#artists) | **[songs.artist_id](#songs)** | Many to One |
 | [users.id](#users) | **[songs.created_by](#songs)** | Many to One |
 | [users.id](#users) | **[songs.updated_by](#songs)** | Many to One |
@@ -605,6 +636,7 @@ erDiagram
     song_productions }o--|| productions : "production_id"
     song_productions }o--|| songs : "song_id"
     song_productions }o--|| users : "updated_by"
+    song_search }o--|| songs : "song_id"
     songs }o--|| artists : "artist_id"
     songs }o--|| users : "created_by"
     songs }o--|| users : "updated_by"
@@ -742,6 +774,10 @@ erDiagram
         timestamp updated_at
         uuid created_by FK
         uuid updated_by FK
+    }
+    song_search {
+        integer song_id PK,FK
+        tsvector document
     }
     songs {
         serial id PK

@@ -2,6 +2,7 @@ import { relations, sql } from "drizzle-orm";
 import {
   type AnyPgColumn,
   boolean,
+  customType,
   index,
   integer,
   pgSchema,
@@ -238,6 +239,31 @@ const songMetadataRelations = relations(songMetadata, ({ one }) => ({
     relationName: "songMetadataUpdater",
   }),
 }));
+
+/** Postgres's full-text document type, which Drizzle has no builder for. */
+const tsvector = customType<{ data: string }>({
+  dataType: () => "tsvector",
+});
+
+/**
+ * What full-text search matches a song against: its title, artist, featured
+ * artists, album, advocates, and bio, weighted by how much each says about
+ * which song it is. Nothing writes here directly -- triggers rebuild a song's
+ * row whenever anything it's built from changes (see the
+ * `add_full_text_search` migration) -- so it exists in the schema only for
+ * queries to join against. Productions are left out on purpose: only some
+ * lists show them, so they're matched separately.
+ */
+const songSearch = songListsSchema.table(
+  "song_search",
+  {
+    songId: integer()
+      .primaryKey()
+      .references(() => songs.id, { onDelete: "cascade" }),
+    document: tsvector().notNull(),
+  },
+  (table) => [index("song_search_document_idx").using("gin", table.document)],
+);
 
 const songFeaturedArtists = songListsSchema.table(
   "song_featured_artists",
@@ -624,6 +650,7 @@ export {
   songsRelations,
   songMetadata,
   songMetadataRelations,
+  songSearch,
   songFeaturedArtists,
   songFeaturedArtistsRelations,
   songCovers,

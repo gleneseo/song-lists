@@ -13,7 +13,7 @@
       "idx": 1,
       "version": "7",
       "when": 1792420887227,
-      "tag": "0001_add_trigram_search",
+      "tag": "0001_add_search",
       "breakpoints": true
     },
     {

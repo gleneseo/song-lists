@@ -13,6 +13,7 @@ import { schema } from "@song-lists/db";
 import type { ListExtraColumn } from "@song-lists/db/list-extra-column";
 import { parseExtraColumns, showsProductions } from "@/lib/lists/extra-columns";
 import type { ListView } from "@/lib/lists/list-view";
+import { prefixTsQuery, SONG_SEARCH_CONFIG } from "@/lib/search/prefix-tsquery";
 import { escapeLike } from "@/lib/text/escape-like";
 import { readSymbols } from "@/lib/text/read-symbols";
 import { db } from "./client";
@@ -120,6 +121,19 @@ function songHasProductionMatching(pattern: string) {
   )`;
 }
 
+/**
+ * Whether a song's search document -- title, artist, featured artists,
+ * album, advocates, and bio, words in any order -- has every word of
+ * `tsquery`, the last as a prefix.
+ */
+function songDocumentMatching(tsquery: string) {
+  return sql`exists (
+    select 1 from ${schema.songSearch}
+    where ${schema.songSearch.songId} = ${schema.songs.id}
+      and ${schema.songSearch.document} @@ to_tsquery(${SONG_SEARCH_CONFIG}::regconfig, ${tsquery})
+  )`;
+}
+
 /** The alphabetically first production a song appears in, for sorting; null when it has none. */
 const firstProductionName = sql`(
   select min(${sortKeySql(schema.productions.name)}) from ${schema.songProductions}
@@ -140,8 +154,10 @@ const advocateNames = sql<string | null>`(
 )`;
 
 /**
- * Narrows a list to songs whose title or artist contains `query`, ignoring
- * case -- and, on a list that shows Productions, whose production does too.
+ * Narrows a list to songs matching `query` in either of two ways: the text
+ * is in the title or artist as typed (ignoring case), or every word of it is
+ * somewhere in the song's search document, in any order. On a list that
+ * shows Productions, a production whose name contains it matches too.
  */
 function matchesQuery(query: string, extraColumns: ListExtraColumn[]) {
   if (!query) {
@@ -151,10 +167,12 @@ function matchesQuery(query: string, extraColumns: ListExtraColumn[]) {
   // Matched with "$" and "!" read as letters on both sides, so "short" finds
   // "Too $hort" and "too $hort" does too.
   const pattern = `%${escapeLike(readSymbols(query))}%`;
+  const tsquery = prefixTsQuery(query);
 
   return or(
     ilike(readSymbolsSql(schema.songs.title), pattern),
     ilike(readSymbolsSql(schema.artists.name), pattern),
+    tsquery ? songDocumentMatching(tsquery) : undefined,
     showsProductions(extraColumns)
       ? songHasProductionMatching(pattern)
       : undefined,

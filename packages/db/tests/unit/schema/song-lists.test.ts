@@ -21,6 +21,7 @@ import {
   songMetadata,
   songProductions,
   songs,
+  songSearch,
   users,
 } from "../../../src/schema/song-lists.js";
 
@@ -383,6 +384,19 @@ describe("songFeaturedArtists", () => {
       fields: [songFeaturedArtists.updatedBy],
       references: [users.id],
     });
+  });
+});
+
+describe("songSearch", () => {
+  it("should hang off the song it describes and go when the song does", () => {
+    const [foreignKey] = getTableConfig(songSearch).foreignKeys;
+
+    expect(foreignKey?.reference().foreignColumns).toEqual([songs.id]);
+    expect(foreignKey?.onDelete).toBe("cascade");
+  });
+
+  it("should hold its document as a tsvector", () => {
+    expect(songSearch.document.getSQLType()).toBe("tsvector");
   });
 });
 

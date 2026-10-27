@@ -1326,6 +1326,58 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "song_lists.song_search": {
+      "name": "song_search",
+      "schema": "song_lists",
+      "columns": {
+        "song_id": {
+          "name": "song_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "document": {
+          "name": "document",
+          "type": "tsvector",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "song_search_document_idx": {
+          "name": "song_search_document_idx",
+          "columns": [
+            {
+              "expression": "document",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "song_search_song_id_songs_id_fk": {
+          "name": "song_search_song_id_songs_id_fk",
+          "tableFrom": "song_search",
+          "tableTo": "songs",
+          "schemaTo": "song_lists",
+          "columnsFrom": ["song_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "song_lists.songs": {
       "name": "songs",
       "schema": "song_lists",

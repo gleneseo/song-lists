@@ -85,6 +85,7 @@ describe("database integration", () => {
       "song_featured_artists",
       "song_metadata",
       "song_productions",
+      "song_search",
       "songs",
       "users",
       "verifications",

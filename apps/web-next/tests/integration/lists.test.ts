@@ -166,6 +166,39 @@ describe("the list queries, against the real schema and seed data", () => {
       },
     );
 
+    describe("by word, in any order and across fields", () => {
+      const titlesFor = async (query: string) =>
+        (await lists.getListEntries(masterId, view({ query }), [], 0, 500)).map(
+          (entry) => `${entry.song.title} / ${entry.song.artist.name}`,
+        );
+
+      it("should find a song by words from its title and its artist, in either order", async () => {
+        expect(await titlesFor("rio duran")).toContain("Rio / Duran Duran");
+        expect(await titlesFor("duran rio")).toContain("Rio / Duran Duran");
+      });
+
+      it("should treat the last word as one still being typed", async () => {
+        expect(await titlesFor("dura ri")).toContain("Rio / Duran Duran");
+      });
+
+      it("should find a song by one of its advocates, along with a word of its title", async () => {
+        // "Rio" by Duran Duran has four advocates, Chad among them.
+        expect(await titlesFor("rio chad")).toContain("Rio / Duran Duran");
+      });
+
+      it("should still require every word", async () => {
+        expect(await titlesFor("rio nonexistentword")).toEqual([]);
+      });
+
+      it("should count exactly the entries it returns", async () => {
+        const query = "duran rio";
+
+        expect(await lists.countListEntries(masterId, query, [])).toBe(
+          (await titlesFor(query)).length,
+        );
+      });
+    });
+
     it("should count exactly the entries a search returns", async () => {
       const total = await lists.countListEntries(masterId, "love", []);
       const entries = await lists.getListEntries(

@@ -722,6 +722,34 @@ test.describe("looking up album details while adding a song", () => {
     ]);
   });
 
+  test("the cover art can be one of the app's own images, but not any other path", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    const title = freshName("Song");
+    await startNewSong(page);
+    await create(artistField(page), freshName("Band"));
+    await titleField(page).fill(title);
+    await albumField(page).fill("A Local Album");
+
+    await coverField(page).fill("/somewhere/else.jpg");
+    await submit(page).click();
+    await expect(
+      page.getByText(/or a local image such as \/album-art\/name\.jpg/),
+    ).toBeVisible();
+
+    await coverField(page).fill("/album-art/a-local-album.jpg");
+    await submit(page).click();
+    await expect(page.getByText(/was added successfully/)).toBeVisible();
+    expect(await savedDetails(title)).toMatchObject([
+      {
+        album_name: "A Local Album",
+        artwork_url: "/album-art/a-local-album.jpg",
+        source: null,
+      },
+    ]);
+  });
+
   test("changing the cover art by hand takes the song's details off the service's name", async ({
     as,
   }) => {

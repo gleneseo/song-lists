@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { findSongDetails } from "@/lib/actions/find-song-details";
 import { metadataCredit } from "@/lib/songs/metadata-credit";
 import {
+  isShowableArtwork,
   sameSongDetails,
   type SongDetailsInput,
 } from "@/lib/songs/song-details-input";
@@ -76,7 +77,7 @@ function SongDetailsFields({
     lookup.status === "found" && lookup.matched.title.trim() !== title.trim()
       ? lookup.matched.title
       : null;
-  const showsArtwork = /^https?:\/\//.test(value.artworkUrl);
+  const showsArtwork = isShowableArtwork(value.artworkUrl);
 
   async function lookUp() {
     setLookup({ status: "looking" });
@@ -236,7 +237,7 @@ function SongDetailsFields({
                     sourceTrackId: null,
                   })
                 }
-                placeholder="https://…"
+                placeholder="https://… or /album-art/name.jpg"
                 disabled={looking}
               />
             </div>

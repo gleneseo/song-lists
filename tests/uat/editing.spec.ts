@@ -45,6 +45,30 @@ test.describe("who can change a song", () => {
     ).toHaveCount(0);
   });
 
+  test("a web address in a song's notes is a link that opens in a new tab", async ({
+    as,
+  }) => {
+    const page = await as("user");
+    const song = await arrangeSong({
+      bio: "Live at https://www.youtube.com/watch?v=abc123. Great show.",
+    });
+
+    await openSong(page, song);
+
+    const link = noteLines(page).getByRole("link", {
+      name: "https://www.youtube.com/watch?v=abc123",
+    });
+    await expect(link).toHaveAttribute(
+      "href",
+      "https://www.youtube.com/watch?v=abc123",
+    );
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(link).toHaveAttribute("rel", /noopener/);
+    await expect(noteLines(page).first()).toHaveText(
+      "Live at https://www.youtube.com/watch?v=abc123. Great show.",
+    );
+  });
+
   test("a manager can only add a note: their form has a single box", async ({
     as,
   }) => {

@@ -1,4 +1,5 @@
 import { cn } from "cn";
+import { splitLinks } from "@/lib/text/split-links";
 
 // Literal class names, so Tailwind sees them. Each pairs a shade dark enough
 // to read on a light page with a lighter one for dark mode. Violet leads and
@@ -13,7 +14,10 @@ const RAINBOW = [
   "text-red-600 dark:text-red-400",
 ];
 
-/** A song's notes, one per line, each in the next color of the rainbow so they stand apart. */
+/**
+ * A song's notes, one per line, each in the next color of the rainbow so they
+ * stand apart. A web address in a note is a link.
+ */
 function NoteLines({
   notes,
   className,
@@ -30,7 +34,21 @@ function NoteLines({
           key={index}
           className={cn("wrap-anywhere", RAINBOW[index % RAINBOW.length])}
         >
-          {line}
+          {splitLinks(line).map((part, at) =>
+            part.kind === "link" ? (
+              <a
+                key={at}
+                href={part.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline underline-offset-4 hover:no-underline"
+              >
+                {part.url}
+              </a>
+            ) : (
+              part.text
+            ),
+          )}
         </p>
       ))}
     </div>

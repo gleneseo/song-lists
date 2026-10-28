@@ -203,6 +203,23 @@ describe("iTunes lookup", () => {
       expect(fetch).toHaveBeenCalledTimes(1);
     });
 
+    it.each([
+      ["turned away", () => new Response("busy", { status: 503 })],
+      ["answered with nothing", () => new Response("null")],
+    ])(
+      "should say not found when the artist's songs are %s",
+      async (_, answer) => {
+        const fetch = vi
+          .fn<typeof globalThis.fetch>()
+          .mockResolvedValueOnce(new Response(JSON.stringify({ results: [] })))
+          .mockResolvedValue(answer());
+
+        await expect(
+          createItunesLookup({ fetch, limiter: passThrough })(wantedHidden),
+        ).resolves.toEqual({ status: "not_found" });
+      },
+    );
+
     it("should say not found, not an error, when the extra requests fail", async () => {
       const fetch = vi
         .fn<typeof globalThis.fetch>()

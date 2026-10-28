@@ -49,6 +49,10 @@ describe("splitLinks", () => {
     ]);
   });
 
+  it("should not link what is left of an address once its punctuation is gone", () => {
+    expect(splitLinks("see https://. ok")).toEqual([text("see https://. ok")]);
+  });
+
   it("should not link other schemes or a bare scheme", () => {
     expect(splitLinks("javascript:alert(1) ftp://a.test https://")).toEqual([
       text("javascript:alert(1) ftp://a.test https://"),

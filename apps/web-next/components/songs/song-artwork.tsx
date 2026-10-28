@@ -1,20 +1,22 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 /**
  * A song's cover art, hotlinked from the music service that supplied it.
  * Art that can't be loaded (the service moved it, or it's offline) leaves
- * nothing behind rather than a broken-image icon.
+ * the fallback, if any, rather than a broken-image icon.
  */
 function SongArtwork({
   src,
   alt,
   size,
+  fallback = null,
 }: {
   src: string;
   alt: string;
   size: number;
+  fallback?: ReactNode;
 }) {
   const [failed, setFailed] = useState(false);
   const image = useRef<HTMLImageElement>(null);
@@ -28,7 +30,7 @@ function SongArtwork({
   }, []);
 
   if (failed) {
-    return null;
+    return fallback;
   }
 
   return (

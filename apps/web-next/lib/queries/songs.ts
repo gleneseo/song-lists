@@ -14,6 +14,8 @@ interface Song {
   title: string;
   artist: { id: number; name: string };
   featuredArtists: FeaturedArtist[];
+  /** What the album details lookup found, or `null` before it has run. */
+  metadata: { status: string; artworkUrl: string | null } | null;
   coverOf: {
     original: {
       title: string;
@@ -36,6 +38,7 @@ const featuredArtistsWith = {
 const songWith = {
   artist: { columns: { id: true, name: true } },
   featuredArtists: featuredArtistsWith,
+  metadata: { columns: { status: true, artworkUrl: true } },
   coverOf: {
     columns: { id: true },
     with: {

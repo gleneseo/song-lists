@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { chooseMatch, simplify } from "../../src/match.js";
+import { chooseMatch, isProperAlbum, simplify } from "../../src/match.js";
 
 const sample = (
   JSON.parse(
@@ -436,6 +436,37 @@ describe("chooseMatch", () => {
     const later = { ...exact, albumName: "Live in Paris", releaseYear: 1995 };
 
     expect(chooseMatch(wanted, [old, later, studio])).toBe(studio);
+  });
+
+  it("should take an album of its own over an earlier one credited to Various Artists", () => {
+    const compilation = {
+      ...exact,
+      albumName: "Small Pond Presents: Emerging Part 2",
+      releaseYear: 2021,
+      variousArtists: true,
+    };
+    const album = { ...exact, albumName: "Wild-Eyed", releaseYear: 2025 };
+
+    expect(chooseMatch(wanted, [compilation, album])).toBe(album);
+    expect(isProperAlbum(wanted, compilation)).toBe(false);
+  });
+
+  it("should still take a compilation credited to Various Artists when it's all there is", () => {
+    const compilation = { ...exact, variousArtists: true };
+
+    expect(chooseMatch(wanted, [compilation])).toBe(compilation);
+  });
+
+  it("should not take a film's soundtrack credited to Various Artists for a compilation", () => {
+    const soundtrack = {
+      ...exact,
+      albumName: "Back to the Future (Original Motion Picture Soundtrack)",
+      releaseYear: 1985,
+      variousArtists: true,
+    };
+    const later = { ...exact, albumName: "Wild-Eyed", releaseYear: 1990 };
+
+    expect(chooseMatch(wanted, [later, soundtrack])).toBe(soundtrack);
   });
 
   it("should refuse live recordings that came out around the same time, or alone", () => {

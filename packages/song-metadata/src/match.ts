@@ -22,6 +22,12 @@ interface Candidate {
    * it, the sort is read from the album's name.
    */
   kind?: ReleaseKind | undefined;
+  /**
+   * Whether the album is credited to Various Artists, as a compilation of
+   * several acts is -- for a service that says so, whatever the album is
+   * called.
+   */
+  variousArtists?: boolean | undefined;
 }
 
 /** Below this, the titles are treated as different songs. */
@@ -516,7 +522,16 @@ function notAnAlbumPenalty(
       ? SINGLE_PATTERN.test(album)
       : candidate.kind === "single";
 
-  if (isCompilation || isNumberedVolumeOf(album, otherAlbums)) {
+  // A film's soundtrack is credited to Various Artists too, but is where the
+  // film's song first came out, so it isn't taken for a compilation.
+  const isVariousArtists =
+    candidate.variousArtists === true && !SOUNDTRACK_PATTERN.test(album);
+
+  if (
+    isCompilation ||
+    isVariousArtists ||
+    isNumberedVolumeOf(album, otherAlbums)
+  ) {
     return 2;
   }
 

@@ -1,10 +1,20 @@
 import type { NextConfig } from "next";
+import { ARTWORK_REMOTE_PATTERNS } from "./lib/songs/artwork-proxy";
 
 const nextConfig: NextConfig = {
   // The UAT browser tests build into a folder of their own, so a build for
   // them never touches the one a running dev server is using.
   distDir: process.env.NEXT_DIST_DIR ?? ".next",
   cacheComponents: true,
+  // Cover art from the music services is fetched, resized, and kept by this
+  // server (see SongArtwork), not hotlinked from every viewer's browser. Art
+  // hardly ever changes, so it is kept for 31 days rather than the default
+  // 4 hours, which would send the Cover Art Archive's images back to
+  // archive.org all day long.
+  images: {
+    remotePatterns: ARTWORK_REMOTE_PATTERNS,
+    minimumCacheTTL: 31 * 24 * 60 * 60,
+  },
   transpilePackages: [
     "@song-lists/db",
     "@song-lists/auth",

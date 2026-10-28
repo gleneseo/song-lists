@@ -55,6 +55,34 @@ test.describe("album art beside the songs in a list", () => {
   });
 });
 
+test.describe("album art fetched through the server", () => {
+  test("the app's own images are resized and served from the app, not hotlinked", async ({
+    as,
+  }) => {
+    const page = await as("user");
+    const song = await arrangeSong();
+    await arrangeSongDetails(song, {
+      artworkUrl: "/album-art/aesop-rock-the-prof-in-convexed-2003.jpg",
+      albumName: "Album",
+    });
+
+    await page.goto(`/lists/1?q=${encodeURIComponent(song.title)}`);
+
+    const image = page
+      .locator("tbody tr", { hasText: song.title })
+      .locator("img");
+    await expect(image).toHaveAttribute("src", /^\/_next\/image\?url=/);
+    const response = await page.request.get(
+      (await image.getAttribute("src")) ?? "",
+    );
+    expect(response.status()).toBe(200);
+    expect(response.headers()["content-type"]).toMatch(/^image\//);
+    await expect
+      .poll(() => image.evaluate((img: HTMLImageElement) => img.naturalWidth))
+      .toBeGreaterThan(0);
+  });
+});
+
 test.describe("album art on the dashboard", () => {
   test("the newest songs in the catalog show their art", async ({ as }) => {
     const page = await as("user");

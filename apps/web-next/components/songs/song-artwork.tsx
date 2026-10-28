@@ -1,9 +1,13 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { canProxyArtwork } from "@/lib/songs/artwork-proxy";
 
 /**
- * A song's cover art, hotlinked from the music service that supplied it.
+ * A song's cover art. Art from the music services this app knows is fetched
+ * through this server, which resizes and keeps it; any other address is
+ * shown straight from where it is.
  * Art that can't be loaded (the service moved it, or it's offline) leaves
  * the fallback, if any, rather than a broken-image icon.
  */
@@ -33,8 +37,26 @@ function SongArtwork({
     return fallback;
   }
 
-  return (
-    // eslint-disable-next-line @next/next/no-img-element -- hotlinked from the music service, not something Next should optimize and re-serve
+  const className =
+    "shrink-0 rounded-md bg-muted object-cover ring-1 ring-foreground/10";
+  const onError = () => {
+    setFailed(true);
+  };
+
+  return canProxyArtwork(src) ? (
+    <Image
+      ref={image}
+      src={src}
+      alt={alt}
+      width={size}
+      height={size}
+      loading="lazy"
+      onError={onError}
+      className={className}
+      style={{ width: size, height: size }}
+    />
+  ) : (
+    // eslint-disable-next-line @next/next/no-img-element -- an address of the admin's own choosing, which Next isn't set up to fetch
     <img
       ref={image}
       src={src}
@@ -43,10 +65,8 @@ function SongArtwork({
       height={size}
       loading="lazy"
       referrerPolicy="no-referrer"
-      onError={() => {
-        setFailed(true);
-      }}
-      className="shrink-0 rounded-md bg-muted object-cover ring-1 ring-foreground/10"
+      onError={onError}
+      className={className}
       style={{ width: size, height: size }}
     />
   );

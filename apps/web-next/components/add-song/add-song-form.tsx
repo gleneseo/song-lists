@@ -421,6 +421,28 @@ function AddSongForm({
             disabled={submitting}
           />
         )}
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="text-lg font-semibold">Album details</h2>
+        <p className="text-sm text-muted-foreground">
+          Look the song up to fill in its album, year, and cover art, then
+          correct anything before adding it. Left blank, they&rsquo;re looked up
+          automatically once the song is added.
+        </p>
+        <SongDetailsFields
+          idPrefix="song-details"
+          title={title}
+          artistName={artist ? selectionLabel(artist) : ""}
+          value={details}
+          onChange={setDetails}
+          onBusyChange={setLookingUp}
+          onUseTitle={setTitle}
+        />
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="text-lg font-semibold">Notes</h2>
         <div className="flex flex-col gap-2">
           <Label htmlFor="song-bio">Bio / notes (optional)</Label>
           <Textarea
@@ -469,24 +491,6 @@ function AddSongForm({
           onNewArtistChange={setCoverNewArtist}
           newTitle={coverNewTitle}
           onNewTitleChange={setCoverNewTitle}
-        />
-      </section>
-
-      <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold">Album details</h2>
-        <p className="text-sm text-muted-foreground">
-          Look the song up to fill in its album, year, and cover art, then
-          correct anything before adding it. Left blank, they&rsquo;re looked up
-          automatically once the song is added.
-        </p>
-        <SongDetailsFields
-          idPrefix="song-details"
-          title={title}
-          artistName={artist ? selectionLabel(artist) : ""}
-          value={details}
-          onChange={setDetails}
-          onBusyChange={setLookingUp}
-          onUseTitle={setTitle}
         />
       </section>
 

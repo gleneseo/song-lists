@@ -9,7 +9,7 @@ import {
 import { buildLeaderboard } from "@/lib/dashboard/build-leaderboard";
 import { songMilestones } from "@/lib/dashboard/milestones";
 import {
-  getCatalogAdditions,
+  getMasterListAdditions,
   getContributors,
   getSongOfTheDay,
   getUserHistory,
@@ -33,7 +33,8 @@ import { TopArtistsCard } from "./top-artists-card";
 /** How many of the user's songs the history card loads. */
 const HISTORY_SIZE = 100;
 const TOP_ARTIST_COUNT = 5;
-const RECENT_ADDITION_COUNT = 5;
+/** How many of the newest Master List songs the Latest card loads. */
+const RECENT_ADDITION_COUNT = 100;
 
 interface SectionProps {
   userId: string;
@@ -177,7 +178,7 @@ async function LeaderboardSection({ userId }: Pick<SectionProps, "userId">) {
 async function RecentAdditionsSection() {
   return (
     <RecentAdditionsCard
-      additions={await getCatalogAdditions(RECENT_ADDITION_COUNT)}
+      additions={await getMasterListAdditions(RECENT_ADDITION_COUNT)}
     />
   );
 }

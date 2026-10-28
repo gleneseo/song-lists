@@ -146,14 +146,35 @@ describe("the dashboard queries, against the real schema and seed data", () => {
       expect(contributors.map((c) => c.name)).not.toContain("System");
     });
 
-    it("should show the newest songs in the catalog, newest first", async () => {
-      const additions = await dashboard.getCatalogAdditions(10);
+    it("should show the newest songs on The Master List, newest first", async () => {
+      const additions = await dashboard.getMasterListAdditions(10);
       const { rows } = await pool.query<{ id: number }>(
-        "select id from song_lists.songs order by created_at desc, id desc limit 10",
+        `select s.id from song_lists.songs s
+         where exists (
+           select 1 from song_lists.list_songs ls
+           join song_lists.lists l on l.id = ls.list_id
+           where ls.song_id = s.id and l.name = 'The Master List')
+         order by s.created_at desc, s.id desc limit 10`,
       );
 
       expect(additions.map((entry) => entry.song.id)).toEqual(
         rows.map((row) => row.id),
+      );
+    });
+
+    it("should leave out a song that is on no list, as a cover's original is", async () => {
+      const { rows: unlisted } = await pool.query<{ id: number }>(
+        `select s.id from song_lists.songs s
+         where not exists (
+           select 1 from song_lists.list_songs ls
+           join song_lists.lists l on l.id = ls.list_id
+           where ls.song_id = s.id and l.name = 'The Master List')`,
+      );
+      const additions = await dashboard.getMasterListAdditions(100_000);
+
+      expect(unlisted.length).toBeGreaterThan(0);
+      expect(additions.map((entry) => entry.song.id)).not.toEqual(
+        expect.arrayContaining([unlisted[0]?.id]),
       );
     });
 

@@ -8,9 +8,14 @@ import {
 } from "@/components/ui/card";
 import { SongSummary } from "@/components/song-summary";
 import type { CatalogAddition } from "@/lib/queries/dashboard";
+import { countLabel } from "@/lib/text/count-label";
 import { formatDate } from "@/lib/text/format-date";
 
-/** The newest songs in the catalog, from anyone. */
+/**
+ * The newest songs on The Master List, from anyone. Its list is a set height,
+ * room for five songs, and scrolls, the same as the contributors card
+ * beside it, so the two always match.
+ */
 function RecentAdditionsCard({ additions }: { additions: CatalogAddition[] }) {
   return (
     <Card>
@@ -19,10 +24,16 @@ function RecentAdditionsCard({ additions }: { additions: CatalogAddition[] }) {
           <Clock className="size-4" />
           Latest in the catalog
         </CardTitle>
-        <CardDescription>Newly added songs from everyone</CardDescription>
+        <CardDescription>
+          The {countLabel(additions.length, "newest song")} on The Master List
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <ul className="divide-y divide-border">
+        <ul
+          tabIndex={0}
+          aria-label="Newest songs on The Master List, newest first"
+          className="-mx-1 h-75 divide-y divide-border overflow-y-auto px-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        >
           {additions.map((addition) => (
             <li
               key={addition.song.id}

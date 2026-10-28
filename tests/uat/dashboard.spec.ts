@@ -1,3 +1,4 @@
+import { arrangeSong } from "./support/app.js";
 import { PEOPLE } from "./support/people.js";
 import { expect, test } from "./support/test.js";
 
@@ -105,6 +106,62 @@ test.describe("the dashboard", () => {
       page.getByText("A fresh pick from the catalog every day"),
     ).toBeVisible();
     await expect(page.getByText("Top contributors")).toBeVisible();
+  });
+
+  test("the Latest card lists the 100 newest songs on The Master List, not songs on other lists", async ({
+    as,
+  }) => {
+    const page = await as("user");
+    const onMaster = await arrangeSong();
+    const elsewhere = await arrangeSong({ list: "Best Soundtrack Yams" });
+
+    await page.goto("/dashboard");
+
+    const latest = page.getByRole("list", {
+      name: "Newest songs on The Master List, newest first",
+    });
+    await expect(latest.getByText(onMaster.title)).toBeVisible();
+    await expect(latest.getByText(elsewhere.title)).toHaveCount(0);
+    await expect(latest.getByRole("listitem")).toHaveCount(100);
+    await expect(
+      page.getByText("The 100 newest songs on The Master List"),
+    ).toBeVisible();
+  });
+
+  test("the Latest and contributors cards are the same set height, and scroll", async ({
+    as,
+  }) => {
+    const page = await as("user");
+
+    await page.goto("/dashboard");
+
+    const latest = page.getByRole("list", {
+      name: "Newest songs on The Master List, newest first",
+    });
+    const contributors = page.getByRole("list", {
+      name: "Contributors ranked by songs added",
+    });
+    const card = (list: typeof latest) =>
+      list.locator("xpath=ancestor::*[@data-slot='card']");
+    await expect(latest.getByRole("listitem")).toHaveCount(100);
+
+    const [latestBox, contributorsBox] = await Promise.all([
+      card(latest).boundingBox(),
+      card(contributors).boundingBox(),
+    ]);
+    expect(latestBox?.height).toBeCloseTo(contributorsBox?.height ?? -1, 0);
+    expect(
+      await latest.evaluate((el) => el.scrollHeight > el.clientHeight),
+    ).toBe(true);
+    expect(await latest.evaluate((el) => getComputedStyle(el).overflowY)).toBe(
+      "auto",
+    );
+    // Both lists are a set 300 px tall, however many people or songs there are.
+    expect(await latest.evaluate((el) => el.clientHeight)).toBe(300);
+    expect(
+      await contributors.evaluate((el) => el.scrollHeight > el.clientHeight),
+    ).toBe(true);
+    expect(await contributors.evaluate((el) => el.clientHeight)).toBe(300);
   });
 
   test("the button at the top goes to the Add song form", async ({ as }) => {

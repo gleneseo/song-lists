@@ -41,3 +41,4 @@ square, about 600 px) and it appears on the song.
 | `bob-dylan-unreleased-1973.jpg` | (unreleased) | 1973 | Bob Dylan - Wagon Wheel (Demo) |
 | `w-a-nichol-s-western-aces-cocaine-blues-my-song-for-you-1947.jpg` | Cocaine Blues / My Song For You | 1947 | W.A. Nichol's Western Aces - Cocaine Blues |
 | `burnt-mcmelba-toast-burntmcmelbatoast-1996.jpg` | BurntMcMelbaToast | 1996 | Burnt McMelba Toast - Funky Love Ballad |
+| `the-revels-comanche-single-1961.jpg` | Comanche - Single | 1961 | The Revels - Comanche |

@@ -405,12 +405,27 @@ test.describe("paging through a list", () => {
       page.getByRole("button", { name: "Previous" }).first(),
     ).toBeDisabled();
 
-    await page.goto(`${SOUNDTRACK}?page=3`);
+    // However many songs the list has, its last page holds what is left over.
+    const total = Number(
+      /of ([\d,]+) songs/
+        .exec(
+          await page
+            .getByText(/1–50 of [\d,]+ songs/)
+            .first()
+            .innerText(),
+        )?.[1]
+        ?.replaceAll(",", ""),
+    );
+    const lastPage = Math.ceil(total / 50);
+
+    await page.goto(`${SOUNDTRACK}?page=${String(lastPage)}`);
 
     await expect(
       page.getByRole("button", { name: "Next" }).first(),
     ).toBeDisabled();
-    await expect(page.locator("tbody tr")).toHaveCount(28);
+    await expect(page.locator("tbody tr")).toHaveCount(
+      total - 50 * (lastPage - 1),
+    );
   });
 
   test("a page number past the end shows the last page, not an error", async ({

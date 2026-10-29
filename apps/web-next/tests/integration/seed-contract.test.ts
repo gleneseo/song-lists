@@ -121,14 +121,54 @@ describe("what the app expects of the seeded data", () => {
     ).toEqual([]);
     expect(
       await rows(
-        `select n.body from song_lists.song_notes n
+        `select n.body, u.name author from song_lists.song_notes n
          join song_lists.songs s on s.id = n.song_id
+         join song_lists.users u on u.id = n.created_by
          where s.title = 'Hit The Lights' order by n.id`,
       ),
     ).toEqual([
-      { body: "REALLY? THE WHOLE ALBUM? -Al" },
-      { body: "Yes, BECAUSE THAT WHOLE ALBUM SLAPS -Cliff" },
+      { body: "REALLY? THE WHOLE ALBUM?", author: "Al" },
+      { body: "Yes, BECAUSE THAT WHOLE ALBUM SLAPS", author: "Cliff" },
     ]);
+  });
+
+  it("should credit an old comment to the user who signed it, and keep the rest as written", async () => {
+    expect(
+      await rows(
+        `select n.body, u.name author from song_lists.song_notes n
+         join song_lists.songs s on s.id = n.song_id
+         join song_lists.users u on u.id = n.created_by
+         where s.title in ('Freak Like Me', 'Kryptonite') order by s.title, n.id`,
+      ),
+    ).toEqual([
+      {
+        body: "Yes, yes I am- Dr. Stankleberries, Freaky M.D.",
+        author: "System",
+      },
+      { body: "Classic shit.", author: "Al" },
+      { body: "Iiiiii, got a pocket full of kryptonite", author: "Cliff" },
+    ]);
+  });
+
+  it("should credit a comment signed with a nickname to the user it belongs to", async () => {
+    expect(
+      await rows(
+        `select n.body, u.name author from song_lists.song_notes n
+         join song_lists.songs s on s.id = n.song_id
+         join song_lists.users u on u.id = n.created_by
+         where s.title = 'Call Me A Dog'`,
+      ),
+    ).toEqual([{ body: "Dog.", author: "Cliff" }]);
+  });
+
+  it("should leave no signed-off comment credited to the System user when a seeded user signed it", async () => {
+    expect(
+      await rows(
+        `select n.body from song_lists.song_notes n
+         join song_lists.users u on u.id = n.created_by
+         where u.name = 'System' and n.body ~* '\\s*-\\s*(al|cliff|stan|stank|stuff|stuffy|minnz|chad|ryan|judd|vic)$'`,
+      ),
+    ).toEqual([]);
   });
 
   it("should not seed two artists with the same name", async () => {

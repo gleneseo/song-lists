@@ -7654,13 +7654,43 @@ ORDER BY v.ord;
 --> statement-breakpoint
 
 -- The seed songs' bios are really notes, one per line. Each line becomes a
--- note of its own (written when and by whom the song was added), in line
--- order, and the bio is left empty for an actual bio.
+-- note of its own, in line order, and the bio is left empty for an actual bio.
+-- A line that ends in a hyphen and the name of a seeded user, or one of the
+-- nicknames in their "aka" bio ("Classic shit. -Al", "Dog. - Stan"), was
+-- written by that user, so it is theirs and loses the sign-off, which the
+-- byline now says; any other line is credited to whoever added the song.
+-- Every note is dated when the song was added.
 INSERT INTO "song_lists"."song_notes" ("song_id", "body", "created_at", "updated_at", "created_by", "updated_by")
-SELECT s.id, btrim(l.line), s.created_at, s.created_at, s.created_by, s.created_by
+SELECT
+  s.id,
+  coalesce(CASE WHEN author.id IS NOT NULL THEN p.parts[1] END, p.line),
+  s.created_at,
+  s.created_at,
+  coalesce(author.id, s.created_by),
+  coalesce(author.id, s.created_by)
 FROM "song_lists"."songs" s
 CROSS JOIN LATERAL regexp_split_to_table(s.bio, E'\n') WITH ORDINALITY AS l(line, position)
-WHERE btrim(l.line) <> ''
+CROSS JOIN LATERAL (
+  SELECT
+    btrim(l.line) AS line,
+    regexp_match(btrim(l.line), '^(.*\S)\s*-\s*([^-]*\S)$') AS parts
+) AS p
+LEFT JOIN LATERAL (
+  SELECT u.id
+  FROM "song_lists"."users" u
+  WHERE p.parts IS NOT NULL
+    AND u.id <> '00000000-0000-0000-0000-000000000000'
+    AND (
+      lower(u.name) = lower(p.parts[2])
+      OR lower(p.parts[2]) IN (
+        SELECT lower(btrim(alias))
+        FROM unnest(string_to_array(regexp_replace(coalesce(u.bio, ''), '^aka\s+', ''), ',')) AS alias
+      )
+    )
+  ORDER BY (lower(u.name) = lower(p.parts[2])) DESC, u.created_at
+  LIMIT 1
+) AS author ON true
+WHERE p.line <> ''
 ORDER BY s.id, l.position;
 --> statement-breakpoint
 

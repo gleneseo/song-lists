@@ -256,8 +256,17 @@ const songMetadata = songListsSchema.table("song_metadata", {
   artworkUrl: text(),
   albumName: text(),
   releaseYear: integer(),
-  /** One of `SONG_METADATA_MATCHED_BY`. */
-  matchedBy: text().notNull(),
+  /**
+   * One of `SONG_METADATA_MATCHED_BY`: whether the source, track, album, and
+   * year were picked by the lookup or by a person.
+   */
+  detailsMatchedBy: text().notNull(),
+  /**
+   * One of `SONG_METADATA_MATCHED_BY`: whether the cover art was picked by
+   * the lookup or by a person, such as one of the app's own files in place of
+   * a reissue's cover.
+   */
+  artworkMatchedBy: text().notNull(),
   /** When the lookup last ran. */
   fetchedAt: timestamp().notNull(),
   ...auditColumns(),

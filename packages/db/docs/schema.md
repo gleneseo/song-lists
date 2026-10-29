@@ -12,7 +12,7 @@
 | [song_advocates](#song_advocates) | 8 |
 | [song_covers](#song_covers) | 8 |
 | [song_featured_artists](#song_featured_artists) | 8 |
-| [song_metadata](#song_metadata) | 15 |
+| [song_metadata](#song_metadata) | 16 |
 | [song_notes](#song_notes) | 8 |
 | [song_productions](#song_productions) | 8 |
 | [song_search](#song_search) | 2 |
@@ -383,7 +383,8 @@
 | artwork_url | text | - | YES | - | - |
 | album_name | text | - | YES | - | - |
 | release_year | integer | - | YES | - | - |
-| matched_by | text | - | NO | - | - |
+| details_matched_by | text | - | NO | - | - |
+| artwork_matched_by | text | - | NO | - | - |
 | fetched_at | timestamp | - | NO | - | - |
 | created_at | timestamp | `now()` | NO | - | - |
 | updated_at | timestamp | `now()` | NO | - | - |
@@ -804,7 +805,8 @@ erDiagram
         text artwork_url
         text album_name
         integer release_year
-        text matched_by
+        text details_matched_by
+        text artwork_matched_by
         timestamp fetched_at
         timestamp created_at
         timestamp updated_at

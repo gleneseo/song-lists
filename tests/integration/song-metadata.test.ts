@@ -41,7 +41,8 @@ describe("song metadata, in the database", () => {
     artworkUrl: "https://example.test/art/100x100bb.jpg",
     albumName: "An Album",
     releaseYear: 1981,
-    matchedBy: "auto",
+    detailsMatchedBy: "auto",
+    artworkMatchedBy: "auto",
     fetchedAt: new Date(),
     createdBy: SYSTEM_USER_ID,
     updatedBy: SYSTEM_USER_ID,
@@ -66,10 +67,10 @@ describe("song metadata, in the database", () => {
     const incomplete = await pool.query(
       `select s.title from song_lists.song_metadata m
          join song_lists.songs s on s.id = m.song_id
-        where (m.status = 'matched' and m.matched_by = 'auto'
+        where (m.status = 'matched' and m.details_matched_by = 'auto'
                and (m.artwork_url is null or m.album_name is null
                     or m.source_track_id is null or m.release_year is null))
-           or (m.status = 'matched' and m.matched_by = 'manual'
+           or (m.status = 'matched' and m.details_matched_by = 'manual'
                and (m.album_name is null or m.release_year is null))
            or (m.status <> 'matched'
                and (m.artwork_url is not null or m.album_name is not null
@@ -105,7 +106,8 @@ describe("song metadata, in the database", () => {
     await db.insert(schema.songMetadata).values({
       songId: otherSongId,
       status: "not_found",
-      matchedBy: "auto",
+      detailsMatchedBy: "auto",
+      artworkMatchedBy: "auto",
       fetchedAt: new Date(),
       createdBy: SYSTEM_USER_ID,
       updatedBy: SYSTEM_USER_ID,

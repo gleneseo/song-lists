@@ -98,7 +98,8 @@ describe("looking up and setting a song's album details, down to the database", 
         artwork_url: string | null;
         album_name: string | null;
         release_year: number | null;
-        matched_by: string;
+        details_matched_by: string;
+        artwork_matched_by: string;
         updated_by: string;
       }>("select * from song_lists.song_metadata where song_id = $1", [id])
     ).rows;
@@ -321,7 +322,8 @@ describe("looking up and setting a song's album details, down to the database", 
           artwork_url: "https://example.test/art/tight.jpg",
           album_name: "A Tightened Album",
           release_year: 1982,
-          matched_by: "manual",
+          details_matched_by: "manual",
+          artwork_matched_by: "manual",
           updated_by: al,
         }),
       ]);
@@ -367,7 +369,7 @@ describe("looking up and setting a song's album details, down to the database", 
       ).toEqual([
         expect.objectContaining({
           album_name: "A Tightened Album",
-          matched_by: "manual",
+          details_matched_by: "manual",
           updated_by: cliff,
         }),
       ]);
@@ -422,8 +424,8 @@ describe("looking up and setting a song's album details, down to the database", 
       const id = await makeSong("Zz Shows Details");
       await pool.query(
         `insert into song_lists.song_metadata
-           (song_id, status, source, source_track_id, artwork_url, album_name, release_year, matched_by, fetched_at, created_by, updated_by)
-         values ($1, 'matched', 'itunes', '99', 'https://example.test/a.jpg', 'Shown Album', 1975, 'auto', now(), $2, $2)`,
+           (song_id, status, source, source_track_id, artwork_url, album_name, release_year, details_matched_by, artwork_matched_by, fetched_at, created_by, updated_by)
+         values ($1, 'matched', 'itunes', '99', 'https://example.test/a.jpg', 'Shown Album', 1975, 'auto', 'auto', now(), $2, $2)`,
         [id, al],
       );
 
@@ -442,8 +444,8 @@ describe("looking up and setting a song's album details, down to the database", 
       const id = await makeSong("Zz Sparse Details");
       await pool.query(
         `insert into song_lists.song_metadata
-           (song_id, status, matched_by, fetched_at, created_by, updated_by)
-         values ($1, 'matched', 'manual', now(), $2, $2)`,
+           (song_id, status, details_matched_by, artwork_matched_by, fetched_at, created_by, updated_by)
+         values ($1, 'matched', 'manual', 'manual', now(), $2, $2)`,
         [id, al],
       );
 
@@ -461,8 +463,8 @@ describe("looking up and setting a song's album details, down to the database", 
       const missed = await makeSong("Zz Missed Details");
       await pool.query(
         `insert into song_lists.song_metadata
-           (song_id, status, matched_by, fetched_at, created_by, updated_by)
-         values ($1, 'not_found', 'auto', now(), $2, $2)`,
+           (song_id, status, details_matched_by, artwork_matched_by, fetched_at, created_by, updated_by)
+         values ($1, 'not_found', 'auto', 'auto', now(), $2, $2)`,
         [missed, al],
       );
 
@@ -480,7 +482,7 @@ describe("looking up and setting a song's album details, down to the database", 
         expect.objectContaining({
           album_name: "A Tightened Album",
           release_year: 1982,
-          matched_by: "manual",
+          details_matched_by: "manual",
         }),
       ]);
     });
@@ -489,8 +491,8 @@ describe("looking up and setting a song's album details, down to the database", 
       const id = await makeSong("Zz Replaces Details");
       await pool.query(
         `insert into song_lists.song_metadata
-           (song_id, status, source, source_track_id, artwork_url, album_name, release_year, matched_by, fetched_at, created_by, updated_by)
-         values ($1, 'matched', 'itunes', '99', 'https://example.test/a.jpg', 'Found Album', 1975, 'auto', now(), $2, $2)`,
+           (song_id, status, source, source_track_id, artwork_url, album_name, release_year, details_matched_by, artwork_matched_by, fetched_at, created_by, updated_by)
+         values ($1, 'matched', 'itunes', '99', 'https://example.test/a.jpg', 'Found Album', 1975, 'auto', 'auto', now(), $2, $2)`,
         [id, al],
       );
 
@@ -501,7 +503,7 @@ describe("looking up and setting a song's album details, down to the database", 
           source: null,
           source_track_id: null,
           album_name: "A Tightened Album",
-          matched_by: "manual",
+          details_matched_by: "manual",
           updated_by: al,
         }),
       ]);
@@ -535,7 +537,7 @@ describe("looking up and setting a song's album details, down to the database", 
           artwork_url: null,
           album_name: null,
           release_year: null,
-          matched_by: "manual",
+          details_matched_by: "manual",
           updated_by: al,
         }),
       ]);
@@ -561,7 +563,11 @@ describe("looking up and setting a song's album details, down to the database", 
       await edit.updateSong(editInput(id, { removeDetails: true }));
 
       expect(await rowsOf(id)).toEqual([
-        expect.objectContaining({ status: "not_found", matched_by: "manual" }),
+        expect.objectContaining({
+          status: "not_found",
+          details_matched_by: "manual",
+          artwork_matched_by: "manual",
+        }),
       ]);
     });
 

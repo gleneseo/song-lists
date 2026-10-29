@@ -207,8 +207,8 @@ describe("the song search documents, kept in step by the database", () => {
 
     await pool.query(
       `insert into song_lists.song_metadata
-         (song_id, status, source, album_name, matched_by, fetched_at, created_by, updated_by)
-       values ($1, 'matched', 'itunes', 'Moonlit Fields', 'auto', now(), $2, $2)`,
+         (song_id, status, source, album_name, details_matched_by, artwork_matched_by, fetched_at, created_by, updated_by)
+       values ($1, 'matched', 'itunes', 'Moonlit Fields', 'auto', 'auto', now(), $2, $2)`,
       [id, al],
     );
     expect(await matching("moonlit & prowl")).toEqual([id]);

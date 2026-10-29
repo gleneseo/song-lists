@@ -25,11 +25,11 @@ FROM (VALUES
 INSERT INTO "song_lists"."song_metadata" ("resource_id", "status")
 SELECT 1
 FROM (VALUES
-	(0, '33333333-3333-3333-3333-333333333333', 'matched', 'itunes', '123', 'https://is1-ssl.mzstatic.com/image/thumb/a/b/c/x.jpg/100x100bb.jpg', 'It''s An Album', '1990', 'auto', '2026-10-23 10:47:17.525', '22222222-2222-2222-2222-222222222222'),
-	(1, '44444444-4444-4444-4444-444444444444', 'matched', NULL, NULL, '/album-art/own-cover.jpg', 'Own Cover', '1991', 'manual', '2026-10-23 10:47:17.525', '11111111-1111-1111-1111-111111111111'),
-	(2, '55555555-5555-5555-5555-555555555555', 'matched', 'musicbrainz', NULL, NULL, 'No Art', '1992', 'manual', '2026-10-23 10:47:17.525', '11111111-1111-1111-1111-111111111111'),
-	(3, '66666666-6666-6666-6666-666666666666', 'matched', NULL, NULL, 'https://example.test/art.jpg', NULL, '1993', 'manual', '2026-10-23 10:47:17.525', '77777777-7777-7777-7777-777777777777')
-) AS v(ord, resource_id, status, source, source_track_id, artwork_url, album_name, release_year, matched_by, fetched_at, song);
+	(0, '33333333-3333-3333-3333-333333333333', 'matched', 'itunes', '123', 'https://is1-ssl.mzstatic.com/image/thumb/a/b/c/x.jpg/100x100bb.jpg', 'It''s An Album', '1990', 'auto', 'auto', '2026-10-23 10:47:17.525', '22222222-2222-2222-2222-222222222222'),
+	(1, '44444444-4444-4444-4444-444444444444', 'matched', NULL, NULL, '/album-art/own-cover.jpg', 'Own Cover', '1991', 'manual', 'manual', '2026-10-23 10:47:17.525', '11111111-1111-1111-1111-111111111111'),
+	(2, '55555555-5555-5555-5555-555555555555', 'matched', 'musicbrainz', NULL, NULL, 'No Art', '1992', 'manual', 'auto', '2026-10-23 10:47:17.525', '11111111-1111-1111-1111-111111111111'),
+	(3, '66666666-6666-6666-6666-666666666666', 'matched', NULL, NULL, 'https://example.test/art.jpg', NULL, '1993', 'manual', 'auto', '2026-10-23 10:47:17.525', '77777777-7777-7777-7777-777777777777')
+) AS v(ord, resource_id, status, source, source_track_id, artwork_url, album_name, release_year, details_matched_by, artwork_matched_by, fetched_at, song);
 `;
 
 describe("seedSongTitles", () => {

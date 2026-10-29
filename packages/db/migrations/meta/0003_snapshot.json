@@ -1121,8 +1121,14 @@
           "primaryKey": false,
           "notNull": false
         },
-        "matched_by": {
-          "name": "matched_by",
+        "details_matched_by": {
+          "name": "details_matched_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "artwork_matched_by": {
+          "name": "artwork_matched_by",
           "type": "text",
           "primaryKey": false,
           "notNull": true

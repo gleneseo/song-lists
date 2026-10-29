@@ -5,7 +5,7 @@ import {
   SYSTEM_USER_ID,
   schema,
 } from "@song-lists/db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import type { SongLookupResult } from "./result.js";
 import type { WantedSong } from "./match.js";
 
@@ -48,6 +48,9 @@ const NO_DETAILS = {
   releaseYear: null,
 } as const;
 
+/** The cover art to save: the row's own if a person chose it, else the lookup's. */
+const keepChosenArtwork = sql`case when "song_metadata"."artwork_matched_by" = ${SONG_METADATA_MATCHED_BY.MANUAL} then "song_metadata"."artwork_url" else excluded."artwork_url" end`;
+
 /**
  * Looks a song up and saves what turned up (or that nothing did) beside it,
  * so its art and album can be shown without asking again.
@@ -89,7 +92,8 @@ async function recordSongMetadata(
       songId,
       status: result.status,
       ...details,
-      matchedBy: SONG_METADATA_MATCHED_BY.AUTO,
+      detailsMatchedBy: SONG_METADATA_MATCHED_BY.AUTO,
+      artworkMatchedBy: SONG_METADATA_MATCHED_BY.AUTO,
       fetchedAt: now,
       createdBy: SYSTEM_USER_ID,
       updatedBy: SYSTEM_USER_ID,
@@ -106,12 +110,17 @@ async function recordSongMetadata(
       set: {
         status: result.status,
         ...details,
+        // Cover art chosen by hand stays while the rest of the details are
+        // refreshed, unless nothing matched, which leaves no art to keep.
+        ...(result.status === SONG_METADATA_STATUS.MATCHED
+          ? { artworkUrl: keepChosenArtwork }
+          : { artworkMatchedBy: SONG_METADATA_MATCHED_BY.AUTO }),
         fetchedAt: now,
         updatedAt: now,
         updatedBy: SYSTEM_USER_ID,
       },
       setWhere: eq(
-        schema.songMetadata.matchedBy,
+        schema.songMetadata.detailsMatchedBy,
         SONG_METADATA_MATCHED_BY.AUTO,
       ),
     });

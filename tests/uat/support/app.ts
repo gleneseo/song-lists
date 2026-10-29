@@ -178,8 +178,8 @@ async function arrangeSongDetails(
   await withDatabase(async (pool) => {
     await pool.query(
       `insert into song_lists.song_metadata
-         (song_id, status, source, artwork_url, album_name, release_year, matched_by, fetched_at, created_by, updated_by)
-       select $1, $2, $3, $4, $5, $6, 'auto', now(), id, id
+         (song_id, status, source, artwork_url, album_name, release_year, details_matched_by, artwork_matched_by, fetched_at, created_by, updated_by)
+       select $1, $2, $3, $4, $5, $6, 'auto', 'auto', now(), id, id
        from song_lists.users where name = 'Al'`,
       [
         song.id,

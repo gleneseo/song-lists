@@ -36,7 +36,12 @@ const SongMetadataSource = Schema.Literals([
 
 type SongMetadataSource = Schema.Schema.Type<typeof SongMetadataSource>;
 
-/** Whether a match was picked by the lookup itself or chosen by a person. */
+/**
+ * Whether a match was picked by the lookup itself or chosen by a person. A
+ * song records it twice: for its album details (source, track, album, and
+ * year) and for its cover art, so a cover can be chosen by hand while the
+ * details stay automatic, and the other way around.
+ */
 const SONG_METADATA_MATCHED_BY = {
   AUTO: "auto",
   MANUAL: "manual",

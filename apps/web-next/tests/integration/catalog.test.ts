@@ -172,7 +172,8 @@ describe("searching and looking up the catalog, against the real database", () =
           artistName: "Robert Johnson",
         }),
       ]);
-      expect(details?.bio?.split("\n")).toHaveLength(2);
+      expect(details?.notes.length).toBeGreaterThanOrEqual(2);
+      expect(details?.bio).toBeNull();
     });
 
     it("should show the other side of a cover: who has covered it", async () => {
@@ -333,6 +334,7 @@ describe("searching and looking up the catalog, against the real database", () =
       const data = await songEdit.getSongEditData(song);
 
       expect(data?.bio).toBe("");
+      expect(data?.notes).toEqual([]);
       expect(data?.featuredArtists).toEqual([
         { id: featured, label: "Cowboy Junkies" },
       ]);

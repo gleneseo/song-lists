@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { addSongNote } from "@/lib/actions/add-song-note";
+import type { SongNote } from "@/lib/songs/song-details";
 
 /**
  * The manager's edit form: the song's existing notes for context, and one box
@@ -21,7 +22,7 @@ function SongNoteForm({
 }: {
   songId: number;
   title: string;
-  notes: string | null;
+  notes: SongNote[];
   onCancel: () => void;
   onSaved: () => void;
 }) {
@@ -76,7 +77,7 @@ function SongNoteForm({
         </p>
       )}
 
-      {notes && (
+      {notes.length > 0 && (
         <NoteLines notes={notes} className="max-h-48 overflow-y-auto text-sm" />
       )}
 

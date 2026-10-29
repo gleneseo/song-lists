@@ -1,4 +1,6 @@
 import { cn } from "cn";
+import { formatNoteByline } from "@/lib/songs/format-note";
+import type { SongNote } from "@/lib/songs/song-details";
 import { splitLinks } from "@/lib/text/split-links";
 
 // Literal class names, so Tailwind sees them. Each pairs a shade dark enough
@@ -15,26 +17,25 @@ const RAINBOW = [
 ];
 
 /**
- * A song's notes, one per line, each in the next color of the rainbow so they
- * stand apart. A web address in a note is a link.
+ * A song's notes, one per line and each followed by who wrote it and when,
+ * each in the next color of the rainbow so they stand apart. A web address in
+ * a note is a link.
  */
 function NoteLines({
   notes,
   className,
 }: {
-  notes: string;
+  notes: SongNote[];
   className?: string;
 }) {
-  const lines = notes.split("\n").filter((line) => line.trim());
-
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      {lines.map((line, index) => (
+      {notes.map((note, index) => (
         <p
-          key={index}
+          key={note.id}
           className={cn("wrap-anywhere", RAINBOW[index % RAINBOW.length])}
         >
-          {splitLinks(line).map((part, at) =>
+          {splitLinks(note.body).map((part, at) =>
             part.kind === "link" ? (
               <a
                 key={at}
@@ -49,6 +50,7 @@ function NoteLines({
               part.text
             ),
           )}
+          {` — ${formatNoteByline(note.author, note.writtenAt)}`}
         </p>
       ))}
     </div>

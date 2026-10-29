@@ -10,6 +10,7 @@ const bareRow: SongDetailsRow = {
   createdAt: day("2020-08-28"),
   artist: { id: 10, name: "The Isley Brothers" },
   featuredArtists: [],
+  notes: [],
   coverOf: [],
   coveredBy: [],
   productions: [],
@@ -24,6 +25,7 @@ describe("toSongDetails", () => {
       id: 7,
       title: "Summer Breeze",
       bio: null,
+      notes: [],
       addedAt: day("2020-08-28"),
       artistId: 10,
       artistName: "The Isley Brothers",
@@ -77,6 +79,31 @@ describe("toSongDetails", () => {
 
   it("should keep the bio when there is one", () => {
     expect(toSongDetails({ ...bareRow, bio: "A gem." }).bio).toBe("A gem.");
+  });
+
+  it("should list notes oldest first, naming who wrote each", () => {
+    const actual = toSongDetails({
+      ...bareRow,
+      notes: [
+        {
+          id: 9,
+          body: "Later.",
+          createdAt: day("2021-02-02"),
+          creator: { name: "Cliff" },
+        },
+        {
+          id: 4,
+          body: "Earlier.",
+          createdAt: day("2021-01-01"),
+          creator: { name: "Al" },
+        },
+      ],
+    });
+
+    expect(actual.notes).toEqual([
+      { id: 4, body: "Earlier.", author: "Al", writtenAt: day("2021-01-01") },
+      { id: 9, body: "Later.", author: "Cliff", writtenAt: day("2021-02-02") },
+    ]);
   });
 
   it("should list featured artists with their IDs, in the order given", () => {

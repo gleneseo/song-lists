@@ -123,7 +123,7 @@ function songHasProductionMatching(pattern: string) {
 
 /**
  * Whether a song's search document -- title, artist, featured artists,
- * album, advocates, and bio, words in any order -- has every word of
+ * album, and advocates, words in any order -- has every word of
  * `tsquery`, the last as a prefix.
  */
 function songDocumentMatching(tsquery: string) {

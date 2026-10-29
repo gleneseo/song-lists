@@ -7651,3 +7651,17 @@ https://www.youtube.com/watch?v=Yc3u69gzl1A -Stuff', '2024-01-28', '2024-01-28',
 ) AS v(ord, resource_id, title, bio, created_at, updated_at, created_by, updated_by, artist)
 JOIN "song_lists"."artists" r0 ON r0."resource_id" = v.artist::uuid
 ORDER BY v.ord;
+--> statement-breakpoint
+
+-- The seed songs' bios are really notes, one per line. Each line becomes a
+-- note of its own (written when and by whom the song was added), in line
+-- order, and the bio is left empty for an actual bio.
+INSERT INTO "song_lists"."song_notes" ("song_id", "body", "created_at", "updated_at", "created_by", "updated_by")
+SELECT s.id, btrim(l.line), s.created_at, s.created_at, s.created_by, s.created_by
+FROM "song_lists"."songs" s
+CROSS JOIN LATERAL regexp_split_to_table(s.bio, E'\n') WITH ORDINALITY AS l(line, position)
+WHERE btrim(l.line) <> ''
+ORDER BY s.id, l.position;
+--> statement-breakpoint
+
+UPDATE "song_lists"."songs" SET "bio" = NULL WHERE "bio" IS NOT NULL;

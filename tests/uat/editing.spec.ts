@@ -35,7 +35,7 @@ test.describe("who can change a song", () => {
     as,
   }) => {
     const page = await as("user");
-    const song = await arrangeSong({ bio: "Already here." });
+    const song = await arrangeSong({ notes: ["Already here."] });
 
     await openSong(page, song);
 
@@ -50,7 +50,7 @@ test.describe("who can change a song", () => {
   }) => {
     const page = await as("user");
     const song = await arrangeSong({
-      bio: "Live at https://www.youtube.com/watch?v=abc123. Great show.",
+      notes: ["Live at https://www.youtube.com/watch?v=abc123. Great show."],
     });
 
     await openSong(page, song);
@@ -64,8 +64,8 @@ test.describe("who can change a song", () => {
     );
     await expect(link).toHaveAttribute("target", "_blank");
     await expect(link).toHaveAttribute("rel", /noopener/);
-    await expect(noteLines(page).first()).toHaveText(
-      "Live at https://www.youtube.com/watch?v=abc123. Great show.",
+    await expect(noteLines(page).first()).toContainText(
+      "Live at https://www.youtube.com/watch?v=abc123. Great show. — Al",
     );
   });
 
@@ -73,7 +73,7 @@ test.describe("who can change a song", () => {
     as,
   }) => {
     const page = await as("manager");
-    const song = await arrangeSong({ bio: "Already here." });
+    const song = await arrangeSong({ notes: ["Already here."] });
     await openSong(page, song);
 
     await dialog(page).getByRole("button", { name: "Edit" }).click();
@@ -103,7 +103,7 @@ test.describe("who can change a song", () => {
     await expect(
       dialog(page).getByRole("heading", { name: "Edit song" }),
     ).toBeVisible();
-    for (const name of ["Title", "Notes", "Add a note"]) {
+    for (const name of ["Title", "Bio", "Add a note"]) {
       await expect(
         dialog(page).getByRole("textbox", { name, exact: true }),
         name,
@@ -136,7 +136,7 @@ test.describe("adding a note", () => {
     as,
   }) => {
     const page = await as("manager");
-    const song = await arrangeSong({ bio: "First note -Al" });
+    const song = await arrangeSong({ notes: ["First note -Al"] });
     await openSong(page, song);
     await dialog(page).getByRole("button", { name: "Edit" }).click();
 
@@ -146,7 +146,9 @@ test.describe("adding a note", () => {
     await dialog(page).getByRole("button", { name: "Add note" }).click();
 
     await expect(noteLines(page)).toHaveCount(2);
-    await expect(noteLines(page).first()).toHaveText("First note -Al");
+    await expect(noteLines(page).first()).toHaveText(
+      SIGNED_NOTE("First note -Al", "Al"),
+    );
     await expect(noteLines(page).nth(1)).toHaveText(
       SIGNED_NOTE("Great live\\.", "Cliff"),
     );
@@ -196,7 +198,7 @@ test.describe("adding a note", () => {
 
   test("cancelling leaves the notes as they were", async ({ as }) => {
     const page = await as("manager");
-    const song = await arrangeSong({ bio: "Untouched." });
+    const song = await arrangeSong({ notes: ["Untouched."] });
     await openSong(page, song);
     await dialog(page).getByRole("button", { name: "Edit" }).click();
     await dialog(page)
@@ -206,12 +208,12 @@ test.describe("adding a note", () => {
     await dialog(page).getByRole("button", { name: "Cancel" }).click();
 
     await expect(noteLines(page)).toHaveCount(1);
-    await expect(noteLines(page).first()).toHaveText("Untouched.");
+    await expect(noteLines(page).first()).toContainText("Untouched.");
   });
 
   test("a note of only spaces is refused", async ({ as }) => {
     const page = await as("manager");
-    const song = await arrangeSong({ bio: "Untouched." });
+    const song = await arrangeSong({ notes: ["Untouched."] });
     await openSong(page, song);
     await dialog(page).getByRole("button", { name: "Edit" }).click();
 
@@ -226,7 +228,7 @@ test.describe("adding a note", () => {
   }) => {
     const page = await as("user");
     const song = await arrangeSong({
-      bio: ["a", "b", "c", "d", "e", "f", "g", "h"].join("\n"),
+      notes: ["a", "b", "c", "d", "e", "f", "g", "h"],
     });
 
     await openSong(page, song);
@@ -255,7 +257,7 @@ test.describe("adding a note", () => {
   }) => {
     const first = await as("manager");
     const second = await as("manager");
-    const song = await arrangeSong({ bio: "Original." });
+    const song = await arrangeSong({ notes: ["Original."] });
     await openSong(first, song);
     await openSong(second, song);
     await first
@@ -289,18 +291,14 @@ test.describe("adding a note", () => {
     await expect(noteLines(first)).toHaveCount(3);
     await expect(noteLines(second)).toHaveCount(3);
     await withDatabase(async (pool) => {
-      const { rows } = await pool.query<{ bio: string }>(
-        "select bio from song_lists.songs where id = $1",
+      const { rows } = await pool.query<{ body: string }>(
+        "select body from song_lists.song_notes where song_id = $1 order by id",
         [song.id],
       );
-      const lines = rows[0]?.bio.split("\n") ?? [];
-      expect(lines[0]).toBe("Original.");
-      expect(lines.some((line) => line.startsWith("From the first."))).toBe(
-        true,
-      );
-      expect(lines.some((line) => line.startsWith("From the second."))).toBe(
-        true,
-      );
+      const bodies = rows.map((row) => row.body);
+      expect(bodies[0]).toBe("Original.");
+      expect(bodies).toContain("From the first.");
+      expect(bodies).toContain("From the second.");
     });
   });
 
@@ -309,7 +307,7 @@ test.describe("adding a note", () => {
   }) => {
     const manager = await as("manager");
     const admin = await as("admin");
-    const song = await arrangeSong({ bio: "Original." });
+    const song = await arrangeSong({ notes: ["Original."] });
     await openSong(manager, song);
     await openSong(admin, song);
     await manager
@@ -343,24 +341,24 @@ test.describe("adding a note", () => {
     // Both saves are in flight after the clicks, so wait for them to land.
     await expect
       .poll(async () => {
-        const bio = await withDatabase(async (pool) => {
-          const { rows } = await pool.query<{ bio: string }>(
-            "select bio from song_lists.songs where id = $1",
+        const bodies = await withDatabase(async (pool) => {
+          const { rows } = await pool.query<{ body: string }>(
+            "select body from song_lists.song_notes where song_id = $1",
             [song.id],
           );
-          return rows[0]?.bio ?? "";
+          return rows.map((row) => row.body);
         });
-        return [bio.includes("From Cliff."), bio.includes("From Al.")];
+        return [bodies.includes("From Cliff."), bodies.includes("From Al.")];
       })
       .toEqual([true, true]);
   });
 
-  test("an admin who rewrote the notes is told, not allowed to overwrite a note added meanwhile", async ({
+  test("an admin removing a note doesn't remove one added meanwhile", async ({
     as,
   }) => {
     const manager = await as("manager");
     const admin = await as("admin");
-    const song = await arrangeSong({ bio: "Original." });
+    const song = await arrangeSong({ notes: ["Original."] });
     await openSong(manager, song);
     await openSong(admin, song);
     await manager
@@ -373,8 +371,8 @@ test.describe("adding a note", () => {
       .click();
     await admin
       .getByRole("dialog")
-      .getByRole("textbox", { name: "Notes", exact: true })
-      .fill("Rewritten.");
+      .getByRole("button", { name: "Remove note: Original." })
+      .click();
     await manager
       .getByRole("dialog")
       .getByRole("textbox", { name: "New note" })
@@ -392,26 +390,54 @@ test.describe("adding a note", () => {
       .getByRole("button", { name: "Save changes" })
       .click();
 
-    await expect(
-      admin.getByRole("dialog").getByText(/changed by someone else/),
-    ).toBeVisible();
-    await withDatabase(async (pool) => {
-      const { rows } = await pool.query<{ bio: string }>(
-        "select bio from song_lists.songs where id = $1",
-        [song.id],
-      );
-      expect(rows[0]?.bio).toContain("From Cliff.");
-      expect(rows[0]?.bio).not.toContain("Rewritten.");
-    });
+    await expect(noteLines(admin)).toHaveCount(1);
+    await expect(noteLines(admin).first()).toContainText("From Cliff.");
   });
 });
 
 test.describe("an admin editing a song", () => {
+  test("removes a note from the full form, and the others stay", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    const song = await arrangeSong({ notes: ["Keep me.", "Drop me."] });
+    await openSong(page, song);
+    await dialog(page).getByRole("button", { name: "Edit" }).click();
+
+    await dialog(page)
+      .getByRole("button", { name: "Remove note: Drop me." })
+      .click();
+    await dialog(page).getByRole("button", { name: "Save changes" }).click();
+
+    await expect(noteLines(page)).toHaveCount(1);
+    await expect(noteLines(page).first()).toContainText("Keep me.");
+  });
+
+  test("writes a bio, which the song then shows apart from its notes", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    const song = await arrangeSong({ notes: ["A note."] });
+    await openSong(page, song);
+    await dialog(page).getByRole("button", { name: "Edit" }).click();
+
+    await dialog(page)
+      .getByRole("textbox", { name: "Bio", exact: true })
+      .fill("Recorded in one take.");
+    await dialog(page).getByRole("button", { name: "Save changes" }).click();
+
+    await expect(
+      dialog(page).getByRole("heading", { name: "Bio", level: 3 }),
+    ).toBeVisible();
+    await expect(dialog(page).getByText("Recorded in one take.")).toBeVisible();
+    await expect(noteLines(page)).toHaveCount(1);
+  });
+
   test("adds a signed note from the full form, and saves other changes with it", async ({
     as,
   }) => {
     const page = await as("admin");
-    const song = await arrangeSong({ bio: "Old notes." });
+    const song = await arrangeSong({ notes: ["Old notes."] });
     await openSong(page, song);
     await dialog(page).getByRole("button", { name: "Edit" }).click();
 

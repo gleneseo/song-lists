@@ -52,8 +52,9 @@ test.describe("adding a song", () => {
     await expect(page.getByText("A new artist will be created.")).toBeVisible();
     await titleField(page).fill(title);
     await page
-      .getByLabel("Bio / notes (optional)")
+      .getByLabel("Note (optional)")
       .fill("Added by the acceptance tests.");
+    await page.getByLabel("Bio (optional)").fill("A song with a story.");
     await submit(page).click();
 
     await expect(
@@ -68,13 +69,22 @@ test.describe("adding a song", () => {
     await expect(page.getByText("Advocates: You")).toBeVisible();
 
     await withDatabase(async (pool) => {
-      const { rows } = await pool.query<{ bio: string; creator: string }>(
-        `select s.bio, u.name creator from song_lists.songs s
-         join song_lists.users u on u.id = s.created_by where s.title = $1`,
+      const { rows } = await pool.query<{
+        bio: string;
+        note: string;
+        author: string;
+      }>(
+        `select s.bio, n.body note, u.name author from song_lists.songs s
+         join song_lists.song_notes n on n.song_id = s.id
+         join song_lists.users u on u.id = n.created_by where s.title = $1`,
         [title],
       );
       expect(rows).toEqual([
-        { bio: "Added by the acceptance tests.", creator: "Al" },
+        {
+          bio: "A song with a story.",
+          note: "Added by the acceptance tests.",
+          author: "Al",
+        },
       ]);
     });
   });
@@ -357,7 +367,7 @@ test.describe("when it can't be added yet", () => {
     await startNewSong(page);
     await choose(artistField(page), "Joey Bada", /Joey Bada\$\$/);
     await titleField(page).fill("Paper Trails");
-    await page.getByLabel("Bio / notes (optional)").fill("Half a thought");
+    await page.getByLabel("Note (optional)").fill("Half a thought");
     await page.evaluate(() => {
       (window as unknown as { stillHere: boolean }).stillHere = true;
     });
@@ -383,7 +393,7 @@ test.describe("when it can't be added yet", () => {
       ),
     ).toBe(true);
     await expect(titleField(page)).toHaveValue("Paper Trails");
-    await expect(page.getByLabel("Bio / notes (optional)")).toHaveValue(
+    await expect(page.getByLabel("Note (optional)")).toHaveValue(
       "Half a thought",
     );
     await expect(artistField(page)).toHaveValue(/Joey Bada/);
@@ -573,7 +583,7 @@ test.describe("starting over", () => {
     await expect(artistField(page)).toBeVisible();
     await choose(artistField(page), "Joey Bada", /Joey Bada\$\$/);
     await titleField(page).fill("Something half typed");
-    await page.getByLabel("Bio / notes (optional)").fill("Half a thought");
+    await page.getByLabel("Note (optional)").fill("Half a thought");
 
     await page.getByRole("button", { name: "Cancel" }).click();
     await expect(page).toHaveURL(/\/dashboard$/);
@@ -582,7 +592,7 @@ test.describe("starting over", () => {
     await expect(artistField(page)).toBeVisible();
     await expect(artistField(page)).toHaveValue("");
     await expect(titleField(page)).toHaveValue("");
-    await expect(page.getByLabel("Bio / notes (optional)")).toHaveValue("");
+    await expect(page.getByLabel("Note (optional)")).toHaveValue("");
   });
 });
 

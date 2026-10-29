@@ -115,6 +115,22 @@ describe("what the app expects of the seeded data", () => {
     ).toEqual([]);
   });
 
+  it("should seed a song's old comments as notes, one per line, leaving no bio behind", async () => {
+    expect(
+      await rows("select title from song_lists.songs where bio is not null"),
+    ).toEqual([]);
+    expect(
+      await rows(
+        `select n.body from song_lists.song_notes n
+         join song_lists.songs s on s.id = n.song_id
+         where s.title = 'Hit The Lights' order by n.id`,
+      ),
+    ).toEqual([
+      { body: "REALLY? THE WHOLE ALBUM? -Al" },
+      { body: "Yes, BECAUSE THAT WHOLE ALBUM SLAPS -Cliff" },
+    ]);
+  });
+
   it("should not seed two artists with the same name", async () => {
     expect(
       await rows(

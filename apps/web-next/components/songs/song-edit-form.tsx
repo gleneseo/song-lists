@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "cn";
 import { useEffect, useState, type SubmitEvent } from "react";
 import {
   loadSongForEdit,
@@ -8,6 +9,7 @@ import {
 } from "@/lib/actions/edit-song";
 import { searchArtistOptions } from "@/lib/actions/search-adapters";
 import type { SongEditData } from "@/lib/queries/song-edit";
+import { formatNoteByline } from "@/lib/songs/format-note";
 import {
   toArtistSelection,
   toCoverSelection,
@@ -69,6 +71,7 @@ function LoadedForm({
 }) {
   const [title, setTitle] = useState(data.title);
   const [bio, setBio] = useState(data.bio);
+  const [removeNoteIds, setRemoveNoteIds] = useState<number[]>([]);
   const [newNote, setNewNote] = useState("");
   const [artist, setArtist] = useState<Selection | null>(existing(data.artist));
   const [featuredArtists, setFeaturedArtists] = useState<Selection[]>(
@@ -124,7 +127,7 @@ function LoadedForm({
         songId: data.songId,
         title,
         bio,
-        originalBio: data.bio,
+        removeNoteIds,
         newNote,
         artist: toArtistSelection(artist),
         featuredArtists: featuredArtists.map(toArtistSelection),
@@ -255,14 +258,45 @@ function LoadedForm({
       </FormSection>
 
       <FormSection title="Notes">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="edit-song-bio">Notes</Label>
-          <Textarea
-            id="edit-song-bio"
-            value={bio}
-            onChange={(event) => setBio(event.target.value)}
-          />
-        </div>
+        {data.notes.length > 0 && (
+          <ul className="flex flex-col gap-2">
+            {data.notes.map((note) => {
+              const removing = removeNoteIds.includes(note.id);
+
+              return (
+                <li
+                  key={note.id}
+                  className="flex items-start justify-between gap-3 text-sm"
+                >
+                  <span
+                    className={cn(
+                      "wrap-anywhere",
+                      removing && "text-muted-foreground line-through",
+                    )}
+                  >
+                    {note.body} —{" "}
+                    {formatNoteByline(note.author, note.writtenAt)}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    aria-label={`${removing ? "Keep" : "Remove"} note: ${note.body}`}
+                    onClick={() =>
+                      setRemoveNoteIds(
+                        removing
+                          ? removeNoteIds.filter((id) => id !== note.id)
+                          : [...removeNoteIds, note.id],
+                      )
+                    }
+                  >
+                    {removing ? "Keep" : "Remove"}
+                  </Button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
         <div className="flex flex-col gap-2">
           <Label htmlFor="edit-song-new-note">Add a note</Label>
           <Textarea
@@ -271,9 +305,19 @@ function LoadedForm({
             onChange={(event) => setNewNote(event.target.value)}
           />
           <p className="text-xs text-muted-foreground">
-            Added to the end of the notes with your name and the date and time
-            (Pacific).
+            Your name and the date and time (Pacific) are added after it.
           </p>
+        </div>
+      </FormSection>
+
+      <FormSection title="Bio">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="edit-song-bio">Bio</Label>
+          <Textarea
+            id="edit-song-bio"
+            value={bio}
+            onChange={(event) => setBio(event.target.value)}
+          />
         </div>
       </FormSection>
 

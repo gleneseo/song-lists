@@ -1,6 +1,7 @@
 import { asc, eq } from "drizzle-orm";
 import { SONG_METADATA_STATUS, schema } from "@song-lists/db";
 import type { CreatableOption } from "@/components/add-song/creatable-autocomplete";
+import type { SongNote } from "@/lib/songs/song-details";
 import type { SongDetailsInput } from "@/lib/songs/song-details-input";
 import { db } from "./client";
 import { getLists, type ListOption } from "./lists";
@@ -12,6 +13,8 @@ interface SongEditData {
   songId: number;
   title: string;
   bio: string;
+  /** The song's notes now, oldest first, each of which an admin can remove. */
+  notes: SongNote[];
   artist: CreatableOption;
   featuredArtists: CreatableOption[];
   /** The productions the song is linked to now, each of which can be kept or dropped. */
@@ -38,6 +41,10 @@ async function getSongEditData(songId: number): Promise<SongEditData | null> {
         featuredArtists: {
           columns: { id: true },
           with: { artist: { columns: { id: true, name: true } } },
+        },
+        notes: {
+          columns: { id: true, body: true, createdAt: true },
+          with: { creator: { columns: { name: true } } },
         },
         productions: {
           columns: { id: true },
@@ -83,6 +90,14 @@ async function getSongEditData(songId: number): Promise<SongEditData | null> {
     songId: row.id,
     title: row.title,
     bio: row.bio ?? "",
+    notes: row.notes
+      .map(({ id, body, createdAt, creator }) => ({
+        id,
+        body,
+        author: creator.name,
+        writtenAt: createdAt,
+      }))
+      .toSorted((a, b) => a.id - b.id),
     artist: { id: row.artist.id, label: row.artist.name },
     featuredArtists: row.featuredArtists.map(({ artist }) => ({
       id: artist.id,

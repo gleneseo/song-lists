@@ -78,6 +78,8 @@ const usersRelations = relations(users, ({ one, many }) => ({
   updatedSongFeaturedArtists: many(songFeaturedArtists, {
     relationName: "songFeaturedArtistUpdater",
   }),
+  createdSongNotes: many(songNotes, { relationName: "songNoteCreator" }),
+  updatedSongNotes: many(songNotes, { relationName: "songNoteUpdater" }),
   createdSongMetadata: many(songMetadata, {
     relationName: "songMetadataCreator",
   }),
@@ -162,6 +164,7 @@ const songs = songListsSchema.table("songs", {
   artistId: integer()
     .notNull()
     .references(() => artists.id),
+  /** An actual bio for the song, if someone has one to write; its notes are in `song_notes`. Neither is searched. */
   bio: text(),
   ...auditColumns(),
 });
@@ -176,6 +179,7 @@ const songsRelations = relations(songs, ({ one, many }) => ({
   featuredArtists: many(songFeaturedArtists),
   productions: many(songProductions),
   advocates: many(songAdvocates),
+  notes: many(songNotes),
   lists: many(listSongs),
   metadata: one(songMetadata),
   creator: one(users, {
@@ -187,6 +191,42 @@ const songsRelations = relations(songs, ({ one, many }) => ({
     fields: [songs.updatedBy],
     references: [users.id],
     relationName: "songUpdater",
+  }),
+}));
+
+/**
+ * One note on a song. `createdBy` is who wrote it and `createdAt` when, so a
+ * note needs no signature in its text. Notes show oldest first (by `id`, which
+ * the migration that moved them out of `songs.bio` kept in their old order).
+ */
+const songNotes = songListsSchema.table(
+  "song_notes",
+  {
+    id: serial().primaryKey(),
+    resource_id: uuidV7().notNull().unique(),
+    songId: integer()
+      .notNull()
+      .references(() => songs.id),
+    body: text().notNull(),
+    ...auditColumns(),
+  },
+  (table) => [index("song_notes_song_id_idx").on(table.songId)],
+);
+
+const songNotesRelations = relations(songNotes, ({ one }) => ({
+  song: one(songs, {
+    fields: [songNotes.songId],
+    references: [songs.id],
+  }),
+  creator: one(users, {
+    fields: [songNotes.createdBy],
+    references: [users.id],
+    relationName: "songNoteCreator",
+  }),
+  updater: one(users, {
+    fields: [songNotes.updatedBy],
+    references: [users.id],
+    relationName: "songNoteUpdater",
   }),
 }));
 
@@ -247,7 +287,7 @@ const tsvector = customType<{ data: string }>({
 
 /**
  * What full-text search matches a song against: its title, artist, featured
- * artists, album, advocates, and bio, weighted by how much each says about
+ * artists, album, and advocates, weighted by how much each says about
  * which song it is. Nothing writes here directly -- triggers rebuild a song's
  * row whenever anything it's built from changes (see the
  * `add_full_text_search` migration) -- so it exists in the schema only for
@@ -648,6 +688,8 @@ export {
   artistsRelations,
   songs,
   songsRelations,
+  songNotes,
+  songNotesRelations,
   songMetadata,
   songMetadataRelations,
   songSearch,

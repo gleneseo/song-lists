@@ -15,12 +15,6 @@ vi.mock("@/lib/auth/auth", async (importOriginal) => ({
     session.userId ? { user: { id: session.userId } } : null,
 }));
 
-/** A note as it's signed: the text, the author, and a Pacific date and time. */
-const signed = (text: string, author: string) =>
-  new RegExp(
-    `^${text.replaceAll(".", "\\.")} — ${author} · [A-Z][a-z]{2} \\d{1,2}, \\d{4}, \\d{1,2}:\\d{2} (AM|PM) (PDT|PST)$`,
-  );
-
 describe("adding a note to a song, from the action down to the database", () => {
   let pool: Pool;
   let notes: typeof import("@/lib/actions/add-song-note");
@@ -42,7 +36,7 @@ describe("adding a note to a song, from the action down to the database", () => 
     await pool.end();
   });
 
-  const newSong = async (title: string, bio: string | null) =>
+  const newSong = async (title: string, bio: string | null = null) =>
     (
       await pool.query<{ id: number }>(
         "insert into song_lists.songs (title, artist_id, bio, created_by, updated_by) values ($1, $2, $3, $4, $4) returning id",
@@ -50,62 +44,66 @@ describe("adding a note to a song, from the action down to the database", () => 
       )
     ).rows[0]?.id as number;
 
-  const bioOf = async (id: number) =>
+  const notesOf = async (id: number) =>
     (
-      await pool.query<{ bio: string | null; updated_by: string }>(
-        "select bio, updated_by from song_lists.songs where id = $1",
+      await pool.query<{ body: string; created_by: string }>(
+        "select body, created_by from song_lists.song_notes where song_id = $1 order by id",
         [id],
       )
-    ).rows[0];
+    ).rows;
 
-  it("should let a manager add a note, signed with their name, below the existing ones", async () => {
+  const bioOf = async (id: number) =>
+    (
+      await pool.query<{ bio: string | null }>(
+        "select bio from song_lists.songs where id = $1",
+        [id],
+      )
+    ).rows[0]?.bio;
+
+  it("should let a manager add a note, in their name, after the existing ones", async () => {
     session.userId = cliff;
-    const song = await newSong("Zz Noted Song", "First note -Al");
+    const song = await newSong("Zz Noted Song");
+    await notes.addSongNote({ songId: song, text: "First note" });
 
     expect(
       await notes.addSongNote({ songId: song, text: "Great live." }),
-    ).toEqual({
-      status: "added",
-    });
-
-    const row = await bioOf(song);
-    const lines = row?.bio?.split("\n") ?? [];
-
-    expect(lines).toHaveLength(2);
-    expect(lines[0]).toBe("First note -Al");
-    expect(lines[1]).toMatch(signed("Great live.", "Cliff"));
-    expect(row?.updated_by).toBe(cliff);
+    ).toEqual({ status: "added" });
+    expect(await notesOf(song)).toEqual([
+      { body: "First note", created_by: cliff },
+      { body: "Great live.", created_by: cliff },
+    ]);
   });
 
-  it("should start the notes with it when the song has none", async () => {
+  it("should tidy the note's text", async () => {
     session.userId = cliff;
-    const song = await newSong("Zz Empty Song", null);
+    const song = await newSong("Zz Tidy Note Song");
 
-    await notes.addSongNote({ songId: song, text: "Hello." });
+    await notes.addSongNote({ songId: song, text: "  Hello   there.  " });
 
-    expect((await bioOf(song))?.bio).toMatch(signed("Hello.", "Cliff"));
-    expect((await bioOf(song))?.bio).not.toContain("\n");
+    expect((await notesOf(song)).map((note) => note.body)).toEqual([
+      "Hello there.",
+    ]);
   });
 
-  it("should treat a song whose notes are an empty string as having none", async () => {
+  it("should leave the song's bio alone", async () => {
     session.userId = cliff;
-    const song = await newSong("Zz Blank Notes Song", "");
+    const song = await newSong("Zz Bio Kept Song", "A real bio.");
 
-    await notes.addSongNote({ songId: song, text: "Hello again." });
+    await notes.addSongNote({ songId: song, text: "A note." });
 
-    expect((await bioOf(song))?.bio).toMatch(signed("Hello again.", "Cliff"));
+    expect(await bioOf(song)).toBe("A real bio.");
   });
 
   it("should let an admin add one too", async () => {
     session.userId = al;
-    const song = await newSong("Zz Admin Noted Song", null);
+    const song = await newSong("Zz Admin Noted Song");
 
     expect(
       await notes.addSongNote({ songId: song, text: "From the top." }),
-    ).toEqual({
-      status: "added",
-    });
-    expect((await bioOf(song))?.bio).toMatch(signed("From the top.", "Al"));
+    ).toEqual({ status: "added" });
+    expect(await notesOf(song)).toEqual([
+      { body: "From the top.", created_by: al },
+    ]);
   });
 
   it.each([
@@ -113,18 +111,18 @@ describe("adding a note to a song, from the action down to the database", () => 
     ["someone signed out", () => null],
   ])("should refuse %s, and change nothing", async (_who, who) => {
     session.userId = who();
-    const song = await newSong("Zz Closed Song", "Original");
+    const song = await newSong("Zz Closed Song");
 
     expect(await notes.addSongNote({ songId: song, text: "Sneaky." })).toEqual({
       status: "error",
       message: "Only admins and managers can add notes.",
     });
-    expect((await bioOf(song))?.bio).toBe("Original");
+    expect(await notesOf(song)).toEqual([]);
   });
 
   it("should read the role from the database, so a demoted manager is refused at once", async () => {
     session.userId = cliff;
-    const song = await newSong("Zz Demoted Song", null);
+    const song = await newSong("Zz Demoted Song");
 
     await pool.query(
       "update song_lists.users set role = 'user' where id = $1",
@@ -134,26 +132,26 @@ describe("adding a note to a song, from the action down to the database", () => 
     try {
       expect(
         await notes.addSongNote({ songId: song, text: "Too late." }),
-      ).toMatchObject({
-        status: "error",
-      });
+      ).toMatchObject({ status: "error" });
     } finally {
       await pool.query(
         "update song_lists.users set role = 'manager' where id = $1",
         [cliff],
       );
     }
+
+    expect(await notesOf(song)).toEqual([]);
   });
 
   it("should refuse a blank note and a song that doesn't exist", async () => {
     session.userId = cliff;
-    const song = await newSong("Zz Blank Note Song", "Original");
+    const song = await newSong("Zz Blank Note Song");
 
     expect(await notes.addSongNote({ songId: song, text: "  \n " })).toEqual({
       status: "error",
       message: "Write a note first.",
     });
-    expect((await bioOf(song))?.bio).toBe("Original");
+    expect(await notesOf(song)).toEqual([]);
     expect(
       await notes.addSongNote({ songId: 999_999, text: "Nobody home." }),
     ).toEqual({
@@ -164,7 +162,7 @@ describe("adding a note to a song, from the action down to the database", () => 
 
   it("should keep every note when several people add one at the same moment", async () => {
     session.userId = cliff;
-    const song = await newSong("Zz Busy Song", "Original");
+    const song = await newSong("Zz Busy Song");
 
     const results = await Promise.all(
       Array.from({ length: 8 }, (_, index) =>
@@ -172,28 +170,23 @@ describe("adding a note to a song, from the action down to the database", () => 
       ),
     );
 
-    const lines = (await bioOf(song))?.bio?.split("\n") ?? [];
-
     expect(results.every((result) => result.status === "added")).toBe(true);
-    expect(lines).toHaveLength(9);
-    expect(lines[0]).toBe("Original");
-    for (let index = 0; index < 8; index++) {
-      expect(
-        lines.some((line) => line.startsWith(`Note number ${index}.`)),
-      ).toBe(true);
-    }
+    expect((await notesOf(song)).map((note) => note.body).toSorted()).toEqual(
+      Array.from({ length: 8 }, (_, index) => `Note number ${index}.`),
+    );
   });
 
   it("should work on the real catalog's songs too, keeping what was there", async () => {
     session.userId = cliff;
     const song = await songId(pool, "Me And The Devil Blues", "Cowboy Junkies");
-    const before = (await bioOf(song))?.bio ?? "";
+    const before = await notesOf(song);
 
     await notes.addSongNote({ songId: song, text: "Still great." });
 
-    const after = (await bioOf(song))?.bio ?? "";
+    const after = await notesOf(song);
 
-    expect(after.startsWith(`${before}\n`)).toBe(true);
-    expect(after.split("\n")).toHaveLength(before.split("\n").length + 1);
+    expect(after.slice(0, before.length)).toEqual(before);
+    expect(after.at(-1)?.body).toBe("Still great.");
+    expect(after).toHaveLength(before.length + 1);
   });
 });

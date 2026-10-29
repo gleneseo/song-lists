@@ -1,6 +1,6 @@
 "use server";
 
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { schema } from "@song-lists/db";
 import { getAdminUserId } from "@/lib/auth/admin";
 import { db } from "@/lib/queries/client";
@@ -14,9 +14,7 @@ import {
   saveSongDetails,
 } from "@/lib/queries/song-metadata";
 import { findExistingSong, type ExistingSongMatch } from "@/lib/queries/songs";
-import { getUserAccess } from "@/lib/queries/users";
 import { diffIds } from "@/lib/songs/diff-ids";
-import { formatNote } from "@/lib/songs/format-note";
 import {
   cleanSongDetails,
   type SongDetailsInput,
@@ -34,10 +32,11 @@ import { normalizeText } from "@/lib/text/normalize";
 interface UpdateSongInput {
   songId: number;
   title: string;
+  /** An actual bio for the song; blank for none. */
   bio: string;
-  /** The notes as the form loaded them, to tell whether they were edited and whether someone else changed them meanwhile. */
-  originalBio: string;
-  /** A new note to sign and add to the end of the bio; blank for none. */
+  /** Notes to remove. Any other note, including one added while the form was open, is left alone. */
+  removeNoteIds: number[];
+  /** A new note to add, in the editing admin's name; blank for none. */
   newNote: string;
   artist: ArtistSelection;
   featuredArtists: ArtistSelection[];
@@ -113,8 +112,7 @@ async function updateSong(input: UpdateSongInput): Promise<UpdateSongResult> {
     return { status: "error", message: details.message };
   }
 
-  const author = (await getUserAccess(userId))?.name ?? "An admin";
-  const note = formatNote(input.newNote, author, new Date());
+  const newNote = normalizeText(input.newNote);
 
   if (input.artist.kind === "existing") {
     const duplicate = await findExistingSong(input.artist.id, title);
@@ -134,7 +132,7 @@ async function updateSong(input: UpdateSongInput): Promise<UpdateSongResult> {
   try {
     await db.transaction(async (tx) => {
       const [song] = await tx
-        .select({ bio: schema.songs.bio })
+        .select({ id: schema.songs.id })
         .from(schema.songs)
         .where(eq(schema.songs.id, input.songId))
         .for("update");
@@ -142,8 +140,6 @@ async function updateSong(input: UpdateSongInput): Promise<UpdateSongResult> {
       if (!song) {
         throw new Error("That song couldn't be found.");
       }
-
-      const bio = mergedBio(input, song.bio ?? "", note);
 
       const newArtistsByName = new Map<string, number>();
       const artistId = await resolveArtist(
@@ -188,11 +184,31 @@ async function updateSong(input: UpdateSongInput): Promise<UpdateSongResult> {
         .set({
           title,
           artistId,
-          bio,
+          bio: input.bio.trim() || null,
           updatedBy: userId,
           updatedAt: new Date(),
         })
         .where(eq(schema.songs.id, input.songId));
+
+      if (input.removeNoteIds.length > 0) {
+        await tx
+          .delete(schema.songNotes)
+          .where(
+            and(
+              eq(schema.songNotes.songId, input.songId),
+              inArray(schema.songNotes.id, input.removeNoteIds),
+            ),
+          );
+      }
+
+      if (newNote) {
+        await tx.insert(schema.songNotes).values({
+          songId: input.songId,
+          body: newNote,
+          createdBy: userId,
+          updatedBy: userId,
+        });
+      }
 
       if (input.removeDetails) {
         await removeSongDetails(tx, input.songId, userId);
@@ -305,31 +321,6 @@ async function updateSong(input: UpdateSongInput): Promise<UpdateSongResult> {
         error instanceof Error ? error.message : "Failed to save the song.",
     };
   }
-}
-
-/**
- * The notes to save. If the form left the notes alone, the notes as they are
- * now are kept, so a note someone else added while the form was open isn't
- * lost. If the form changed them, they replace the notes -- unless someone
- * else changed them too, which can't be reconciled. Any new note goes on the
- * end. Only trimmed, not normalized, so the line breaks between notes survive.
- */
-function mergedBio(
-  input: Pick<UpdateSongInput, "bio" | "originalBio">,
-  current: string,
-  note: string | null,
-): string | null {
-  const editedHere = input.bio !== input.originalBio;
-
-  if (editedHere && current !== input.originalBio) {
-    throw new Error(
-      "The notes were changed by someone else while you were editing. Close this form and open it again to see their changes.",
-    );
-  }
-
-  const base = editedHere ? input.bio : current;
-
-  return [base.trim(), note].filter(Boolean).join("\n") || null;
 }
 
 /**

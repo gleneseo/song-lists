@@ -28,6 +28,10 @@ async function getSongDetails(songId: number): Promise<SongDetails | null> {
         columns: { id: true },
         with: { artist: { columns: { id: true, name: true } } },
       },
+      notes: {
+        columns: { id: true, body: true, createdAt: true },
+        with: { creator: { columns: { name: true } } },
+      },
       coverOf: { columns: { id: true }, with: { original: relatedSongWith } },
       coveredBy: { columns: { id: true }, with: { song: relatedSongWith } },
       productions: {

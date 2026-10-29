@@ -1210,6 +1210,123 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "song_lists.song_notes": {
+      "name": "song_notes",
+      "schema": "song_lists",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "resource_id": {
+          "name": "resource_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "song_id": {
+          "name": "song_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "song_notes_song_id_idx": {
+          "name": "song_notes_song_id_idx",
+          "columns": [
+            {
+              "expression": "song_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "song_notes_song_id_songs_id_fk": {
+          "name": "song_notes_song_id_songs_id_fk",
+          "tableFrom": "song_notes",
+          "tableTo": "songs",
+          "schemaTo": "song_lists",
+          "columnsFrom": ["song_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "song_notes_created_by_users_id_fk": {
+          "name": "song_notes_created_by_users_id_fk",
+          "tableFrom": "song_notes",
+          "tableTo": "users",
+          "schemaTo": "song_lists",
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "song_notes_updated_by_users_id_fk": {
+          "name": "song_notes_updated_by_users_id_fk",
+          "tableFrom": "song_notes",
+          "tableTo": "users",
+          "schemaTo": "song_lists",
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "song_notes_resource_id_unique": {
+          "name": "song_notes_resource_id_unique",
+          "nullsNotDistinct": false,
+          "columns": ["resource_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "song_lists.song_productions": {
       "name": "song_productions",
       "schema": "song_lists",

@@ -3,7 +3,7 @@
 -- type" against artists, productions, and songs (used by the Add Song page)
 -- rather than a client-side fuzzy-match library. Full-text search gives "all
 -- of these words, in any order, across fields" over a song's title, artist,
--- featured artists, album, advocates, and bio, kept in song_lists.song_search
+-- featured artists, album, and advocates, kept in song_lists.song_search
 -- (one document per song) and rebuilt by triggers whenever anything it's built
 -- from changes -- including by the seed migrations that follow.
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
@@ -45,7 +45,7 @@ $$;
 --> statement-breakpoint
 
 -- Rebuilds one song's document. Weights, highest first: title (A); artist and
--- featured artists (B); album and advocates (C); bio (D). Productions are
+-- featured artists (B); album and advocates (C). Productions are
 -- left out on purpose -- only some lists show them, so they're matched apart.
 CREATE FUNCTION song_lists.refresh_song_search(p_song_id integer) RETURNS void
 LANGUAGE sql AS $$
@@ -66,8 +66,7 @@ LANGUAGE sql AS $$
       FROM song_lists.song_advocates sa
       JOIN song_lists.users u ON u.id = sa.user_id
       WHERE sa.song_id = s.id
-    ), '')), 'C') ||
-    setweight(to_tsvector('song_lists.song_search', song_lists.read_symbols(coalesce(s.bio, ''))), 'D')
+    ), '')), 'C')
   FROM song_lists.songs s
   JOIN song_lists.artists a ON a.id = s.artist_id
   LEFT JOIN song_lists.song_metadata m ON m.song_id = s.id
@@ -124,7 +123,7 @@ $$;
 --> statement-breakpoint
 
 CREATE TRIGGER song_search_songs
-  AFTER INSERT OR UPDATE OF title, bio, artist_id ON song_lists.songs
+  AFTER INSERT OR UPDATE OF title, artist_id ON song_lists.songs
   FOR EACH ROW EXECUTE FUNCTION song_lists.song_search_touch();
 --> statement-breakpoint
 CREATE TRIGGER song_search_artists

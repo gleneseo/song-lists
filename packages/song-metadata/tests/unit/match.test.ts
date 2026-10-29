@@ -1047,6 +1047,41 @@ describe("chooseMatch", () => {
     expect(chooseMatch(wanted, [unstated, unknown])).toBe(unstated);
   });
 
+  it("should take the album itself over a deluxe edition of it, though the edition is dated earlier", () => {
+    const song = { title: "I Wanna Be Sedated", artistName: "Ramones" };
+    const deluxe = {
+      ...song,
+      albumName: "Road to Ruin (Deluxe Edition)",
+      releaseYear: 1978,
+      releaseDate: "1978-01-01",
+    };
+    const anniversary = {
+      ...song,
+      albumName: "Road to Ruin (40th Anniversary Deluxe Edition)",
+      releaseYear: 1978,
+      releaseDate: "1978-09-21",
+    };
+    const album = {
+      ...song,
+      albumName: "Road to Ruin",
+      releaseYear: 1978,
+      releaseDate: "1978-09-21",
+    };
+
+    expect(chooseMatch(song, [deluxe, anniversary, album])).toBe(album);
+  });
+
+  it("should still take an edition when the plain album is a later year", () => {
+    const edition = {
+      ...exact,
+      albumName: "Rocks (Remastered)",
+      releaseYear: 1981,
+    };
+    const album = { ...exact, albumName: "Rocks", releaseYear: 1990 };
+
+    expect(chooseMatch(wanted, [album, edition])).toBe(edition);
+  });
+
   it("should prefer the closer match, then the service's own order", () => {
     const typo = { title: "Hold On Loosley", artistName: ".38 Special" };
     const twin = { ...exact };

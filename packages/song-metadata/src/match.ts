@@ -1,3 +1,5 @@
+import { hasEditionNote } from "./album-name.js";
+
 /** A song as it was asked for: the title and artist we hold for it. */
 interface WantedSong {
   title: string;
@@ -625,8 +627,9 @@ function leastPenalized<T>(entries: T[], penalty: (entry: T) => number): T[] {
  * (within {@link CLOSE_ENOUGH} of the best) are kept; of those, a song on an
  * album of its own comes before one on a compilation or single (which is
  * still better than nothing); and of those, the earliest release wins (of
- * one year, an album, then an EP, then a soundtrack), then the service's own
- * ordering.
+ * one year, an album, then an EP, then a soundtrack; then the album itself
+ * before an edition of it, whatever date the service gives the edition), then
+ * the earliest date, then the service's own ordering.
  */
 function chooseMatch<T extends Candidate>(
   wanted: WantedSong,
@@ -724,6 +727,8 @@ function chooseMatch<T extends Candidate>(
         releaseKind(a.candidate) - releaseKind(b.candidate) ||
         Number(!isTitleTrack(wanted, a.candidate)) -
           Number(!isTitleTrack(wanted, b.candidate)) ||
+        Number(hasEditionNote(a.candidate.albumName ?? "")) -
+          Number(hasEditionNote(b.candidate.albumName ?? "")) ||
         sortableDate(a.candidate).localeCompare(sortableDate(b.candidate)) ||
         a.position - b.position,
     )[0]?.candidate ?? null

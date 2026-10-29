@@ -61,6 +61,22 @@ function cleanAlbumName(name: string): string {
   return cleaned + mark;
 }
 
+/**
+ * Whether the album's name says it is an edition of an album ("Road to Ruin
+ * (Deluxe Edition)") rather than the album as it first came out.
+ */
+function hasEditionNote(name: string): boolean {
+  const mark = RELEASE_MARK.exec(name)?.[1] ?? "";
+  const unmarked = mark === "" ? name : name.slice(0, -mark.length);
+  const note = TRAILING_NOTE.exec(unmarked);
+
+  return (
+    note !== null &&
+    unmarked.slice(0, note.index).trim() !== "" &&
+    EDITION_WORDS.test(String(note[1] ?? note[2]))
+  );
+}
+
 /** A word, with an apostrophe-joined tail ("Don't") kept as part of it. */
 const WORD = /[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu;
 
@@ -119,4 +135,4 @@ function tidyAlbumName(name: string): string {
   );
 }
 
-export { cleanAlbumName, tidyAlbumName };
+export { cleanAlbumName, hasEditionNote, tidyAlbumName };

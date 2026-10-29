@@ -1,14 +1,8 @@
 import { formatDateTime } from "@/lib/text/format-date";
-import { normalizeText } from "@/lib/text/normalize";
 
-/**
- * A new note for a song's bio, signed with who wrote it and when -- "Great
- * live. — Cliff · Aug 6, 2026, 8:42 AM PDT" -- or `null` when the text is blank.
- */
-function formatNote(text: string, author: string, now: Date): string | null {
-  const body = normalizeText(text);
-
-  return body ? `${body} — ${author} · ${formatDateTime(now)}` : null;
+/** Who wrote a note and when, as it's shown after the note: "Cliff · Aug 6, 2026, 8:42 AM PDT". */
+function formatNoteByline(author: string, createdAt: Date): string {
+  return `${author} · ${formatDateTime(createdAt)}`;
 }
 
-export { formatNote };
+export { formatNoteByline };

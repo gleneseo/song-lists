@@ -107,8 +107,14 @@ function SongDetailsView({
       </a>
 
       {details.bio && (
+        <Section title="Bio">
+          <p className="whitespace-pre-line wrap-anywhere">{details.bio}</p>
+        </Section>
+      )}
+
+      {details.notes.length > 0 && (
         <Section title="Notes">
-          <NoteLines notes={details.bio} />
+          <NoteLines notes={details.notes} />
         </Section>
       )}
 

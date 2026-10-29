@@ -20,6 +20,12 @@ interface SongDetailsRow {
   createdAt: Date;
   artist: NamedArtist;
   featuredArtists: { artist: NamedArtist }[];
+  notes: {
+    id: number;
+    body: string;
+    createdAt: Date;
+    creator: { name: string };
+  }[];
   coverOf: { original: RelatedSongRow }[];
   coveredBy: { song: RelatedSongRow }[];
   productions: {
@@ -62,10 +68,21 @@ interface RelatedSong {
   artistName: string;
 }
 
+/** One note on a song, with who wrote it and when. */
+interface SongNote {
+  id: number;
+  body: string;
+  author: string;
+  writtenAt: Date;
+}
+
 interface SongDetails {
   id: number;
   title: string;
+  /** An actual bio for the song, if someone wrote one; not its notes. */
   bio: string | null;
+  /** The song's notes, oldest first. */
+  notes: SongNote[];
   addedAt: Date;
   artistId: number;
   artistName: string;
@@ -104,6 +121,14 @@ function toSongDetails(row: SongDetailsRow): SongDetails {
     addedAt: row.createdAt,
     artistId: row.artist.id,
     artistName: row.artist.name,
+    notes: row.notes
+      .map(({ id, body, createdAt, creator }) => ({
+        id,
+        body,
+        author: creator.name,
+        writtenAt: createdAt,
+      }))
+      .toSorted((a, b) => a.id - b.id),
     featuredArtists: row.featuredArtists.map(({ artist }) => ({
       id: artist.id,
       name: artist.name,
@@ -155,4 +180,10 @@ function toSongDetails(row: SongDetailsRow): SongDetails {
 }
 
 export { toSongDetails };
-export type { RelatedSong, SongDetails, SongDetailsRow, SongMetadataDetails };
+export type {
+  RelatedSong,
+  SongDetails,
+  SongDetailsRow,
+  SongMetadataDetails,
+  SongNote,
+};

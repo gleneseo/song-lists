@@ -72,6 +72,22 @@ describe("an admin editing the catalog, from the action down to the database", (
       )
     ).id;
 
+  const insertNote = async (song: number, body: string) =>
+    (
+      await one<{ id: number }>(
+        "insert into song_lists.song_notes (song_id, body, created_by, updated_by) values ($1, $2, $3, $3) returning id",
+        [song, body, al],
+      )
+    ).id;
+
+  const notesOf = async (song: number) =>
+    (
+      await all(
+        "select body from song_lists.song_notes where song_id = $1 order by id",
+        [song],
+      )
+    ).map((row) => row.body);
+
   const insertProduction = async (name: string, year: number, type: number) =>
     (
       await one<{ id: number }>(
@@ -107,7 +123,7 @@ describe("an admin editing the catalog, from the action down to the database", (
         songId: song,
         title: "Zz Hijacked",
         bio: "",
-        originalBio: "",
+        removeNoteIds: [],
         newNote: "",
         artist: { kind: "existing", id: artist },
         featuredArtists: [],
@@ -187,13 +203,21 @@ describe("an admin editing the catalog, from the action down to the database", (
     it("should hand an admin the song's current values", async () => {
       session.userId = al;
       const artist = await insertArtist("Zz Load Artist");
-      const song = await insertSong("Zz Load Song", artist, "Some notes");
+      const song = await insertSong("Zz Load Song", artist, "A bio");
+      await insertNote(song, "Some notes");
 
       const loaded = await editSong.loadSongForEdit(song);
 
       expect(loaded).toMatchObject({
         status: "ok",
-        data: { songId: song, title: "Zz Load Song", bio: "Some notes" },
+        data: {
+          songId: song,
+          title: "Zz Load Song",
+          bio: "A bio",
+          notes: [
+            expect.objectContaining({ body: "Some notes", author: "Al" }),
+          ],
+        },
       });
     });
 
@@ -212,7 +236,7 @@ describe("an admin editing the catalog, from the action down to the database", (
       songId: song,
       title: "Zz Edited Song",
       bio: "",
-      originalBio: "",
+      removeNoteIds: [],
       newNote: "",
       artist: { kind: "existing", id: artist },
       featuredArtists: [],
@@ -229,7 +253,8 @@ describe("an admin editing the catalog, from the action down to the database", (
       const artist = await insertArtist("Zz Edit Artist");
       const featuredOld = await insertArtist("Zz Featured Old");
       const featuredNew = await insertArtist("Zz Featured New");
-      const song = await insertSong("Zz Edit Me", artist, "Old notes");
+      const song = await insertSong("Zz Edit Me", artist);
+      await insertNote(song, "Old notes");
       const original = await insertSong(
         "Zz Original",
         await insertArtist("Zz Orig Artist"),
@@ -269,8 +294,8 @@ describe("an admin editing the catalog, from the action down to the database", (
       const result = await editSong.updateSong({
         ...blank(song, artist),
         title: "  Zz   Renamed   Song ",
-        bio: "Old notes",
-        originalBio: "Old notes",
+        bio: "A bio",
+        removeNoteIds: [],
         newNote: "Great live.",
         artist: { kind: "new", name: "Zz Brand New Artist" },
         featuredArtists: [{ kind: "existing", id: featuredNew }],
@@ -296,10 +321,8 @@ describe("an admin editing the catalog, from the action down to the database", (
       expect(row.title).toBe("Zz Renamed Song");
       expect(row.artist).toBe("Zz Brand New Artist");
       expect(row.updated_by).toBe(al);
-      expect(row.bio.split("\n")).toEqual([
-        "Old notes",
-        expect.stringMatching(/^Great live\. — Al · .+ (PDT|PST)$/),
-      ]);
+      expect(row.bio).toBe("A bio");
+      expect(await notesOf(song)).toEqual(["Old notes", "Great live."]);
 
       expect(
         (
@@ -400,17 +423,20 @@ describe("an admin editing the catalog, from the action down to the database", (
     it("should undo the whole edit if it fails part way", async () => {
       session.userId = al;
       const artist = await insertArtist("Zz Atomic Artist");
-      const song = await insertSong(
-        "Zz Atomic Song",
-        artist,
-        "Untouched notes",
-      );
+      const song = await insertSong("Zz Atomic Song", artist, "Untouched bio");
+      await insertNote(song, "Untouched note");
 
       const result = await editSong.updateSong({
         ...blank(song, artist),
         title: "Zz Atomic Renamed",
-        bio: "Changed notes",
-        originalBio: "Untouched notes",
+        bio: "Changed bio",
+        removeNoteIds: [
+          await one<{ id: number }>(
+            "select id from song_lists.song_notes where song_id = $1",
+            [song],
+          ).then((r) => r.id),
+        ],
+        newNote: "A new note",
         artist: { kind: "new", name: "Zz Atomic New Artist" },
         addCover: { kind: "existing", songId: song },
       });
@@ -423,7 +449,8 @@ describe("an admin editing the catalog, from the action down to the database", (
         await one("select title, bio from song_lists.songs where id = $1", [
           song,
         ]),
-      ).toEqual({ title: "Zz Atomic Song", bio: "Untouched notes" });
+      ).toEqual({ title: "Zz Atomic Song", bio: "Untouched bio" });
+      expect(await notesOf(song)).toEqual(["Untouched note"]);
       expect(
         await one(
           "select count(*)::int n from song_lists.artists where name = 'Zz Atomic New Artist'",
@@ -457,69 +484,86 @@ describe("an admin editing the catalog, from the action down to the database", (
     });
   });
 
-  describe("a song's notes, when edited at the same time as another change", () => {
-    it("should keep a note added while the form was open, if the form left the notes alone", async () => {
+  describe("a song's notes, when edited", () => {
+    const edit = (song: number, artist: number): UpdateSongInput => ({
+      songId: song,
+      title: "Zz Notes Song",
+      bio: "",
+      removeNoteIds: [],
+      newNote: "",
+      artist: { kind: "existing", id: artist },
+      featuredArtists: [],
+      keepProductionIds: [],
+      addProduction: null,
+      keepCoverSongIds: [],
+      addCover: null,
+      listIds: [],
+      advocateUserIds: [],
+    });
+
+    it("should remove only the notes asked for, and keep one added while the form was open", async () => {
       session.userId = al;
       const artist = await insertArtist("Zz Merge Artist");
-      const song = await insertSong("Zz Merge Song", artist, "A.\nB.");
+      const song = await insertSong("Zz Merge Song", artist);
+      const first = await insertNote(song, "A.");
+      await insertNote(song, "B.");
 
       const result = await editSong.updateSong({
-        songId: song,
+        ...edit(song, artist),
         title: "Zz Merge Song",
-        bio: "A.",
-        originalBio: "A.",
+        removeNoteIds: [first],
         newNote: "From Al.",
-        artist: { kind: "existing", id: artist },
-        featuredArtists: [],
-        keepProductionIds: [],
-        addProduction: null,
-        keepCoverSongIds: [],
-        addCover: null,
-        listIds: [],
-        advocateUserIds: [],
       });
 
       expect(result).toEqual({ status: "updated" });
-      expect(
-        (
-          await one<{ bio: string }>(
-            "select bio from song_lists.songs where id = $1",
-            [song],
-          )
-        ).bio.split("\n"),
-      ).toEqual(["A.", "B.", expect.stringMatching(/^From Al\. — Al/)]);
+      expect(await notesOf(song)).toEqual(["B.", "From Al."]);
     });
 
-    it("should refuse to replace notes that someone else changed too", async () => {
+    it("should not remove another song's note", async () => {
       session.userId = al;
-      const artist = await insertArtist("Zz Conflict Artist");
-      const song = await insertSong("Zz Conflict Song", artist, "A.\nB.");
+      const artist = await insertArtist("Zz Other Notes Artist");
+      const song = await insertSong("Zz Notes Mine", artist);
+      const other = await insertSong("Zz Notes Theirs", artist);
+      const theirs = await insertNote(other, "Not yours.");
 
-      const result = await editSong.updateSong({
-        songId: song,
-        title: "Zz Conflict Renamed",
-        bio: "Rewritten.",
-        originalBio: "A.",
-        newNote: "",
-        artist: { kind: "existing", id: artist },
-        featuredArtists: [],
-        keepProductionIds: [],
-        addProduction: null,
-        keepCoverSongIds: [],
-        addCover: null,
-        listIds: [],
-        advocateUserIds: [],
+      await editSong.updateSong({
+        ...edit(song, artist),
+        title: "Zz Notes Mine",
+        removeNoteIds: [theirs],
       });
 
-      expect(result).toMatchObject({
-        status: "error",
-        message: expect.stringContaining("changed by someone else"),
+      expect(await notesOf(other)).toEqual(["Not yours."]);
+    });
+
+    it("should leave the notes alone when the form asks for nothing", async () => {
+      session.userId = al;
+      const artist = await insertArtist("Zz Still Notes Artist");
+      const song = await insertSong("Zz Still Notes Song", artist);
+      await insertNote(song, "Stays.");
+
+      await editSong.updateSong({
+        ...edit(song, artist),
+        title: "Zz Still Notes Song",
+        newNote: "  ",
       });
+
+      expect(await notesOf(song)).toEqual(["Stays."]);
+    });
+
+    it("should empty the bio when the form blanks it", async () => {
+      session.userId = al;
+      const artist = await insertArtist("Zz Bio Artist");
+      const song = await insertSong("Zz Bio Song", artist, "A bio.");
+
+      await editSong.updateSong({
+        ...edit(song, artist),
+        title: "Zz Bio Song",
+        bio: "  ",
+      });
+
       expect(
-        await one("select title, bio from song_lists.songs where id = $1", [
-          song,
-        ]),
-      ).toEqual({ title: "Zz Conflict Song", bio: "A.\nB." });
+        await one("select bio from song_lists.songs where id = $1", [song]),
+      ).toEqual({ bio: null });
     });
   });
 
@@ -528,7 +572,7 @@ describe("an admin editing the catalog, from the action down to the database", (
       songId: song,
       title: "Zz Linked Song",
       bio: "",
-      originalBio: "",
+      removeNoteIds: [],
       newNote: "",
       artist: { kind: "existing", id: artist },
       featuredArtists: [],

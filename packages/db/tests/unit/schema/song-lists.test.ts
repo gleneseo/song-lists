@@ -19,6 +19,7 @@ import {
   songCovers,
   songFeaturedArtists,
   songMetadata,
+  songNotes,
   songProductions,
   songs,
   songSearch,
@@ -119,6 +120,17 @@ describe("users", () => {
     expect(resolveRelation("users", "updatedSongMetadata")).toEqual({
       fields: [users.id],
       references: [songMetadata.updatedBy],
+    });
+  });
+
+  it("should distinguish the notes it wrote from the notes it last updated", () => {
+    expect(resolveRelation("users", "createdSongNotes")).toEqual({
+      fields: [users.id],
+      references: [songNotes.createdBy],
+    });
+    expect(resolveRelation("users", "updatedSongNotes")).toEqual({
+      fields: [users.id],
+      references: [songNotes.updatedBy],
     });
   });
 
@@ -260,6 +272,13 @@ describe("songs", () => {
     expect(resolveRelation("songs", "lists")).toEqual({
       fields: [songs.id],
       references: [listSongs.songId],
+    });
+  });
+
+  it("should list its notes", () => {
+    expect(resolveRelation("songs", "notes")).toEqual({
+      fields: [songs.id],
+      references: [songNotes.songId],
     });
   });
 
@@ -424,6 +443,26 @@ describe("songMetadata", () => {
   });
 });
 
+describe("songNotes", () => {
+  it("should resolve back to the song it is about", () => {
+    expect(resolveRelation("songNotes", "song")).toEqual({
+      fields: [songNotes.songId],
+      references: [songs.id],
+    });
+  });
+
+  it("should distinguish who wrote it from who last updated it", () => {
+    expect(resolveRelation("songNotes", "creator")).toEqual({
+      fields: [songNotes.createdBy],
+      references: [users.id],
+    });
+    expect(resolveRelation("songNotes", "updater")).toEqual({
+      fields: [songNotes.updatedBy],
+      references: [users.id],
+    });
+  });
+});
+
 describe("songCovers", () => {
   it("should resolve back to the covering song and the original it covers", () => {
     expect(resolveRelation("songCovers", "song")).toEqual({
@@ -567,6 +606,8 @@ describe("foreign key wiring", () => {
       { table: songFeaturedArtists, column: songFeaturedArtists.updatedBy },
       { table: songMetadata, column: songMetadata.createdBy },
       { table: songMetadata, column: songMetadata.updatedBy },
+      { table: songNotes, column: songNotes.createdBy },
+      { table: songNotes, column: songNotes.updatedBy },
       { table: songCovers, column: songCovers.createdBy },
       { table: songCovers, column: songCovers.updatedBy },
       { table: songProductions, column: songProductions.createdBy },

@@ -32,7 +32,7 @@ function SongDetailsPanel({
       <SongNoteForm
         songId={details.id}
         title={details.title}
-        notes={details.bio}
+        notes={details.notes}
         onCancel={() => setEditing(false)}
         onSaved={() => {
           setEditing(false);

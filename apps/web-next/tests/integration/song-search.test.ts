@@ -32,11 +32,11 @@ describe("the song search documents, kept in step by the database", () => {
     return rows.map((row) => row.song_id);
   };
 
-  const addSong = async (title: string, artist: number, bio?: string) => {
+  const addSong = async (title: string, artist: number) => {
     const { rows } = await pool.query<{ id: number }>(
-      `insert into song_lists.songs (title, artist_id, bio, created_by, updated_by)
-       values ($1, $2, $3, $4, $4) returning id`,
-      [title, artist, bio ?? null, al],
+      `insert into song_lists.songs (title, artist_id, created_by, updated_by)
+       values ($1, $2, $3, $3) returning id`,
+      [title, artist, al],
     );
     const [row] = rows;
 
@@ -111,23 +111,40 @@ describe("the song search documents, kept in step by the database", () => {
 
   it("should add a song as it is created", async () => {
     const artist = await addArtist("Zebra Mothers");
-    const id = await addSong("Quiet Quokka", artist, "recorded subaquatically");
+    const id = await addSong("Quiet Quokka", artist);
 
     expect(await matching("quokka & zebra")).toEqual([id]);
-    expect(await matching("subaquatically")).toEqual([id]);
   });
 
-  it("should follow a song's title and bio when they change", async () => {
+  it("should follow a song's title when it changes", async () => {
     const artist = await addArtist("Marmot Choir");
     const id = await addSong("Old Name", artist);
 
     await pool.query(
-      "update song_lists.songs set title = 'Fresh Title', bio = 'hummed' where id = $1",
+      "update song_lists.songs set title = 'Fresh Title' where id = $1",
       [id],
     );
 
     expect(await matching("old")).not.toContain(id);
-    expect(await matching("fresh & title & hummed")).toEqual([id]);
+    expect(await matching("fresh & title")).toEqual([id]);
+  });
+
+  it("should not search a song's bio or its notes", async () => {
+    const artist = await addArtist("Tapir Society");
+    const id = await addSong("Plain Title", artist);
+
+    await pool.query(
+      "update song_lists.songs set bio = 'a lemur appears' where id = $1",
+      [id],
+    );
+    await pool.query(
+      `insert into song_lists.song_notes (song_id, body, created_by, updated_by)
+       values ($1, 'an armadillo cameo', $2, $2)`,
+      [id, al],
+    );
+
+    expect(await matching("lemur")).not.toContain(id);
+    expect(await matching("armadillo")).not.toContain(id);
   });
 
   it("should follow a song to a new artist", async () => {
@@ -241,17 +258,17 @@ describe("the song search documents, kept in step by the database", () => {
     expect(await matching("wilhelmina")).toEqual([]);
   });
 
-  it("should rank a title above a bio that says the same word", async () => {
-    const artist = await addArtist("Okapi Band");
-    const inTitle = await addSong("Pinecone", artist);
-    const inBio = await addSong("Something Else", artist, "about a pinecone");
+  it("should rank a title above an artist's name that says the same word", async () => {
+    const artist = await addArtist("Pinecone Band");
+    const inArtist = await addSong("Something Else", artist);
+    const inTitle = await addSong("Pinecone", await addArtist("Okapi Band"));
 
     const { rows } = await pool.query<{ song_id: number }>(
       `select song_id from song_lists.song_search, to_tsquery('song_lists.song_search', 'pinecone') q
        where document @@ q order by ts_rank_cd(document, q) desc`,
     );
 
-    expect(rows.map((row) => row.song_id)).toEqual([inTitle, inBio]);
+    expect(rows.map((row) => row.song_id)).toEqual([inTitle, inArtist]);
   });
 
   it("should not put productions in the document", async () => {

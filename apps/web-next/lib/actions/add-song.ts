@@ -30,7 +30,10 @@ import { normalizeText } from "@/lib/text/normalize";
 interface CreateSongInput {
   artist: ArtistSelection;
   title: string;
+  /** An actual bio for the song; optional and rarely given. */
   bio?: string;
+  /** A first note on the song, signed as the person adding it; optional. */
+  note?: string;
   featuredArtists: ArtistSelection[];
   production: ProductionSelection;
   cover: CoverSelection;
@@ -168,7 +171,7 @@ async function createSong(input: CreateSongInput): Promise<CreateSongResult> {
         .values({
           title: normalizedTitle,
           artistId,
-          bio: input.bio ? normalizeText(input.bio) : null,
+          bio: input.bio?.trim() || null,
           createdBy: userId,
           updatedBy: userId,
         })
@@ -176,6 +179,17 @@ async function createSong(input: CreateSongInput): Promise<CreateSongResult> {
 
       if (!song) {
         throw new Error("Expected the song insert to return a row.");
+      }
+
+      const note = input.note ? normalizeText(input.note) : "";
+
+      if (note) {
+        await tx.insert(schema.songNotes).values({
+          songId: song.id,
+          body: note,
+          createdBy: userId,
+          updatedBy: userId,
+        });
       }
 
       if (featuredArtistIds.length > 0) {

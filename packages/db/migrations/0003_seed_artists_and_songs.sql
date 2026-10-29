@@ -1777,7 +1777,7 @@ FROM (VALUES
 	(1769, 'd6eca132-c8c5-4e1c-ab7f-a4f55e00e6c7', 'moe.', '2020-05-19', '2020-05-19', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'),
 	(1770, 'f47e150a-75e5-4831-bda4-77c9e9fe1eba', 'Young MC', '2023-06-12', '2023-06-12', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'),
 	(1771, '436b4ca1-30b3-443b-8813-013f3ad355ea', 'Alice Bowie', '2021-02-03', '2021-02-03', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'),
-	(1772, '7bae8556-3155-4691-ba30-94350948d1ad', 'Joe Esposito', '2021-02-02', '2021-02-02', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'),
+	(1772, '7bae8556-3155-4691-ba30-94350948d1ad', 'Joe "Bean" Esposito', '2021-02-02', '2021-02-02', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'),
 	(1773, '21d6e76e-6b87-4273-92cd-41ea76191991', 'South Park (Terrance And Phillip)', '2021-01-30', '2021-01-30', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'),
 	(1774, 'a7d59854-74d5-48b8-bd8e-d341c927197e', 'Barrett Strong', '2021-02-11', '2021-02-11', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'),
 	(1775, 'd99c9061-dde1-4ccb-a863-7f473feada0c', 'Chris Kenner', '2021-02-22', '2021-02-22', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'),
@@ -7591,7 +7591,6 @@ https://www.youtube.com/watch?v=Yc3u69gzl1A -Stuff', '2024-01-28', '2024-01-28',
 	(5608, '0ddfa7c0-2b96-4791-8a4c-da84db6f49c4', 'Spinning Like A Top', NULL, '2026-08-06', '2026-08-06', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'e0f0a9c5-376e-45e8-a878-72a7a9005c1a'),
 	(5610, 'b4a1fce1-65d6-4f7a-9cb9-15639a2423b0', 'Number One', NULL, '2021-02-03', '2021-02-03', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', '51e11971-caa5-432e-816d-c1a366b20ca4'),
 	(5611, '13b3fe05-92a3-4bd9-b040-e7290604ef2e', 'You''re The Best', NULL, '2021-02-02', '2021-02-02', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', '7bae8556-3155-4691-ba30-94350948d1ad'),
-	(5612, '71aae3bc-1fe4-4131-a69e-8b726ca41cb9', 'Flash Gordon', NULL, '2021-02-03', '2021-02-03', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', '4c5aefdb-1d0c-4dca-9b29-39343e14ceca'),
 	(5613, '56c59f19-f5f3-4853-8b4c-4d4db5d8272f', 'Uncle Fucker', NULL, '2021-01-30', '2021-01-30', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', '21d6e76e-6b87-4273-92cd-41ea76191991'),
 	(5614, '0fd80b38-715e-4d6c-a058-a72468070ba8', 'Take A Chance On Me', NULL, '2021-02-11', '2021-02-11', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'd4970069-0e33-4d27-a110-c663cd77d869'),
 	(5616, 'c0accc54-5be6-46f8-b71e-51962253891a', 'Mama Kin', NULL, '2021-02-04', '2021-02-04', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', '54b241c0-c0e2-4439-9716-2c0a2a29d898'),
@@ -7651,3 +7650,48 @@ https://www.youtube.com/watch?v=Yc3u69gzl1A -Stuff', '2024-01-28', '2024-01-28',
 ) AS v(ord, resource_id, title, bio, created_at, updated_at, created_by, updated_by, artist)
 JOIN "song_lists"."artists" r0 ON r0."resource_id" = v.artist::uuid
 ORDER BY v.ord;
+--> statement-breakpoint
+
+-- The seed songs' bios are really notes, one per line. Each line becomes a
+-- note of its own, in line order, and the bio is left empty for an actual bio.
+-- A line that ends in a hyphen and the name of a seeded user ("Classic shit.
+-- -Al") was written by that user, so it is theirs and loses the sign-off, which
+-- the byline now says. One signed with a nickname from a user's "aka" bio
+-- ("Dog. - Stan") is theirs too, but keeps the nickname, which is half the fun.
+-- Any other line is credited to whoever added the song.
+-- Every note is dated when the song was added.
+INSERT INTO "song_lists"."song_notes" ("song_id", "body", "created_at", "updated_at", "created_by", "updated_by")
+SELECT
+  s.id,
+  coalesce(CASE WHEN author.by_name THEN p.parts[1] END, p.line),
+  s.created_at,
+  s.created_at,
+  coalesce(author.id, s.created_by),
+  coalesce(author.id, s.created_by)
+FROM "song_lists"."songs" s
+CROSS JOIN LATERAL regexp_split_to_table(s.bio, E'\n') WITH ORDINALITY AS l(line, position)
+CROSS JOIN LATERAL (
+  SELECT
+    btrim(l.line) AS line,
+    regexp_match(btrim(l.line), '^(.*\S)\s*-\s*([^-]*\S)$') AS parts
+) AS p
+LEFT JOIN LATERAL (
+  SELECT u.id, lower(u.name) = lower(p.parts[2]) AS by_name
+  FROM "song_lists"."users" u
+  WHERE p.parts IS NOT NULL
+    AND u.id <> '00000000-0000-0000-0000-000000000000'
+    AND (
+      lower(u.name) = lower(p.parts[2])
+      OR lower(p.parts[2]) IN (
+        SELECT lower(btrim(alias))
+        FROM unnest(string_to_array(regexp_replace(coalesce(u.bio, ''), '^aka\s+', ''), ',')) AS alias
+      )
+    )
+  ORDER BY (lower(u.name) = lower(p.parts[2])) DESC, u.created_at
+  LIMIT 1
+) AS author ON true
+WHERE p.line <> ''
+ORDER BY s.id, l.position;
+--> statement-breakpoint
+
+UPDATE "song_lists"."songs" SET "bio" = NULL WHERE "bio" IS NOT NULL;

@@ -58,6 +58,20 @@ describe("when the database fails under an action", () => {
     }
   };
 
+  /** Refuses every insert into `table` while `run` is going. */
+  const refusingInsertsTo = async (table: string, run: () => Promise<void>) => {
+    await pool.query(
+      `create trigger refuse before insert on song_lists.${table}
+       for each row execute function song_lists.refuse_write()`,
+    );
+
+    try {
+      await run();
+    } finally {
+      await pool.query(`drop trigger refuse on song_lists.${table}`);
+    }
+  };
+
   const one = async (sql: string, params: unknown[] = []) =>
     (await pool.query(sql, params)).rows[0];
 
@@ -67,18 +81,22 @@ describe("when the database fails under an action", () => {
     session.userId = cliff;
     const notes = await import("@/lib/actions/add-song-note");
     const song = await songId(pool, "Me And The Devil Blues", "Cowboy Junkies");
-    const before = await one("select bio from song_lists.songs where id = $1", [
-      song,
-    ]);
+    const before = await one(
+      "select count(*)::int n from song_lists.song_notes where song_id = $1",
+      [song],
+    );
 
-    await refusingUpdatesTo("songs", async () => {
+    await refusingInsertsTo("song_notes", async () => {
       expect(
         await notes.addSongNote({ songId: song, text: "Won't land." }),
       ).toEqual(failed);
     });
 
     expect(
-      await one("select bio from song_lists.songs where id = $1", [song]),
+      await one(
+        "select count(*)::int n from song_lists.song_notes where song_id = $1",
+        [song],
+      ),
     ).toEqual(before);
   });
 

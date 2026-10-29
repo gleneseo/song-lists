@@ -115,7 +115,7 @@ test.describe("opening a name from a list", () => {
     await expect(
       modal.getByRole("heading", { name: "Notes", level: 3 }),
     ).toBeVisible();
-    await expect(modal.getByText("Talk Hard! -Cliff")).toBeVisible();
+    await expect(modal.getByText(/^Talk Hard! — Cliff · /)).toBeVisible();
     await expect(
       modal.getByRole("link", { name: "The Master List" }),
     ).toBeVisible();

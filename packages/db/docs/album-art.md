@@ -46,3 +46,9 @@ square, about 600 px) and it appears on the song.
 | `the-rolling-stones-big-hits-high-tide-and-green-grass-uk-version-1966.jpg` | Big Hits (High Tide And Green Grass) (UK Version) | 1966 | The Rolling Stones - Paint It, Black |
 | `johnny-pearson-sporting-themes-1979.jpg` | Sporting Themes | 1979 | Johnny Pearson - Heavy Action |
 | `dillinger-cocaine-in-my-brain-funky-punk-1979.jpg` | Cocaine In My Brain / Funky Punk | 1979 | Dillinger - Cocaine In My Brain |
+| `ritchie-valens-come-on-let-s-go-framed-1958.jpg` | Come On, Let's Go / Framed | 1958 | Ritchie Valens - Come On Let's Go |
+| `the-diamonds-little-darlin-faithful-and-true-1957.jpg` | Little Darlin' / Faithful And True | 1957 | The Diamonds - Little Darlin' |
+| `george-baker-selection-little-green-bag-pretty-little-dreamer-1969.jpg` | Little Green Bag / Pretty Little Dreamer | 1969 | George Baker Selection - Little Green Bag |
+| `the-trashmen-surfin-bird-king-of-the-surf-1963.jpg` | Surfin' Bird / King Of The Surf | 1963 | The Trashmen - Surfin' Bird |
+| `tina-turner-mad-max-beyond-thunderdome-original-motion-picture-soundtrack-1985.jpg` | Mad Max Beyond Thunderdome (Original Motion Picture Soundtrack) | 1985 | Tina Turner - We Don't Need Another Hero (Thunderdome) |
+| `bloodhound-gang-hooray-for-boobies-1999.jpg` | Hooray For Boobies | 1999 | Bloodhound Gang - The Bad Touch |

@@ -69,6 +69,7 @@ function AddSongForm({
   const [artist, setArtist] =
     useState<CreatableSelection<CreatableOption> | null>(null);
   const [title, setTitle] = useState("");
+  const [note, setNote] = useState("");
   const [bio, setBio] = useState("");
   const [featuredArtists, setFeaturedArtists] = useState<
     CreatableSelection<CreatableOption>[]
@@ -145,6 +146,7 @@ function AddSongForm({
   function resetForm() {
     setArtist(null);
     setTitle("");
+    setNote("");
     setBio("");
     setFeaturedArtists([]);
     setProductionChoice(null);
@@ -247,6 +249,7 @@ function AddSongForm({
       const input: CreateSongInput = {
         artist: toArtistSelection(artist),
         title,
+        note: note.trim() ? note : undefined,
         bio: bio.trim() ? bio : undefined,
         featuredArtists: featuredArtists.map(toArtistSelection),
         production: toProductionSelection(
@@ -444,12 +447,16 @@ function AddSongForm({
       <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">Notes</h2>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="song-bio">Bio / notes (optional)</Label>
+          <Label htmlFor="song-note">Note (optional)</Label>
           <Textarea
-            id="song-bio"
-            value={bio}
-            onChange={(event) => setBio(event.target.value)}
+            id="song-note"
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
           />
+          <p className="text-xs text-muted-foreground">
+            Your name and the date and time are added after it. More notes can
+            be added later.
+          </p>
         </div>
       </section>
 
@@ -519,6 +526,22 @@ function AddSongForm({
           layout="tiles"
           maxRows={3}
         />
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="text-lg font-semibold">Bio</h2>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="song-bio">Bio (optional)</Label>
+          <Textarea
+            id="song-bio"
+            value={bio}
+            onChange={(event) => setBio(event.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">
+            What the song is about, if you have the story. Most songs
+            don&rsquo;t need one.
+          </p>
+        </div>
       </section>
 
       {styleIssues.length > 0 && (

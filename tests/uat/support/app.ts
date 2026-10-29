@@ -108,7 +108,13 @@ interface ArrangedSong {
  * the seeded songs the other journeys look at.
  */
 async function arrangeSong(
-  details: { bio?: string; list?: string; sameArtistAs?: ArrangedSong } = {},
+  details: {
+    bio?: string;
+    /** Notes on the song, oldest first, all written by Al. */
+    notes?: string[];
+    list?: string;
+    sameArtistAs?: ArrangedSong;
+  } = {},
 ): Promise<ArrangedSong> {
   const artist = details.sameArtistAs?.artist ?? freshName("Band");
   const title = freshName("Song");
@@ -130,6 +136,12 @@ async function arrangeSong(
       "insert into song_lists.songs (title, artist_id, bio, created_by, updated_by) values ($1, $2, $3, $4, $4) returning id",
       [title, artistId, details.bio ?? null, al],
     );
+    for (const note of details.notes ?? []) {
+      await pool.query(
+        "insert into song_lists.song_notes (song_id, body, created_by, updated_by) values ($1, $2, $3, $3)",
+        [songs[0]?.id, note, al],
+      );
+    }
     await pool.query(
       `insert into song_lists.list_songs (list_id, song_id, created_by, updated_by)
        select id, $1, $2, $2 from song_lists.lists where name = $3`,

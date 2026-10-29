@@ -99,6 +99,7 @@ describe("adding a song, from the form's action down to the database", () => {
           artist: { kind: "new", name: "Zz Full Band" },
           title: "  Zz   Full   Song ",
           bio: "  It slaps.  ",
+          note: "  Great   live.  ",
           featuredArtists: [
             { kind: "existing", id: gloria },
             { kind: "new", name: "Zz Guest Singer" },
@@ -139,6 +140,15 @@ describe("adding a song, from the form's action down to the database", () => {
         updated_by: al,
         artist: "Zz Full Band",
       });
+
+      expect(
+        (
+          await pool.query(
+            `select n.body, n.created_by from song_lists.song_notes n where n.song_id = $1`,
+            [result.songId],
+          )
+        ).rows,
+      ).toEqual([{ body: "Great live.", created_by: al }]);
 
       const featured = await pool.query(
         `select a.name from song_lists.song_featured_artists f

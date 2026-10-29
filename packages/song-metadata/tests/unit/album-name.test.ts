@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { cleanAlbumName, tidyAlbumName } from "../../src/album-name.js";
+import {
+  cleanAlbumName,
+  hasEditionNote,
+  tidyAlbumName,
+} from "../../src/album-name.js";
 
 describe("cleanAlbumName", () => {
   it.each([
@@ -76,5 +80,27 @@ describe("tidyAlbumName", () => {
     "",
   ])("should leave %s as it is", (name) => {
     expect(tidyAlbumName(name)).toBe(name);
+  });
+});
+
+describe("hasEditionNote", () => {
+  it.each([
+    "Road to Ruin (Deluxe Edition)",
+    "Road to Ruin (40th Anniversary Deluxe Edition)",
+    "Insomniac [Expanded Edition]",
+    "Rocks - Remastered",
+    "Rocks (Remastered) - EP",
+  ])("should see that %s is an edition", (name) => {
+    expect(hasEditionNote(name)).toBe(true);
+  });
+
+  it.each([
+    "Road to Ruin",
+    "Weezer (Green Album)",
+    "Rocks - EP",
+    "Live at the Palladium (Live)",
+    "(Deluxe Edition)",
+  ])("should not call %s an edition", (name) => {
+    expect(hasEditionNote(name)).toBe(false);
   });
 });

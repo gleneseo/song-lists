@@ -84,6 +84,7 @@ describe("database integration", () => {
       "song_covers",
       "song_featured_artists",
       "song_metadata",
+      "song_notes",
       "song_productions",
       "song_search",
       "songs",

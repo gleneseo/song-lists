@@ -243,3 +243,19 @@ ALTER TABLE "song_lists"."users" ADD CONSTRAINT "users_updated_by_users_id_fk" F
 CREATE INDEX "accounts_user_id_index" ON "song_lists"."accounts" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "sessions_user_id_index" ON "song_lists"."sessions" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "verifications_identifier_index" ON "song_lists"."verifications" USING btree ("identifier");
+CREATE TABLE "song_lists"."song_notes" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"resource_id" uuid DEFAULT uuidv7() NOT NULL,
+	"song_id" integer NOT NULL,
+	"body" text NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"created_by" uuid NOT NULL,
+	"updated_by" uuid NOT NULL,
+	CONSTRAINT "song_notes_resource_id_unique" UNIQUE("resource_id")
+);
+--> statement-breakpoint
+ALTER TABLE "song_lists"."song_notes" ADD CONSTRAINT "song_notes_song_id_songs_id_fk" FOREIGN KEY ("song_id") REFERENCES "song_lists"."songs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "song_lists"."song_notes" ADD CONSTRAINT "song_notes_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "song_lists"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "song_lists"."song_notes" ADD CONSTRAINT "song_notes_updated_by_users_id_fk" FOREIGN KEY ("updated_by") REFERENCES "song_lists"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "song_notes_song_id_idx" ON "song_lists"."song_notes" USING btree ("song_id");

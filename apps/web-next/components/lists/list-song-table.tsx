@@ -3,6 +3,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import type { ListExtraColumn } from "@song-lists/db/list-extra-column";
 import { ClampedText } from "@/components/clamped-text";
 import { DetailsLink } from "@/components/details-link";
+import { SongThumbnail } from "@/components/songs/song-thumbnail";
 import { SongTitleLink } from "@/components/songs/song-title-link";
 import {
   listHref,
@@ -141,14 +142,22 @@ function ListSongTable({
                   {(firstPosition + index).toLocaleString("en-US")}
                 </td>
                 <td className="px-2 py-2.5">
-                  <SongTitleLink id={entry.song.id} title={entry.song.title} />
-                  {cover && (
-                    <ClampedText
-                      lines={1}
-                      text={`Cover of ${cover}`}
-                      className="text-xs text-muted-foreground"
-                    />
-                  )}
+                  <div className="flex items-center gap-3">
+                    <SongThumbnail song={entry.song} />
+                    <div className="min-w-0">
+                      <SongTitleLink
+                        id={entry.song.id}
+                        title={entry.song.title}
+                      />
+                      {cover && (
+                        <ClampedText
+                          lines={1}
+                          text={`Cover of ${cover}`}
+                          className="text-xs text-muted-foreground"
+                        />
+                      )}
+                    </div>
+                  </div>
                 </td>
                 <td className="px-2 py-2.5">
                   <DetailsLink

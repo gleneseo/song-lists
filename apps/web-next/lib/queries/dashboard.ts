@@ -4,6 +4,7 @@ import { schema, SYSTEM_USER_ID } from "@song-lists/db";
 import type { YearCount } from "@/lib/dashboard/activity-by-year";
 import type { Contributor } from "@/lib/dashboard/build-leaderboard";
 import { songOfTheDayIndex } from "@/lib/dashboard/song-of-the-day";
+import { MASTER_LIST_NAME } from "@/lib/lists/list-view";
 import { db } from "./client";
 import { sortKeySql } from "./sort-key";
 import { songWith, type Song } from "./songs";
@@ -177,10 +178,29 @@ async function fetchContributors(): Promise<Contributor[]> {
     .groupBy(schema.users.id, schema.users.name);
 }
 
-/** The newest songs in the whole catalog, whoever added them. */
-async function getCatalogAdditions(limit: number): Promise<CatalogAddition[]> {
+/**
+ * The newest songs on The Master List, whoever added them. A song that is in
+ * the database only because another song covers it is on no list, so it
+ * isn't one of them.
+ */
+async function getMasterListAdditions(
+  limit: number,
+): Promise<CatalogAddition[]> {
   const rows = await db.query.songs.findMany({
     columns: { id: true, title: true, createdAt: true },
+    where: (songs, { and, eq, exists }) =>
+      exists(
+        db
+          .select({ one: sql`1` })
+          .from(schema.listSongs)
+          .innerJoin(schema.lists, eq(schema.lists.id, schema.listSongs.listId))
+          .where(
+            and(
+              eq(schema.listSongs.songId, songs.id),
+              eq(schema.lists.name, MASTER_LIST_NAME),
+            ),
+          ),
+      ),
     orderBy: [desc(schema.songs.createdAt), desc(schema.songs.id)],
     limit,
     with: songWith,
@@ -239,7 +259,7 @@ const getUserStats = cache(fetchUserStats);
 const getContributors = cache(fetchContributors);
 
 export {
-  getCatalogAdditions,
+  getMasterListAdditions,
   getContributors,
   getSongOfTheDay,
   getUserHistory,

@@ -102,11 +102,16 @@ describe("cleanSongDetails", () => {
     "not an address",
     "ftp://example.test/a.jpg",
     "javascript:alert(1)",
+    "/other/a.jpg",
+    "/album-art/sub/a.jpg",
+    "/album-art/../a.jpg",
+    "/album-art/a.gif",
+    "/album-art/",
   ])("should refuse the cover art address %s", (artworkUrl) => {
     expect(cleanSongDetails({ ...typed, artworkUrl }, NOW)).toEqual({
       status: "error",
       message:
-        "The cover art address must be a web address starting with http:// or https://.",
+        "The cover art address must be a web address starting with http:// or https://, or a local image such as /album-art/name.jpg.",
     });
   });
 
@@ -118,6 +123,15 @@ describe("cleanSongDetails", () => {
       ),
     ).toMatchObject({ details: { artworkUrl: "http://example.test/a.jpg" } });
   });
+
+  it.each(["/album-art/band-album-1999.jpg", "/album-art/a.PNG"])(
+    "should accept the local cover art image %s",
+    (artworkUrl) => {
+      expect(cleanSongDetails({ ...typed, artworkUrl }, NOW)).toMatchObject({
+        details: { artworkUrl },
+      });
+    },
+  );
 
   it("should drop a source it doesn't know, and the track ID with it", () => {
     expect(

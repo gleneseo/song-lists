@@ -51,7 +51,7 @@ describe("the queries when the catalog has no songs yet", () => {
       expect(await dashboard.getUserTopArtists(al, 5)).toEqual([]);
       expect(await dashboard.getUserYearlyActivity(al)).toEqual([]);
       expect(await dashboard.getContributors()).toEqual([]);
-      expect(await dashboard.getCatalogAdditions(10)).toEqual([]);
+      expect(await dashboard.getMasterListAdditions(10)).toEqual([]);
     });
   });
 

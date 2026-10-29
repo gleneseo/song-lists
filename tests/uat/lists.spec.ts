@@ -228,23 +228,36 @@ test.describe("sorting a list", () => {
     await expect(page).toHaveURL(/q=stone/);
     await expect(page.getByText(/1–50 of \d+ songs/).first()).toBeVisible();
 
-    const artistsOnPage = async () => [
-      ...new Set((await column(page, "Artist")).map((text) => text.trim())),
+    const wanted = [
+      "The Rolling Stones",
+      "The Stone Foxes",
+      "The Stone Roses",
+      "Stone Sour",
+      "Stone Temple Pilots",
     ];
-    const inOrder = async (wanted: string[]) =>
-      (await artistsOnPage()).filter((name) => wanted.includes(name));
+    const seen: string[] = [];
 
-    await expect
-      .poll(() =>
-        inOrder(["The Rolling Stones", "The Stone Foxes", "The Stone Roses"]),
-      )
-      .toEqual(["The Rolling Stones", "The Stone Foxes", "The Stone Roses"]);
+    // The bands can fall on any page, so read on until the last one is found.
+    for (let pageNumber = 1; pageNumber <= 5; pageNumber += 1) {
+      const names = (await column(page, "Artist")).map((text) => text.trim());
 
-    await page.getByRole("link", { name: "Next" }).first().click();
-    await expect(page).toHaveURL(/page=2/);
-    await expect
-      .poll(() => inOrder(["Stone Sour", "Stone Temple Pilots"]))
-      .toEqual(["Stone Sour", "Stone Temple Pilots"]);
+      for (const name of names) {
+        if (wanted.includes(name) && !seen.includes(name)) {
+          seen.push(name);
+        }
+      }
+
+      if (seen.includes("Stone Temple Pilots")) {
+        break;
+      }
+
+      await page.getByRole("link", { name: "Next" }).first().click();
+      await expect(page).toHaveURL(
+        new RegExp(`page=${String(pageNumber + 1)}`),
+      );
+    }
+
+    expect(seen).toEqual(wanted);
   });
 
   test("by title, a leading article doesn't count either", async ({ as }) => {
@@ -392,12 +405,27 @@ test.describe("paging through a list", () => {
       page.getByRole("button", { name: "Previous" }).first(),
     ).toBeDisabled();
 
-    await page.goto(`${SOUNDTRACK}?page=3`);
+    // However many songs the list has, its last page holds what is left over.
+    const total = Number(
+      /of ([\d,]+) songs/
+        .exec(
+          await page
+            .getByText(/1–50 of [\d,]+ songs/)
+            .first()
+            .innerText(),
+        )?.[1]
+        ?.replaceAll(",", ""),
+    );
+    const lastPage = Math.ceil(total / 50);
+
+    await page.goto(`${SOUNDTRACK}?page=${String(lastPage)}`);
 
     await expect(
       page.getByRole("button", { name: "Next" }).first(),
     ).toBeDisabled();
-    await expect(page.locator("tbody tr")).toHaveCount(29);
+    await expect(page.locator("tbody tr")).toHaveCount(
+      total - 50 * (lastPage - 1),
+    );
   });
 
   test("a page number past the end shows the last page, not an error", async ({

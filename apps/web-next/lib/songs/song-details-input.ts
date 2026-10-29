@@ -54,6 +54,19 @@ function isWebAddress(text: string): boolean {
   }
 }
 
+/** Where the app's own cover art is kept: files in `public/album-art`. */
+const LOCAL_ARTWORK_PATTERN = /^\/album-art\/[\w.-]+\.(?:jpe?g|png|webp)$/i;
+
+/** Whether cover art is one of the app's own image files rather than a service's. */
+function isLocalArtwork(text: string): boolean {
+  return LOCAL_ARTWORK_PATTERN.test(text);
+}
+
+/** Whether cover art is an address a page can show: a web address or one of the app's own images. */
+function isShowableArtwork(text: string): boolean {
+  return isWebAddress(text) || isLocalArtwork(text);
+}
+
 /**
  * Checks what an admin typed for a song's album details and turns it into
  * what is saved: blanks become nothing, the year a number, the cover art an
@@ -80,11 +93,11 @@ function cleanSongDetails(
     };
   }
 
-  if (artworkUrl !== "" && !isWebAddress(artworkUrl)) {
+  if (artworkUrl !== "" && !isShowableArtwork(artworkUrl)) {
     return {
       status: "error",
       message:
-        "The cover art address must be a web address starting with http:// or https://.",
+        "The cover art address must be a web address starting with http:// or https://, or a local image such as /album-art/name.jpg.",
     };
   }
 
@@ -146,5 +159,11 @@ function sameSongDetails(a: SongDetailsInput, b: SongDetailsInput): boolean {
   );
 }
 
-export { cleanSongDetails, detailsToSave, EMPTY_SONG_DETAILS, sameSongDetails };
+export {
+  cleanSongDetails,
+  detailsToSave,
+  EMPTY_SONG_DETAILS,
+  isShowableArtwork,
+  sameSongDetails,
+};
 export type { CleanSongDetails, CleanSongDetailsResult, SongDetailsInput };

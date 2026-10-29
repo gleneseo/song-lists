@@ -8,6 +8,7 @@ function song(overrides: Partial<Song>): Song {
     title: "Song",
     artist: { id: 1, name: "Artist" },
     featuredArtists: [],
+    metadata: null,
     coverOf: [],
     ...overrides,
   };

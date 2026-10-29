@@ -71,6 +71,187 @@ describe("iTunes lookup", () => {
     await expect(lookup(wanted)).resolves.toEqual({ status: "not_found" });
   });
 
+  describe("for a song its search won't show", () => {
+    const wantedHidden = {
+      title: "Finish Em",
+      artistName: "ESQ & Chikaramanga",
+    };
+    const other = {
+      trackId: 1,
+      collectionId: 77,
+      trackName: "Mad Love",
+      artistName: "ESQ & Chikaramanga",
+      collectionName: "The Succession",
+      artworkUrl100: "https://example.test/succession/100x100bb.jpg",
+      releaseDate: "2010-09-14T07:00:00Z",
+    };
+    const hidden = { ...other, trackId: 15, trackName: "Finish Em" };
+
+    /** An iTunes that answers each kind of request in turn. */
+    function itunes(answers: {
+      byName: unknown[];
+      byArtist: unknown[];
+      albums: Record<string, unknown[]>;
+    }) {
+      return vi.fn<typeof fetch>((input) => {
+        const url = new URL(input);
+        const term = url.searchParams.get("term");
+        const results =
+          url.pathname === "/lookup"
+            ? (answers.albums[url.searchParams.get("id") ?? ""] ?? [])
+            : term === wantedHidden.artistName
+              ? answers.byArtist
+              : answers.byName;
+
+        return Promise.resolve(new Response(JSON.stringify({ results })));
+      });
+    }
+
+    it("should find it on an album iTunes lists in full, by way of the artist's other songs", async () => {
+      const fetch = itunes({
+        byName: [],
+        byArtist: [other],
+        albums: { "77": [{ wrapperType: "collection" }, other, hidden] },
+      });
+
+      await expect(
+        createItunesLookup({ fetch, limiter: passThrough })(wantedHidden),
+      ).resolves.toMatchObject({
+        status: "matched",
+        sourceTrackId: "15",
+        albumName: "The Succession",
+        releaseYear: 2010,
+      });
+    });
+
+    it("should read no album when the artist's songs are someone else's", async () => {
+      const fetch = itunes({
+        byName: [],
+        byArtist: [{ ...other, artistName: "Somebody Else" }],
+        albums: { "77": [hidden] },
+      });
+
+      await expect(
+        createItunesLookup({ fetch, limiter: passThrough })(wantedHidden),
+      ).resolves.toEqual({ status: "not_found" });
+      expect(
+        fetch.mock.calls.some(([url]) => new URL(url).pathname === "/lookup"),
+      ).toBe(false);
+    });
+
+    it("should read no album credited to Various Artists, which is a compilation, not the artist's own", async () => {
+      const compilation = { ...other, collectionArtistName: "Various Artists" };
+      const fetch = itunes({
+        byName: [],
+        byArtist: [compilation],
+        albums: { "77": [compilation, hidden] },
+      });
+
+      await expect(
+        createItunesLookup({ fetch, limiter: passThrough })(wantedHidden),
+      ).resolves.toEqual({ status: "not_found" });
+    });
+
+    it("should say not found when the albums don't have it either", async () => {
+      const fetch = itunes({
+        byName: [],
+        byArtist: [other],
+        albums: { "77": [other] },
+      });
+
+      await expect(
+        createItunesLookup({ fetch, limiter: passThrough })(wantedHidden),
+      ).resolves.toEqual({ status: "not_found" });
+    });
+
+    it("should read at most three albums, the artist's most-listed first", async () => {
+      const albumsOf = (collectionId: number, count: number) =>
+        Array.from({ length: count }, (_, index) => ({
+          ...other,
+          trackId: collectionId * 100 + index,
+          collectionId,
+        }));
+      const fetch = itunes({
+        byName: [],
+        byArtist: [
+          ...albumsOf(1, 1),
+          ...albumsOf(2, 4),
+          ...albumsOf(3, 3),
+          ...albumsOf(4, 2),
+        ],
+        albums: {},
+      });
+
+      await createItunesLookup({ fetch, limiter: passThrough })(wantedHidden);
+
+      const read = fetch.mock.calls
+        .map(([url]) => new URL(url as URL))
+        .filter((url) => url.pathname === "/lookup")
+        .map((url) => url.searchParams.get("id"));
+
+      expect(read).toEqual(["2", "3", "4"]);
+    });
+
+    it("should leave a song that was found alone, asking nothing more", async () => {
+      const fetch = itunes({ byName: [other], byArtist: [], albums: {} });
+
+      await createItunesLookup({ fetch, limiter: passThrough })({
+        title: "Mad Love",
+        artistName: "ESQ & Chikaramanga",
+      });
+
+      expect(fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([
+      ["turned away", () => new Response("busy", { status: 503 })],
+      ["answered with nothing", () => new Response("null")],
+    ])(
+      "should say not found when the artist's songs are %s",
+      async (_, answer) => {
+        const fetch = vi
+          .fn<typeof globalThis.fetch>()
+          .mockResolvedValueOnce(new Response(JSON.stringify({ results: [] })))
+          .mockResolvedValue(answer());
+
+        await expect(
+          createItunesLookup({ fetch, limiter: passThrough })(wantedHidden),
+        ).resolves.toEqual({ status: "not_found" });
+      },
+    );
+
+    it("should say not found, not an error, when the extra requests fail", async () => {
+      const fetch = vi
+        .fn<typeof globalThis.fetch>()
+        .mockResolvedValueOnce(new Response(JSON.stringify({ results: [] })))
+        .mockRejectedValue(new Error("offline"));
+
+      await expect(
+        createItunesLookup({ fetch, limiter: passThrough })(wantedHidden),
+      ).resolves.toEqual({ status: "not_found" });
+    });
+  });
+
+  it("should count an album credited to Various Artists as a compilation", async () => {
+    const lookup = createItunesLookup({
+      fetch: answering({
+        results: [
+          {
+            ...track,
+            collectionName: "Small Pond Presents",
+            collectionArtistName: "Various Artists",
+          },
+        ],
+      }),
+      limiter: passThrough,
+    });
+
+    await expect(lookup(wanted)).resolves.toMatchObject({
+      status: "matched",
+      isAlbum: false,
+    });
+  });
+
   it("should prefer an album of its own to a compilation the song is also on", async () => {
     const lookup = createItunesLookup({
       fetch: answering({

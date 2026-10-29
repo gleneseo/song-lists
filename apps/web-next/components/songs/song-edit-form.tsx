@@ -201,26 +201,6 @@ function LoadedForm({
           value={artist}
           onChange={setArtist}
         />
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="edit-song-bio">Notes</Label>
-          <Textarea
-            id="edit-song-bio"
-            value={bio}
-            onChange={(event) => setBio(event.target.value)}
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="edit-song-new-note">Add a note</Label>
-          <Textarea
-            id="edit-song-new-note"
-            value={newNote}
-            onChange={(event) => setNewNote(event.target.value)}
-          />
-          <p className="text-xs text-muted-foreground">
-            Added to the end of the notes with your name and the date and time
-            (Pacific).
-          </p>
-        </div>
       </FormSection>
 
       <FormSection title="Album details">
@@ -272,6 +252,29 @@ function LoadedForm({
             </div>
           )
         )}
+      </FormSection>
+
+      <FormSection title="Notes">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="edit-song-bio">Notes</Label>
+          <Textarea
+            id="edit-song-bio"
+            value={bio}
+            onChange={(event) => setBio(event.target.value)}
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="edit-song-new-note">Add a note</Label>
+          <Textarea
+            id="edit-song-new-note"
+            value={newNote}
+            onChange={(event) => setNewNote(event.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">
+            Added to the end of the notes with your name and the date and time
+            (Pacific).
+          </p>
+        </div>
       </FormSection>
 
       <FormSection title="Featured artists">

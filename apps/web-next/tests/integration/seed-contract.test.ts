@@ -186,353 +186,432 @@ describe("what the app expects of the seeded data", () => {
     ).toEqual([]);
   });
 
-  it("should show Build Me Up Buttercup on The Foundations' 1968 album of that name, with its real cover", async () => {
+  it("should name the Isley Brothers' 1973 album 3 + 3 the same way for every song on it, and leave Seals & Crofts' Summer Breeze alone", async () => {
     expect(
       await rows(
-        `select m.source, m.artwork_url, m.album_name, m.release_year, m.matched_by
-         from song_lists.song_metadata m
-         join song_lists.songs s on s.id = m.song_id
-         where s.title = 'Build Me Up Buttercup'`,
-      ),
-    ).toEqual([
-      {
-        source: "musicbrainz",
-        artwork_url:
-          "https://coverartarchive.org/release-group/fe4abd50-1b96-3810-8dd7-b92094dddf74/front",
-        album_name: "Build Me Up Buttercup",
-        release_year: 1968,
-        matched_by: "manual",
-      },
-    ]);
-  });
-
-  it("should point Come On Let's Go at Ritchie Valens' 1958 single, with its label as the art", async () => {
-    expect(
-      await rows(
-        `select m.source, m.artwork_url, m.album_name, m.release_year, m.matched_by
+        `select a.name artist, s.title, m.source_track_id, m.album_name, m.release_year, m.matched_by
          from song_lists.song_metadata m
          join song_lists.songs s on s.id = m.song_id
          join song_lists.artists a on a.id = s.artist_id
-         where a.name = 'Ritchie Valens' and s.title = 'Come On Let''s Go'`,
+         where s.title in ('Summer Breeze', 'That Lady, Pts. 1 & 2')
+         order by a.name, s.title`,
       ),
     ).toEqual([
       {
-        source: null,
-        artwork_url:
-          "/album-art/ritchie-valens-come-on-let-s-go-framed-1958.jpg",
-        album_name: "Come On, Let's Go / Framed",
-        release_year: 1958,
-        matched_by: "manual",
-      },
-    ]);
-  });
-
-  it("should put Danger Zone on the Top Gun soundtrack, which is also its film", async () => {
-    expect(
-      await rows(
-        `select m.source, m.album_name, m.release_year, m.matched_by, p.name production
-         from song_lists.songs s
-         join song_lists.artists a on a.id = s.artist_id
-         join song_lists.song_metadata m on m.song_id = s.id
-         join song_lists.song_productions sp on sp.song_id = s.id
-         join song_lists.productions p on p.id = sp.production_id
-         where a.name = 'Kenny Loggins' and s.title = 'Danger Zone'`,
-      ),
-    ).toEqual([
-      {
-        source: "itunes",
-        album_name: "Top Gun (Original Motion Picture Soundtrack)",
-        release_year: 1986,
-        matched_by: "manual",
-        production: "Top Gun",
-      },
-    ]);
-  });
-
-  it("should seed Queen's Flash's Theme once, with Stuff as a second advocate since the day he added it", async () => {
-    expect(
-      await rows(
-        `select s.title from song_lists.songs s
-         join song_lists.artists a on a.id = s.artist_id
-         where a.name = 'Queen' and s.title like 'Flash%' order by s.title`,
-      ),
-    ).toEqual([{ title: "Flash's Theme" }]);
-    expect(
-      await rows(
-        `select u.name, to_char(sa.created_at, 'YYYY-MM-DD') since
-         from song_lists.song_advocates sa
-         join song_lists.songs s on s.id = sa.song_id
-         join song_lists.users u on u.id = sa.user_id
-         where s.title = 'Flash''s Theme' order by sa.created_at`,
-      ),
-    ).toEqual([
-      { name: "Al", since: "2020-09-24" },
-      { name: "Stuff", since: "2021-02-03" },
-    ]);
-  });
-
-  it("should point Great Balls Of Fire at Jerry Lee Lewis' 1957 EP, not a compilation", async () => {
-    expect(
-      await rows(
-        `select m.source, m.artwork_url, m.album_name, m.release_year, m.matched_by
-         from song_lists.song_metadata m
-         join song_lists.songs s on s.id = m.song_id
-         join song_lists.artists a on a.id = s.artist_id
-         where a.name = 'Jerry Lee Lewis' and s.title = 'Great Balls Of Fire'`,
-      ),
-    ).toEqual([
-      {
-        source: "musicbrainz",
-        artwork_url:
-          "https://coverartarchive.org/release-group/b600cd34-1275-4641-abf5-dd9062951cbc/front",
-        album_name: "The Great Ball of Fire",
-        release_year: 1957,
-        matched_by: "manual",
-      },
-    ]);
-  });
-
-  it("should show I Wanna Be Sedated with the cover of Road to Ruin itself, not its deluxe edition", async () => {
-    expect(
-      await rows(
-        `select m.source_track_id, m.artwork_url, m.album_name, m.matched_by
-         from song_lists.song_metadata m
-         join song_lists.songs s on s.id = m.song_id
-         join song_lists.artists a on a.id = s.artist_id
-         where a.name = 'Ramones' and s.title = 'I Wanna Be Sedated'`,
-      ),
-    ).toEqual([
-      {
-        source_track_id: "847960913",
-        artwork_url:
-          "https://is1-ssl.mzstatic.com/image/thumb/Music6/v4/c2/86/19/c28619a9-e26c-20f7-fef6-0d21412aefb4/603497909568.jpg/100x100bb.jpg",
-        album_name: "Road To Ruin",
+        artist: "Seals & Crofts",
+        title: "Summer Breeze",
+        source_track_id: "303230013",
+        album_name: "Summer Breeze",
+        release_year: 1972,
         matched_by: "auto",
       },
-    ]);
-  });
-
-  it("should point Little Darlin' at The Diamonds' 1957 single, with its label as the art", async () => {
-    expect(
-      await rows(
-        `select m.source, m.artwork_url, m.album_name, m.release_year, m.matched_by
-         from song_lists.song_metadata m
-         join song_lists.songs s on s.id = m.song_id
-         join song_lists.artists a on a.id = s.artist_id
-         where a.name = 'The Diamonds' and s.title = 'Little Darlin'''`,
-      ),
-    ).toEqual([
       {
-        source: null,
-        artwork_url:
-          "/album-art/the-diamonds-little-darlin-faithful-and-true-1957.jpg",
-        album_name: "Little Darlin' / Faithful And True",
-        release_year: 1957,
+        artist: "The Isley Brothers",
+        title: "Summer Breeze",
+        source_track_id: "1030452487",
+        album_name: "3 + 3",
+        release_year: 1973,
+        matched_by: "manual",
+      },
+      {
+        artist: "The Isley Brothers",
+        title: "That Lady, Pts. 1 & 2",
+        source_track_id: "1030452446",
+        album_name: "3 + 3",
+        release_year: 1973,
         matched_by: "manual",
       },
     ]);
   });
 
-  it("should point Little Green Bag at George Baker Selection's 1969 single, with its sleeve as the art", async () => {
+  it("should give Centerfold and Freeze-Frame the same album, named the same way, with the same cover", async () => {
     expect(
       await rows(
-        `select m.source, m.artwork_url, m.album_name, m.release_year, m.matched_by
+        `select s.title, m.source, m.artwork_url, m.album_name, m.release_year
          from song_lists.song_metadata m
          join song_lists.songs s on s.id = m.song_id
          join song_lists.artists a on a.id = s.artist_id
-         where a.name = 'George Baker Selection' and s.title = 'Little Green Bag'`,
+         where a.name = 'The J. Geils Band' and s.title in ('Centerfold', 'Freeze-Frame')
+         order by s.title`,
       ),
-    ).toEqual([
-      {
-        source: null,
-        artwork_url:
-          "/album-art/george-baker-selection-little-green-bag-pretty-little-dreamer-1969.jpg",
-        album_name: "Little Green Bag / Pretty Little Dreamer",
-        release_year: 1969,
-        matched_by: "manual",
-      },
-    ]);
-  });
-
-  it.each([
-    [
-      "State Of Love And Trust",
-      "Singles (Original Motion Picture Soundtrack)",
-      1992,
-    ],
-    ["I've Got A Feeling", "Vault 9: Live In Seattle 12/8/93", 2019],
-  ])("should put Pearl Jam's %s on %s", async (title, album, year) => {
-    expect(
-      await rows(
-        `select m.source, m.album_name, m.release_year, m.matched_by
-         from song_lists.song_metadata m
-         join song_lists.songs s on s.id = m.song_id
-         join song_lists.artists a on a.id = s.artist_id
-         where a.name = 'Pearl Jam' and s.title = $1`,
-        [title],
-      ),
-    ).toEqual([
-      {
+    ).toEqual(
+      ["Centerfold", "Freeze-Frame"].map((title) => ({
+        title,
         source: "itunes",
-        album_name: album,
-        release_year: year,
-        matched_by: "manual",
-      },
-    ]);
+        artwork_url:
+          "https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/4d/d2/5a/4dd25afd-4260-d593-e8c6-d1d9c2ea5112/14UMGIM11053.rgb.jpg/100x100bb.jpg",
+        album_name: "Freeze-Frame",
+        release_year: 1981,
+      })),
+    );
   });
 
-  it("should point The Trashmen's Surfin' Bird at their 1963 single, with its label as the art", async () => {
+  it("should show every Electric Ladyland song with the album's original, uncensored UK cover", async () => {
     expect(
       await rows(
-        `select m.source, m.artwork_url, m.album_name, m.release_year, m.matched_by
+        `select s.title, m.source, m.artwork_url, m.album_name, m.release_year, m.matched_by
          from song_lists.song_metadata m
          join song_lists.songs s on s.id = m.song_id
-         join song_lists.artists a on a.id = s.artist_id
-         where a.name = 'The Trashmen' and s.title = 'Surfin'' Bird'`,
+         where m.album_name = 'Electric Ladyland' order by s.title`,
       ),
-    ).toEqual([
-      {
+    ).toEqual(
+      [
+        "All Along The Watchtower",
+        "Crosstown Traffic",
+        "Voodoo Child (Slight Return)",
+      ].map((title) => ({
+        title,
         source: null,
         artwork_url:
-          "/album-art/the-trashmen-surfin-bird-king-of-the-surf-1963.jpg",
-        album_name: "Surfin' Bird / King Of The Surf",
-        release_year: 1963,
+          "/album-art/the-jimi-hendrix-experience-electric-ladyland-1968.jpg",
+        album_name: "Electric Ladyland",
+        release_year: 1968,
         matched_by: "manual",
-      },
-    ]);
+      })),
+    );
   });
 
-  it("should put the Stop Making Sense version of Take Me To The River on the Stop Making Sense album", async () => {
+  it("should show John Fogerty's Centerfield songs with the original cover, not the 25th anniversary one", async () => {
     expect(
       await rows(
-        `select m.source, m.artwork_url, m.album_name, m.release_year, m.matched_by
+        `select s.title, m.source, m.artwork_url, m.album_name, m.release_year, m.matched_by
          from song_lists.song_metadata m
          join song_lists.songs s on s.id = m.song_id
          join song_lists.artists a on a.id = s.artist_id
-         where a.name = 'Talking Heads'
-           and s.title = 'Take Me To The River (Stop Making Sense Version)'`,
+         where a.name = 'John Fogerty' and m.album_name = 'Centerfield'
+         order by s.title`,
       ),
-    ).toEqual([
-      {
+    ).toEqual(
+      ["Centerfield", "The Old Man Down The Road"].map((title) => ({
+        title,
         source: "musicbrainz",
         artwork_url:
-          "https://coverartarchive.org/release-group/2b85ba4e-53bf-4473-87f5-59d0b53020ad/front",
-        album_name: "Stop Making Sense",
-        release_year: 1984,
-        matched_by: "manual",
-      },
-    ]);
-  });
-
-  it("should put We Don't Need Another Hero on the Mad Max Beyond Thunderdome soundtrack, as well as the film", async () => {
-    expect(
-      await rows(
-        `select m.source, m.artwork_url, m.album_name, m.release_year, m.matched_by, p.name production
-         from song_lists.songs s
-         join song_lists.artists a on a.id = s.artist_id
-         join song_lists.song_metadata m on m.song_id = s.id
-         join song_lists.song_productions sp on sp.song_id = s.id
-         join song_lists.productions p on p.id = sp.production_id
-         where a.name = 'Tina Turner'
-           and s.title = 'We Don''t Need Another Hero (Thunderdome)'`,
-      ),
-    ).toEqual([
-      {
-        source: null,
-        artwork_url:
-          "/album-art/tina-turner-mad-max-beyond-thunderdome-original-motion-picture-soundtrack-1985.jpg",
-        album_name:
-          "Mad Max Beyond Thunderdome (Original Motion Picture Soundtrack)",
+          "https://coverartarchive.org/release-group/29de7d6b-599b-31e7-83e9-b6a4139c3f88/front",
+        album_name: "Centerfield",
         release_year: 1985,
         matched_by: "manual",
-        production: "Mad Max Beyond Thunderdome",
-      },
-    ]);
+      })),
+    );
   });
 
-  it('should credit You\'re The Best to Joe "Bean" Esposito, on the 1984 Karate Kid soundtrack', async () => {
+  it("should put KRS-One's songs from his 1995 album KRS-One on it, with one cover and one spelling", async () => {
     expect(
       await rows(
-        `select a.name artist, m.source, m.album_name, m.release_year, m.matched_by
-         from song_lists.songs s
-         join song_lists.artists a on a.id = s.artist_id
-         join song_lists.song_metadata m on m.song_id = s.id
-         where s.title = 'You''re The Best'`,
-      ),
-    ).toEqual([
-      {
-        artist: 'Joe "Bean" Esposito',
-        source: "itunes",
-        album_name: "The Karate Kid (Original Motion Picture Soundtrack)",
-        release_year: 1984,
-        matched_by: "manual",
-      },
-    ]);
-    expect(
-      await rows(
-        "select name from song_lists.artists where name = 'Joe Esposito'",
-      ),
-    ).toEqual([]);
-  });
-
-  it("should put Ça Plane Pour Moi on Plastic Bertrand's original album, not a later compilation", async () => {
-    expect(
-      await rows(
-        `select m.source, m.artwork_url, m.album_name, m.release_year, m.matched_by
+        `select s.title, m.source, m.source_track_id, m.artwork_url, m.album_name, m.release_year, m.matched_by
          from song_lists.song_metadata m
          join song_lists.songs s on s.id = m.song_id
-         where s.title = 'Ça Plane Pour Moi'`,
+         join song_lists.artists a on a.id = s.artist_id
+         where a.name = 'KRS-One' and m.album_name ilike 'KRS%one'
+         order by s.title`,
       ),
-    ).toEqual([
-      {
+    ).toEqual(
+      [
+        ["Free Mumia", "254977338"],
+        ["MC's Act Like They Don't Know", "254977164"],
+      ].map(([title, track]) => ({
+        title,
         source: "itunes",
+        source_track_id: track,
         artwork_url:
-          "https://is1-ssl.mzstatic.com/image/thumb/Music/y2005/m09/d09/h08/mzi.fhqvulzd.tif/100x100bb.jpg",
-        album_name: "An 1",
+          "https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/01/56/9f/01569fdf-f9a0-9ad3-9612-8460f3de7967/mzi.ffogbhiq.jpg/100x100bb.jpg",
+        album_name: "KRS-One",
+        release_year: 1995,
+        matched_by: "manual",
+      })),
+    );
+  });
+
+  it("should put Michael Jackson's songs from Off The Wall on that album, with its famous cover and not a compilation", async () => {
+    expect(
+      await rows(
+        `select s.title, m.source_track_id, m.artwork_url, m.album_name, m.release_year
+         from song_lists.song_metadata m
+         join song_lists.songs s on s.id = m.song_id
+         join song_lists.artists a on a.id = s.artist_id
+         where a.name = 'Michael Jackson' and m.album_name = 'Off The Wall'
+         order by s.title`,
+      ),
+    ).toEqual(
+      [
+        ["Don't Stop Til You Get Enough", "186166292"],
+        ["Rock With You", "186166358"],
+      ].map(([title, track]) => ({
+        title,
+        source_track_id: track,
+        artwork_url:
+          "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/0c/fe/a3/0cfea324-57c1-d530-5248-9bb591bbd7bf/074643574525.jpg/100x100bb.jpg",
+        album_name: "Off The Wall",
+        release_year: 1979,
+      })),
+    );
+  });
+
+  it("should give every People Under The Stairs song from O.S.T. the same cover", async () => {
+    expect(
+      await rows(
+        `select s.title, m.source, m.artwork_url, m.release_year
+         from song_lists.song_metadata m
+         join song_lists.songs s on s.id = m.song_id
+         join song_lists.artists a on a.id = s.artist_id
+         where a.name = 'People Under The Stairs' and m.album_name = 'O.S.T.'
+         order by s.title`,
+      ),
+    ).toEqual(
+      ["Acid Raindrops", "Montego Slay", "O.S.T. Intro", "The Hang Loose"].map(
+        (title) => ({
+          title,
+          source: "itunes",
+          artwork_url:
+            "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/98/59/c3/9859c32d-3b7b-5d64-a1fc-42bcef0cc81a/600353020528_Cover.jpg/100x100bb.jpg",
+          release_year: 2002,
+        }),
+      ),
+    );
+  });
+
+  it("should put every People Under The Stairs song from The Next Step on it, Play It Again as its last track", async () => {
+    expect(
+      await rows(
+        `select s.title, m.source_track_id, m.artwork_url, m.release_year
+         from song_lists.song_metadata m
+         join song_lists.songs s on s.id = m.song_id
+         join song_lists.artists a on a.id = s.artist_id
+         where a.name = 'People Under The Stairs' and m.album_name = 'The Next Step'
+         order by m.source_track_id::int`,
+      ),
+    ).toEqual(
+      [
+        ["San Francisco Knights", "2857200"],
+        ["Time To Rock Our Shit", "2857213"],
+        ["The Next Step II", "2857232"],
+        ["Play It Again", "2857251"],
+      ].map(([title, track]) => ({
+        title,
+        source_track_id: track,
+        artwork_url:
+          "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/03/e6/04/03e604d1-0929-7cf2-b19c-4ddfead69e57/s03.pvfbpyzz.jpg/100x100bb.jpg",
+        release_year: 1998,
+      })),
+    );
+  });
+
+  it("should give Poison's Flesh & Blood songs the album's original, uncensored cover", async () => {
+    expect(
+      await rows(
+        `select s.title, m.source, m.artwork_url, m.release_year, m.matched_by
+         from song_lists.song_metadata m
+         join song_lists.songs s on s.id = m.song_id
+         join song_lists.artists a on a.id = s.artist_id
+         where a.name = 'Poison' and m.album_name = 'Flesh & Blood'
+         order by s.title`,
+      ),
+    ).toEqual(
+      ["Ride The Wind", "Unskinny Bop"].map((title) => ({
+        title,
+        source: null,
+        artwork_url: "/album-art/poison-flesh-blood-1990.jpg",
+        release_year: 1990,
+        matched_by: "manual",
+      })),
+    );
+  });
+
+  it("should put the Pretenders' Brass In Pocket and Kid on their 1980 album Pretenders, with one cover", async () => {
+    expect(
+      await rows(
+        `select s.title, m.source_track_id, m.artwork_url, m.release_year
+         from song_lists.song_metadata m
+         join song_lists.songs s on s.id = m.song_id
+         join song_lists.artists a on a.id = s.artist_id
+         where a.name = 'Pretenders' and m.album_name = 'Pretenders'
+         order by s.title`,
+      ),
+    ).toEqual(
+      [
+        ["Brass In Pocket", "197211499"],
+        ["Kid", "197211363"],
+      ].map(([title, track]) => ({
+        title,
+        source_track_id: track,
+        artwork_url:
+          "https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/93/5c/a6/935ca680-f52e-d7da-f736-5470e48880bf/mzi.klixczwp.jpg/100x100bb.jpg",
+        release_year: 1980,
+      })),
+    );
+  });
+
+  it("should keep covers off the Cover Art Archive addresses that stopped loading, on iTunes or in our own files", async () => {
+    const moved = await rows<{
+      title: string;
+      source: string | null;
+      album_name: string;
+      artwork_url: string;
+    }>(
+      `select s.title, m.source, m.album_name, m.artwork_url
+       from song_lists.song_metadata m
+       join song_lists.songs s on s.id = m.song_id
+       where m.artwork_url ~ '^(https://is1-ssl.mzstatic.com|/album-art/)'
+         and (
+           (s.title, m.album_name) in (
+             ('Baker Street', 'Next Year'),
+             ('Self Suicide', 'Greatest Hits'),
+             ('Guns Don''t Kill People, Rappers Do', 'Greatest Hits'),
+             ('Cocaine Blues', 'Johnny Cash At Folsom Prison'),
+             ('Swayin'' To The Music (Slow Dancin'')', 'Coast To Coast'),
+             ('Jungle Boogie', 'Wild And Peaceful'),
+             ('Banditos', 'Wheelie'),
+             ('Live To Rise', 'Avengers Assemble (Music Inspired By The Motion Picture)'),
+             ('Breathe', 'Avengers Assemble (Music Inspired By The Motion Picture)'),
+             ('God Part II', 'Rattle And Hum'),
+             ('Red Red Wine', 'Labour Of Love')
+           )
+         )
+       order by s.title`,
+    );
+
+    expect(moved.map(({ title }) => title)).toEqual([
+      "Baker Street",
+      "Banditos",
+      "Breathe",
+      "Cocaine Blues",
+      "God Part II",
+      "Guns Don't Kill People, Rappers Do",
+      "Jungle Boogie",
+      "Live To Rise",
+      "Red Red Wine",
+      "Self Suicide",
+      "Swayin' To The Music (Slow Dancin')",
+    ]);
+    expect(
+      await rows(
+        "select count(*)::int n from song_lists.song_metadata where artwork_url like '%coverartarchive.org/release-group/%' and (artwork_url like '%64817ce7%' or artwork_url like '%d6b8db26%' or artwork_url like '%6b4ea595%' or artwork_url like '%744f5ccb%' or artwork_url like '%db9b94e6%' or artwork_url like '%ad238e3a%' or artwork_url like '%3ef760ac%' or artwork_url like '%bf965ead%' or artwork_url like '%f1363399%')",
+      ),
+    ).toEqual([{ n: 0 }]);
+  });
+
+  it("should put every Sex Pistols song on the yellow UK Never Mind The Bollocks cover", async () => {
+    expect(
+      await rows(
+        `select s.title, m.source, m.artwork_url, m.album_name, m.release_year, m.matched_by
+         from song_lists.song_metadata m
+         join song_lists.songs s on s.id = m.song_id
+         join song_lists.artists a on a.id = s.artist_id
+         where a.name = 'The Sex Pistols'
+         order by s.title`,
+      ),
+    ).toEqual(
+      [
+        "Bodies",
+        "E.M.I.",
+        "Holidays In The Sun",
+        "No Feelings",
+        "Pretty Vacant",
+      ].map((title) => ({
+        title,
+        source: null,
+        artwork_url:
+          "/album-art/sex-pistols-never-mind-the-bollocks-here-s-the-sex-pistols-1977.jpg",
+        album_name: "Never Mind The Bollocks, Here's The Sex Pistols",
         release_year: 1977,
         matched_by: "manual",
-      },
-    ]);
+      })),
+    );
   });
 
-  it("should keep The Bad Touch's cover on our own server, since its Cover Art Archive image fails to load", async () => {
-    expect(
-      await rows(
-        `select m.source, m.artwork_url, m.album_name, m.release_year, m.matched_by
-         from song_lists.song_metadata m
-         join song_lists.songs s on s.id = m.song_id
-         where s.title = 'The Bad Touch'`,
-      ),
-    ).toEqual([
-      {
-        source: null,
-        artwork_url: "/album-art/bloodhound-gang-hooray-for-boobies-1999.jpg",
-        album_name: "Hooray For Boobies",
-        release_year: 1999,
-        matched_by: "manual",
-      },
+  it("should show every Siamese Dream song with the original cover, not the reissue's", async () => {
+    const songs = await rows<{ title: string; artwork_url: string }>(
+      `select s.title, m.artwork_url
+       from song_lists.song_metadata m
+       join song_lists.songs s on s.id = m.song_id
+       where m.album_name = 'Siamese Dream'
+         and m.release_year = 1993`,
+    );
+
+    expect(songs.map(({ title }) => title).sort()).toEqual([
+      "Cherub Rock",
+      "Disarm",
+      "Mayonaise",
+      "Rocket",
+      "Soma",
+      "Spaceboy",
+      "Today",
     ]);
+    expect(new Set(songs.map(({ artwork_url }) => artwork_url))).toEqual(
+      new Set(["/album-art/smashing-pumpkins-siamese-dream-1993.jpg"]),
+    );
   });
 
-  it("should show Primal Scream's Rocks with the original neon-sign cover of Give Out But Don't Give Up", async () => {
-    expect(
-      await rows(
-        `select m.source, m.artwork_url, m.album_name, m.release_year, m.matched_by
-         from song_lists.song_metadata m
-         join song_lists.songs s on s.id = m.song_id
-         join song_lists.artists a on a.id = s.artist_id
-         where a.name = 'Primal Scream' and s.title = 'Rocks'`,
-      ),
-    ).toEqual([
-      {
-        source: "musicbrainz",
-        artwork_url:
-          "https://coverartarchive.org/release-group/a9c9cda6-d92f-3022-9a54-0053e58eca25/front",
-        album_name: "Give Out But Don't Give Up",
-        release_year: 1994,
-        matched_by: "manual",
-      },
+  it("should show every Mellon Collie song with the original cover, not the reissue's", async () => {
+    const songs = await rows<{ title: string; artwork_url: string }>(
+      `select s.title, m.artwork_url
+       from song_lists.song_metadata m
+       join song_lists.songs s on s.id = m.song_id
+       where m.album_name = 'Mellon Collie And The Infinite Sadness'
+         and m.release_year = 1995`,
+    );
+
+    expect(songs.map(({ title }) => title).sort()).toEqual([
+      "1979",
+      "Bullet With Butterfly Wings",
+      "Thirty-Three",
+      "Tonight, Tonight",
+      "Where Boys Fear To Tread",
+      "X.Y.U.",
     ]);
+    expect(new Set(songs.map(({ artwork_url }) => artwork_url))).toEqual(
+      new Set([
+        "/album-art/smashing-pumpkins-mellon-collie-and-the-infinite-sadness-1995.jpg",
+      ]),
+    );
+  });
+
+  it("should give every Sublime song on 40 Oz. To Freedom the same cover", async () => {
+    const songs = await rows<{ artwork_url: string }>(
+      `select m.artwork_url
+       from song_lists.song_metadata m
+       join song_lists.songs s on s.id = m.song_id
+       join song_lists.artists a on a.id = s.artist_id
+       where a.name = 'Sublime'
+         and m.album_name = '40 Oz. To Freedom'
+         and m.release_year = 1992`,
+    );
+
+    expect(songs.length).toBeGreaterThan(10);
+    expect(new Set(songs.map(({ artwork_url }) => artwork_url)).size).toBe(1);
+  });
+
+  it("should give every Sublime song on Sublime the same, original cover", async () => {
+    const songs = await rows<{ artwork_url: string }>(
+      `select m.artwork_url
+       from song_lists.song_metadata m
+       join song_lists.songs s on s.id = m.song_id
+       join song_lists.artists a on a.id = s.artist_id
+       where a.name = 'Sublime'
+         and m.album_name = 'Sublime'
+         and m.release_year = 1996`,
+    );
+
+    expect(songs).toHaveLength(7);
+    expect(new Set(songs.map(({ artwork_url }) => artwork_url)).size).toBe(1);
+    expect(songs[0]?.artwork_url).toContain("06UMGIM01498");
+  });
+
+  it("should show every Crime Of The Century song with the original cover, not the deluxe edition's", async () => {
+    const songs = await rows<{ title: string; artwork_url: string }>(
+      `select s.title, m.artwork_url
+       from song_lists.song_metadata m
+       join song_lists.songs s on s.id = m.song_id
+       where m.album_name = 'Crime Of The Century'
+         and m.release_year = 1974`,
+    );
+
+    expect(songs.map(({ title }) => title).sort()).toEqual([
+      "Another Man's Woman",
+      "Bloody Well Right",
+    ]);
+    expect(new Set(songs.map(({ artwork_url }) => artwork_url))).toEqual(
+      new Set(["/album-art/supertramp-crime-of-the-century-1974.jpg"]),
+    );
   });
 
   it("should not seed two artists with the same name", async () => {

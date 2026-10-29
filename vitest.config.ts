@@ -43,6 +43,7 @@ export default defineConfig({
         "packages/db/src/reset-db.ts",
         "packages/db/src/run-migrations.ts",
         "packages/db/src/studio.ts",
+        "packages/song-metadata/src/check-seed-art.ts",
         "apps/cli/src/index.ts",
         "apps/cli/src/backfill-metadata.ts",
         "apps/web-next/lib/queries/**",

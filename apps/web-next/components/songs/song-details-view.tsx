@@ -9,6 +9,7 @@ import {
   SongLink,
 } from "@/components/entity-links";
 import { NoteLines } from "@/components/songs/note-lines";
+import { albumLine } from "@/lib/songs/album-line";
 import { metadataCredit } from "@/lib/songs/metadata-credit";
 import { SongArtwork } from "@/components/songs/song-artwork";
 import { ListPill } from "@/components/lists/list-pill";
@@ -27,11 +28,14 @@ function SongDetailsView({
   details,
   headingLevel = "h1",
   footerAction,
+  onViewArt,
 }: {
   details: SongDetails;
   headingLevel?: "h1" | "h2";
   /** Something to show beside the footer line, such as an Edit button. */
   footerAction?: ReactNode;
+  /** Called when the art is clicked, to show it larger; without it the art isn't clickable. */
+  onViewArt?: () => void;
 }) {
   const Heading = headingLevel;
   const artworkUrl = details.metadata?.artworkUrl ?? null;
@@ -39,9 +43,7 @@ function SongDetailsView({
   const credit = details.metadata
     ? metadataCredit(details.metadata.source)
     : null;
-  const albumLine = [albumName, details.metadata?.releaseYear]
-    .filter((part) => part !== null && part !== undefined)
-    .join(" · ");
+  const albumDescription = albumLine(albumName, details.metadata?.releaseYear);
   return (
     <article className="flex flex-col gap-5">
       <header className="flex gap-4 pr-8">
@@ -50,6 +52,12 @@ function SongDetailsView({
             src={artworkUrlAtSize(artworkUrl, ARTWORK_SIZE * 2)}
             alt={albumName ? `Album art for ${albumName}` : "Album art"}
             size={ARTWORK_SIZE}
+            {...(onViewArt && {
+              onView: onViewArt,
+              viewLabel: albumName
+                ? `View larger album art for ${albumName}`
+                : "View larger album art",
+            })}
           />
         )}
         <div className="flex min-w-0 flex-col gap-1">
@@ -88,9 +96,9 @@ function SongDetailsView({
               ))}
             </p>
           )}
-          {albumLine && (
+          {albumDescription && (
             <p className="text-sm text-muted-foreground wrap-anywhere">
-              {albumLine}
+              {albumDescription}
             </p>
           )}
         </div>

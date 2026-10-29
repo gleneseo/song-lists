@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { artworkUrlAtSize } from "../../src/artwork.js";
+import { artworkUrlAtSize, largestArtworkUrl } from "../../src/artwork.js";
 
 describe("artwork url", () => {
   it("should ask for the artwork at another size", () => {
@@ -37,4 +37,34 @@ describe("artwork url", () => {
       ).toBe(`https://coverartarchive.org/release-group/g1/${name}`);
     },
   );
+});
+
+describe("largest artwork url", () => {
+  it("should ask iTunes for more than it will ever hold, which it answers with the most it has", () => {
+    expect(largestArtworkUrl("https://example.test/art/100x100bb.jpg")).toBe(
+      "https://example.test/art/5000x5000bb.jpg",
+    );
+  });
+
+  it.each([
+    "https://coverartarchive.org/release-group/g1/front",
+    "https://coverartarchive.org/release-group/g1/front-250",
+    "https://coverartarchive.org/release-group/g1/front-1200",
+  ])(
+    "should ask the Cover Art Archive for the cover it holds, not one of its sizes: %s",
+    (address) => {
+      expect(largestArtworkUrl(address)).toBe(
+        "https://coverartarchive.org/release-group/g1/front",
+      );
+    },
+  );
+
+  it("should leave a file of our own, or an address it doesn't recognize, alone", () => {
+    expect(largestArtworkUrl("/album-art/the-cover-1969.jpg")).toBe(
+      "/album-art/the-cover-1969.jpg",
+    );
+    expect(largestArtworkUrl("https://example.test/art/cover.jpg")).toBe(
+      "https://example.test/art/cover.jpg",
+    );
+  });
 });

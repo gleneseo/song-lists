@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { largestArtworkUrl } from "@song-lists/song-metadata/artwork";
 import { useRouter } from "next/navigation";
+import { albumLine } from "@/lib/songs/album-line";
+import { LargeSongArtwork } from "@/components/songs/large-song-artwork";
 import { SongDetailsView } from "@/components/songs/song-details-view";
 import { SongNoteForm } from "@/components/songs/song-note-form";
 import { SongEditForm } from "@/components/songs/song-edit-form";
@@ -26,6 +29,19 @@ function SongDetailsPanel({
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
+  const [viewingArt, setViewingArt] = useState(false);
+  const wasViewingArt = useRef(false);
+  const artworkUrl = details.metadata?.artworkUrl ?? null;
+  const albumName = details.metadata?.albumName ?? null;
+
+  // Back from the large art, the art it came from has the focus again.
+  useEffect(() => {
+    if (wasViewingArt.current && !viewingArt) {
+      document.querySelector<HTMLElement>("[data-artwork-button]")?.focus();
+    }
+
+    wasViewingArt.current = viewingArt;
+  }, [viewingArt]);
 
   if (editing && editorRole === "manager") {
     return (
@@ -55,10 +71,25 @@ function SongDetailsPanel({
     );
   }
 
+  if (viewingArt && artworkUrl) {
+    return (
+      <LargeSongArtwork
+        src={largestArtworkUrl(artworkUrl)}
+        alt={albumName ? `Album art for ${albumName}` : "Album art"}
+        heading={
+          albumLine(albumName, details.metadata?.releaseYear) ?? details.title
+        }
+        headingLevel={headingLevel}
+        onClose={() => setViewingArt(false)}
+      />
+    );
+  }
+
   return (
     <SongDetailsView
       details={details}
       headingLevel={headingLevel}
+      onViewArt={artworkUrl ? () => setViewingArt(true) : undefined}
       footerAction={
         editorRole ? <EditButton onClick={() => setEditing(true)} /> : null
       }

@@ -30,7 +30,12 @@ function EntityModal({ children }: { children: ReactNode }) {
         }
       }}
     >
-      <DialogContent aria-labelledby={ENTITY_HEADING_ID}>
+      <DialogContent
+        aria-labelledby={ENTITY_HEADING_ID}
+        // The large album art has a close button of its own, which puts the
+        // song's details back; the dialog's would close the whole dialog.
+        className="has-[[data-artwork-viewer]]:[&>button]:hidden"
+      >
         <InEntityModalContext value={true}>{children}</InEntityModalContext>
       </DialogContent>
     </Dialog>

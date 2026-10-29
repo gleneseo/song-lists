@@ -1119,14 +1119,29 @@ describe("chooseMatch, for the same act written another way", () => {
   });
 
   it("should treat n and 'n' as and, in a title", () => {
-    const candidate = song("Snoop Dogg", "Gin and Juice");
+    // Both spellings of each are on iTunes, for the same record.
+    const elo = song("Electric Light Orchestra", "Rock and Roll Is King");
+    const devo = song("Devo", "Jerkin' Back and Forth");
 
-    expect(chooseMatch(song("Snoop Dogg", "Gin N Juice"), [candidate])).toBe(
-      candidate,
-    );
     expect(
-      chooseMatch(song("Snoop Dogg", "Rock 'n' Roll"), [
-        song("Snoop Dogg", "Rock & Roll"),
+      chooseMatch(song("Electric Light Orchestra", "Rock 'N' Roll Is King"), [
+        elo,
+      ]),
+    ).toBe(elo);
+    expect(chooseMatch(song("Devo", "Jerkin' Back 'N' Forth"), [devo])).toBe(
+      devo,
+    );
+    // And an ampersand, which iTunes uses for the same song, is and too.
+    const heaven = song("The Righteous Brothers", "Rock and Roll Heaven");
+
+    expect(
+      chooseMatch(song("The Righteous Brothers", "Rock & Roll Heaven"), [
+        heaven,
+      ]),
+    ).toBe(heaven);
+    expect(
+      chooseMatch(song("Joan Jett & The Blackhearts", "I Love Rock 'n' Roll"), [
+        song("Joan Jett & The Blackhearts", "I Love Rock 'N Roll"),
       ]),
     ).not.toBeNull();
   });

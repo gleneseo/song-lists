@@ -42,3 +42,7 @@ square, about 600 px) and it appears on the song.
 | `w-a-nichol-s-western-aces-cocaine-blues-my-song-for-you-1947.jpg` | Cocaine Blues / My Song For You | 1947 | W.A. Nichol's Western Aces - Cocaine Blues |
 | `burnt-mcmelba-toast-burntmcmelbatoast-1996.jpg` | BurntMcMelbaToast | 1996 | Burnt McMelba Toast - Funky Love Ballad |
 | `the-revels-comanche-single-1961.jpg` | Comanche - Single | 1961 | The Revels - Comanche |
+| `joey-scarbury-theme-from-the-greatest-american-hero-1981.jpg` | Theme From The Greatest American Hero (Believe It Or Not) - Single | 1981 | Joey Scarbury - Believe It Or Not (Theme From "Greatest American Hero") |
+| `the-rolling-stones-big-hits-high-tide-and-green-grass-uk-version-1966.jpg` | Big Hits (High Tide And Green Grass) (UK Version) | 1966 | The Rolling Stones - Paint It, Black |
+| `johnny-pearson-sporting-themes-1979.jpg` | Sporting Themes | 1979 | Johnny Pearson - Heavy Action |
+| `dillinger-cocaine-in-my-brain-funky-punk-1979.jpg` | Cocaine In My Brain / Funky Punk | 1979 | Dillinger - Cocaine In My Brain |

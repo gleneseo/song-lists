@@ -146,11 +146,14 @@ describe("what the app expects of the seeded data", () => {
         author: "System",
       },
       { body: "Classic shit.", author: "Al" },
-      { body: "Iiiiii, got a pocket full of kryptonite", author: "Cliff" },
+      {
+        body: "Iiiiii, got a pocket full of kryptonite-Stank",
+        author: "Cliff",
+      },
     ]);
   });
 
-  it("should credit a comment signed with a nickname to the user it belongs to", async () => {
+  it("should credit a comment signed with a nickname to the user it belongs to, and keep the nickname", async () => {
     expect(
       await rows(
         `select n.body, u.name author from song_lists.song_notes n
@@ -158,7 +161,18 @@ describe("what the app expects of the seeded data", () => {
          join song_lists.users u on u.id = n.created_by
          where s.title = 'Call Me A Dog'`,
       ),
-    ).toEqual([{ body: "Dog.", author: "Cliff" }]);
+    ).toEqual([{ body: "Dog.  - Stan", author: "Cliff" }]);
+  });
+
+  it("should know Dr. Jelly Finger as one of Cliff's nicknames", async () => {
+    expect(
+      await rows(
+        `select n.body, u.name author from song_lists.song_notes n
+         join song_lists.songs s on s.id = n.song_id
+         join song_lists.users u on u.id = n.created_by
+         where s.title = 'Territorial Pissings'`,
+      ),
+    ).toEqual([{ body: "💖💕💕-Dr. Jelly Finger", author: "Cliff" }]);
   });
 
   it("should leave no signed-off comment credited to the System user when a seeded user signed it", async () => {

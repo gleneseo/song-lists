@@ -7655,15 +7655,16 @@ ORDER BY v.ord;
 
 -- The seed songs' bios are really notes, one per line. Each line becomes a
 -- note of its own, in line order, and the bio is left empty for an actual bio.
--- A line that ends in a hyphen and the name of a seeded user, or one of the
--- nicknames in their "aka" bio ("Classic shit. -Al", "Dog. - Stan"), was
--- written by that user, so it is theirs and loses the sign-off, which the
--- byline now says; any other line is credited to whoever added the song.
+-- A line that ends in a hyphen and the name of a seeded user ("Classic shit.
+-- -Al") was written by that user, so it is theirs and loses the sign-off, which
+-- the byline now says. One signed with a nickname from a user's "aka" bio
+-- ("Dog. - Stan") is theirs too, but keeps the nickname, which is half the fun.
+-- Any other line is credited to whoever added the song.
 -- Every note is dated when the song was added.
 INSERT INTO "song_lists"."song_notes" ("song_id", "body", "created_at", "updated_at", "created_by", "updated_by")
 SELECT
   s.id,
-  coalesce(CASE WHEN author.id IS NOT NULL THEN p.parts[1] END, p.line),
+  coalesce(CASE WHEN author.by_name THEN p.parts[1] END, p.line),
   s.created_at,
   s.created_at,
   coalesce(author.id, s.created_by),
@@ -7676,7 +7677,7 @@ CROSS JOIN LATERAL (
     regexp_match(btrim(l.line), '^(.*\S)\s*-\s*([^-]*\S)$') AS parts
 ) AS p
 LEFT JOIN LATERAL (
-  SELECT u.id
+  SELECT u.id, lower(u.name) = lower(p.parts[2]) AS by_name
   FROM "song_lists"."users" u
   WHERE p.parts IS NOT NULL
     AND u.id <> '00000000-0000-0000-0000-000000000000'

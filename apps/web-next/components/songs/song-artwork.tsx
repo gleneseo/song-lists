@@ -10,17 +10,24 @@ import { canProxyArtwork } from "@/lib/songs/artwork-proxy";
  * shown straight from where it is.
  * Art that can't be loaded (the service moved it, or it's offline) leaves
  * the fallback, if any, rather than a broken-image icon.
+ * With `onView` it is a button that asks for the art to be shown larger; the
+ * button goes with the art, so there is never a button with nothing in it.
  */
 function SongArtwork({
   src,
   alt,
   size,
   fallback = null,
+  onView,
+  viewLabel,
 }: {
   src: string;
   alt: string;
   size: number;
   fallback?: ReactNode;
+  onView?: () => void;
+  /** What the button that shows the art larger is called, for a screen reader */
+  viewLabel?: string;
 }) {
   const [failed, setFailed] = useState(false);
   const image = useRef<HTMLImageElement>(null);
@@ -43,7 +50,7 @@ function SongArtwork({
     setFailed(true);
   };
 
-  return canProxyArtwork(src) ? (
+  const picture = canProxyArtwork(src) ? (
     <Image
       ref={image}
       src={src}
@@ -69,6 +76,20 @@ function SongArtwork({
       className={className}
       style={{ width: size, height: size }}
     />
+  );
+
+  return onView ? (
+    <button
+      type="button"
+      data-artwork-button
+      aria-label={viewLabel}
+      onClick={onView}
+      className="shrink-0 cursor-zoom-in rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+    >
+      {picture}
+    </button>
+  ) : (
+    picture
   );
 }
 

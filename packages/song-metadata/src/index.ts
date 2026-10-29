@@ -1,4 +1,4 @@
-export { artworkUrlAtSize } from "./artwork.js";
+export { artworkUrlAtSize, largestArtworkUrl } from "./artwork.js";
 export { createItunesLookup, ITUNES_MIN_INTERVAL_MS } from "./itunes.js";
 export { backfillSongMetadata, findSongsToBackfill } from "./backfill.js";
 export type {

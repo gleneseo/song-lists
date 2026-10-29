@@ -27,4 +27,26 @@ function artworkUrlAtSize(artworkUrl: string, pixels: number): string {
   );
 }
 
-export { artworkUrlAtSize };
+/**
+ * A size far beyond any cover iTunes holds: it serves the largest the source
+ * has, and no more, for any size above that (5000 pixels got the 3000 a
+ * cover was kept at).
+ */
+const ITUNES_LARGEST_PIXELS = 5000;
+
+/**
+ * The same artwork at the largest size we can get it. The Cover Art Archive
+ * serves the cover it holds, at its own size, from the address without a
+ * size in it, while its sized covers stop at 1200 pixels. iTunes serves the
+ * largest it has when asked for more than that. An address in neither form,
+ * such as a file of our own, is returned as it is.
+ */
+function largestArtworkUrl(artworkUrl: string): string {
+  const archive = /^(.*\/release-group\/[^/]+\/front)(?:-\d+)?$/.exec(
+    artworkUrl,
+  );
+
+  return archive?.[1] ?? artworkUrlAtSize(artworkUrl, ITUNES_LARGEST_PIXELS);
+}
+
+export { artworkUrlAtSize, largestArtworkUrl };

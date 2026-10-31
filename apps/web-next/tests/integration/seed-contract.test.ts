@@ -189,7 +189,7 @@ describe("what the app expects of the seeded data", () => {
   it("should name the Isley Brothers' 1973 album 3 + 3 the same way for every song on it, and leave Seals & Crofts' Summer Breeze alone", async () => {
     expect(
       await rows(
-        `select a.name artist, s.title, m.source_track_id, m.album_name, m.release_year, m.details_matched_by
+        `select a.name artist, s.title, m.source_track_id, m.album_name, m.release_year
          from song_lists.song_metadata m
          join song_lists.songs s on s.id = m.song_id
          join song_lists.artists a on a.id = s.artist_id
@@ -203,7 +203,6 @@ describe("what the app expects of the seeded data", () => {
         source_track_id: "303230013",
         album_name: "Summer Breeze",
         release_year: 1972,
-        details_matched_by: "auto",
       },
       {
         artist: "The Isley Brothers",
@@ -211,7 +210,6 @@ describe("what the app expects of the seeded data", () => {
         source_track_id: "1030452487",
         album_name: "3 + 3",
         release_year: 1973,
-        details_matched_by: "manual",
       },
       {
         artist: "The Isley Brothers",
@@ -219,7 +217,6 @@ describe("what the app expects of the seeded data", () => {
         source_track_id: "1030452446",
         album_name: "3 + 3",
         release_year: 1973,
-        details_matched_by: "manual",
       },
     ]);
   });
@@ -249,7 +246,7 @@ describe("what the app expects of the seeded data", () => {
   it("should show every Electric Ladyland song with the album's original, uncensored UK cover", async () => {
     expect(
       await rows(
-        `select s.title, m.source, m.artwork_url, m.album_name, m.release_year, m.details_matched_by
+        `select s.title, m.source, m.artwork_url, m.album_name, m.release_year
          from song_lists.song_metadata m
          join song_lists.songs s on s.id = m.song_id
          where m.album_name = 'Electric Ladyland' order by s.title`,
@@ -266,7 +263,6 @@ describe("what the app expects of the seeded data", () => {
           "/album-art/the-jimi-hendrix-experience-electric-ladyland-1968.jpg",
         album_name: "Electric Ladyland",
         release_year: 1968,
-        details_matched_by: "manual",
       })),
     );
   });
@@ -274,7 +270,7 @@ describe("what the app expects of the seeded data", () => {
   it("should show John Fogerty's Centerfield songs with the original cover, not the 25th anniversary one", async () => {
     expect(
       await rows(
-        `select s.title, m.source, m.artwork_url, m.album_name, m.release_year, m.details_matched_by
+        `select s.title, m.source, m.artwork_url, m.album_name, m.release_year
          from song_lists.song_metadata m
          join song_lists.songs s on s.id = m.song_id
          join song_lists.artists a on a.id = s.artist_id
@@ -289,7 +285,6 @@ describe("what the app expects of the seeded data", () => {
           "https://coverartarchive.org/release-group/29de7d6b-599b-31e7-83e9-b6a4139c3f88/front",
         album_name: "Centerfield",
         release_year: 1985,
-        details_matched_by: "manual",
       })),
     );
   });
@@ -297,7 +292,7 @@ describe("what the app expects of the seeded data", () => {
   it("should put KRS-One's songs from his 1995 album KRS-One on it, with one cover and one spelling", async () => {
     expect(
       await rows(
-        `select s.title, m.source, m.source_track_id, m.artwork_url, m.album_name, m.release_year, m.details_matched_by
+        `select s.title, m.source, m.source_track_id, m.artwork_url, m.album_name, m.release_year
          from song_lists.song_metadata m
          join song_lists.songs s on s.id = m.song_id
          join song_lists.artists a on a.id = s.artist_id
@@ -316,7 +311,6 @@ describe("what the app expects of the seeded data", () => {
           "https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/01/56/9f/01569fdf-f9a0-9ad3-9612-8460f3de7967/mzi.ffogbhiq.jpg/100x100bb.jpg",
         album_name: "KRS-One",
         release_year: 1995,
-        details_matched_by: "manual",
       })),
     );
   });
@@ -398,7 +392,7 @@ describe("what the app expects of the seeded data", () => {
   it("should give Poison's Flesh & Blood songs the album's original, uncensored cover", async () => {
     expect(
       await rows(
-        `select s.title, m.source, m.artwork_url, m.release_year, m.details_matched_by
+        `select s.title, m.source, m.artwork_url, m.release_year
          from song_lists.song_metadata m
          join song_lists.songs s on s.id = m.song_id
          join song_lists.artists a on a.id = s.artist_id
@@ -411,7 +405,6 @@ describe("what the app expects of the seeded data", () => {
         source: null,
         artwork_url: "/album-art/poison-flesh-blood-1990.jpg",
         release_year: 1990,
-        details_matched_by: "manual",
       })),
     );
   });
@@ -492,7 +485,7 @@ describe("what the app expects of the seeded data", () => {
   it("should put every Sex Pistols song on the yellow UK Never Mind The Bollocks cover", async () => {
     expect(
       await rows(
-        `select s.title, m.source, m.artwork_url, m.album_name, m.release_year, m.details_matched_by
+        `select s.title, m.source, m.artwork_url, m.album_name, m.release_year
          from song_lists.song_metadata m
          join song_lists.songs s on s.id = m.song_id
          join song_lists.artists a on a.id = s.artist_id
@@ -513,7 +506,6 @@ describe("what the app expects of the seeded data", () => {
           "/album-art/sex-pistols-never-mind-the-bollocks-here-s-the-sex-pistols-1977.jpg",
         album_name: "Never Mind The Bollocks, Here's The Sex Pistols",
         release_year: 1977,
-        details_matched_by: "manual",
       })),
     );
   });

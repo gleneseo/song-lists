@@ -128,3 +128,4 @@ square, ideally at least 600 px; the largest scan there is is best, since the so
 | `hurricane-the-hurra-1995.jpg` | The Hurra | 1995 | Hurricane - Get Blind |
 | `iron-butterfly-in-a-gadda-da-vida-1968.jpg` | In-A-Gadda-Da-Vida | 1968 | Iron Butterfly - Most Anything You Want |
 | `public-enemy-it-takes-a-nation-of-millions-to-hold-us-back-1988.jpg` | It Takes A Nation Of Millions To Hold Us Back | 1988 | Public Enemy - Bring The Noise; Don't Believe The Hype; Louder Than A Bomb; Party For Your Right To Fight; Prophets Of Rage; Rebel Without A Pause; Terminator X To The Edge Of Panic |
+| `zeke-flat-tracker-1996.jpg` | Flat Tracker | 1996 | Zeke - Wanna Fuck (the original Scooch Pooch cover, not the reissue's) |

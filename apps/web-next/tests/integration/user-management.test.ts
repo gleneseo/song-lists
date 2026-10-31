@@ -17,6 +17,7 @@ describe("an admin managing users, through the real Better Auth and database", (
   let pool: Pool;
   let edit: typeof import("@/lib/actions/edit-user");
   let manage: typeof import("@/lib/actions/manage-user");
+  let create: typeof import("@/lib/actions/create-user");
   let users: typeof import("@/lib/queries/users");
   let auth: (typeof import("@/lib/auth/auth"))["auth"];
   let al: string;
@@ -27,6 +28,7 @@ describe("an admin managing users, through the real Better Auth and database", (
     ({ pool } = await openAppDatabase());
     edit = await import("@/lib/actions/edit-user");
     manage = await import("@/lib/actions/manage-user");
+    create = await import("@/lib/actions/create-user");
     users = await import("@/lib/queries/users");
     ({ auth } = await import("@/lib/auth/auth"));
     al = await userId(pool, "Al");
@@ -67,6 +69,85 @@ describe("an admin managing users, through the real Better Auth and database", (
 
     return result.user.id;
   };
+
+  describe("creating a user", () => {
+    const newUser = (email: string, role = "user") => ({
+      name: "Zz Created",
+      firstName: "Zed",
+      lastName: "Created",
+      email,
+      role,
+      bio: "Made by an admin.",
+      password: "a long password",
+    });
+
+    it("should make an account that signs in with the chosen password, with its role and who made it", async () => {
+      session.userId = al;
+
+      const result = await create.createUser(
+        newUser("  ZZ.Created@Example.com ", "manager"),
+      );
+
+      expect(result.status).toBe("created");
+      const id = result.status === "created" ? result.userId : "";
+      expect(await row(id)).toMatchObject({
+        name: "Zz Created",
+        first_name: "Zed",
+        last_name: "Created",
+        email: "zz.created@example.com",
+        role: "manager",
+        bio: "Made by an admin.",
+      });
+      expect(
+        (await signIn("zz.created@example.com", "a long password")).user.id,
+      ).toBe(id);
+    });
+
+    it("should not leave a session behind for the new account", async () => {
+      session.userId = al;
+
+      const result = await create.createUser(
+        newUser("zz.nosession@example.com"),
+      );
+
+      const id = result.status === "created" ? result.userId : "";
+      expect(await sessionCount(id)).toBe(0);
+    });
+
+    it("should refuse an email another user has, in any case", async () => {
+      session.userId = al;
+      await create.createUser(newUser("zz.taken@example.com"));
+
+      const result = await create.createUser(newUser("ZZ.Taken@example.com"));
+
+      expect(result).toEqual({
+        status: "duplicate",
+        email: "zz.taken@example.com",
+      });
+    });
+
+    it("should refuse a password that is too short", async () => {
+      session.userId = al;
+
+      const result = await create.createUser({
+        ...newUser("zz.short@example.com"),
+        password: "short",
+      });
+
+      expect(result.status).toBe("error");
+    });
+
+    it("should refuse anyone who isn't an admin", async () => {
+      session.userId = judd;
+
+      const result = await create.createUser(newUser("zz.nope@example.com"));
+
+      expect(result).toEqual({
+        status: "error",
+        message: "Only admins can create users.",
+      });
+    });
+  });
 
   describe("editing a user's profile", () => {
     it("should save the changes, tidied up, and record who made them", async () => {

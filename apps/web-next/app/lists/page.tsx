@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { CardSkeleton } from "@/components/dashboard/card-skeleton";
+import { Button } from "@/components/ui/button";
 import { ListCard } from "@/components/lists/list-card";
+import { getAdminUserId } from "@/lib/auth/admin";
 import { getSession } from "@/lib/auth/auth";
 import { getListsOverview } from "@/lib/queries/lists";
 import { countLabel } from "@/lib/text/count-label";
@@ -18,12 +21,24 @@ async function Lists() {
 
   const now = new Date();
   const lists = await getListsOverview(session.user.id);
+  const isAdmin = (await getAdminUserId()) !== null;
 
   return (
     <>
-      <p className="mb-6 text-sm text-muted-foreground">
-        {countLabel(lists.length, "list")}
-      </p>
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <p className="text-sm text-muted-foreground">
+          {countLabel(lists.length, "list")}
+        </p>
+        {isAdmin && (
+          <Button
+            variant="outline"
+            nativeButton={false}
+            render={<Link href="/admin/lists" />}
+          >
+            Manage lists
+          </Button>
+        )}
+      </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {lists.map((list) => (
           <ListCard key={list.id} list={list} now={now} />

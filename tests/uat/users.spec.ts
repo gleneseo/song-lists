@@ -1,6 +1,8 @@
 import type { Page } from "@playwright/test";
 import {
   createPerson,
+  freshEmail,
+  freshName,
   signedInAs,
   signInThroughThePage,
   newPageOfTheirOwn,
@@ -412,4 +414,131 @@ test.describe("deactivating a person", () => {
       expect(rows[0]?.n).toBe("1");
     });
   });
+});
+
+test.describe("creating a person", () => {
+  const fillIn = async (page: Page, name: string, email: string) => {
+    await main(page).getByRole("textbox", { name: "Display name" }).fill(name);
+    await main(page).getByRole("textbox", { name: "Email" }).fill(email);
+  };
+
+  test("the users page has a New user button that opens the form", async ({
+    as,
+  }) => {
+    const page = await as("admin");
+    await page.goto("/users");
+
+    await main(page).getByRole("link", { name: "New user" }).click();
+
+    await expect(page).toHaveURL(/\/users\/new$/);
+    await expect(
+      main(page).getByRole("heading", { name: "New user", level: 1 }),
+    ).toBeVisible();
+  });
+
+  test("makes an account that signs in with the password given, and opens its page", async ({
+    as,
+    browser,
+  }) => {
+    const name = freshName("Created");
+    const email = freshEmail();
+    const page = await as("admin");
+    await page.goto("/users/new");
+
+    await fillIn(page, name, email);
+    await main(page)
+      .getByRole("textbox", { name: "Password" })
+      .fill("brand new pass");
+    await main(page).getByRole("button", { name: "Create user" }).click();
+
+    await expect(page).toHaveURL(/\/users\/[0-9a-f-]{36}$/);
+    await expect(
+      main(page).getByRole("heading", { name, level: 1 }),
+    ).toBeVisible();
+    await expect(main(page).getByText(`${email} · user`)).toBeVisible();
+    const id = page.url().split("/").pop() ?? "";
+    await signedInAs(browser, { id, name, email, password: "brand new pass" });
+  });
+
+  test("Generate fills in a password to pass on", async ({ as }) => {
+    const page = await as("admin");
+    await page.goto("/users/new");
+
+    await main(page).getByRole("button", { name: "Generate" }).click();
+
+    await expect(
+      main(page).getByRole("textbox", { name: "Password" }),
+    ).toHaveValue(/^[A-Za-z0-9]{16}$/);
+  });
+
+  test("can make a manager", async ({ as }) => {
+    const name = freshName("Boss");
+    const email = freshEmail();
+    const page = await as("admin");
+    await page.goto("/users/new");
+
+    await fillIn(page, name, email);
+    await main(page).getByRole("combobox").click();
+    await page.getByRole("option", { name: "manager" }).click();
+    await main(page)
+      .getByRole("textbox", { name: "Password" })
+      .fill("brand new pass");
+    await main(page).getByRole("button", { name: "Create user" }).click();
+
+    await expect(main(page).getByText(`${email} · manager`)).toBeVisible();
+  });
+
+  test("says so when the email already belongs to someone, and makes nobody", async ({
+    as,
+  }) => {
+    const person = await createPerson();
+    const page = await as("admin");
+    await page.goto("/users/new");
+
+    await fillIn(page, "Zz Uat Twin", person.email.toUpperCase());
+    await main(page)
+      .getByRole("textbox", { name: "Password" })
+      .fill("brand new pass");
+    await main(page).getByRole("button", { name: "Create user" }).click();
+
+    await expect(main(page).getByRole("alert")).toContainText(
+      `Another user already has the email ${person.email}.`,
+    );
+    await expect(page).toHaveURL(/\/users\/new$/);
+  });
+
+  test("says so when the password is too short", async ({ as }) => {
+    const page = await as("admin");
+    await page.goto("/users/new");
+
+    await fillIn(page, freshName("Short"), freshEmail());
+    await main(page).getByRole("textbox", { name: "Password" }).fill("short");
+    await main(page).getByRole("button", { name: "Create user" }).click();
+
+    await expect(main(page).getByRole("alert")).toContainText(
+      "Password must be at least 8 characters.",
+    );
+  });
+});
+
+test.describe("creating a person, as someone who may not", () => {
+  // Asking for an admin page as a non-admin answers with the not-found page,
+  // and the check that runs inside a streamed section can make React report
+  // error #419 ("the server could not finish this Suspense boundary") while it
+  // redoes that section in the browser. Nothing shows, so the error is allowed
+  // for these tests only (see "pages that aren't there" in navigation).
+  test.use({
+    allowedErrors: [/React error #419|could not finish this Suspense boundary/],
+  });
+
+  for (const role of ["manager", "user"] as const) {
+    test(`a ${role} gets the not-found page for it`, async ({ as }) => {
+      const page = await as(role);
+      await page.goto("/users/new");
+
+      await expect(
+        page.getByText("This page could not be found"),
+      ).toBeVisible();
+    });
+  }
 });

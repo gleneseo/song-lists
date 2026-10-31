@@ -85,6 +85,32 @@ async function getListsOverview(userId: string): Promise<ListOverview[]> {
     .orderBy(asc(schema.lists.id));
 }
 
+/** Every list with its size and optional columns, for the admin lists page. */
+async function getManagedLists(): Promise<ListSummary[]> {
+  const rows = await db
+    .select({
+      id: schema.lists.id,
+      name: schema.lists.name,
+      createdAt: schema.lists.createdAt,
+      extraColumns: schema.lists.extraColumns,
+      songCount: count(schema.listSongs.id),
+    })
+    .from(schema.lists)
+    .leftJoin(schema.listSongs, eq(schema.listSongs.listId, schema.lists.id))
+    .groupBy(
+      schema.lists.id,
+      schema.lists.name,
+      schema.lists.createdAt,
+      schema.lists.extraColumns,
+    )
+    .orderBy(asc(schema.lists.id));
+
+  return rows.map((row) => ({
+    ...row,
+    extraColumns: parseExtraColumns(row.extraColumns),
+  }));
+}
+
 /** A single list's header details, or `null` when no list has that ID. */
 async function getListSummary(listId: number): Promise<ListSummary | null> {
   const [row] = await db
@@ -342,6 +368,7 @@ export {
   getListsOverview,
   getListSummary,
   getListEntries,
+  getManagedLists,
 };
 export type {
   EntryProduction,

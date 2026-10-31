@@ -129,3 +129,22 @@ test.describe("a production's own page", () => {
     ).toBeVisible();
   });
 });
+
+test.describe("the admin pages", () => {
+  for (const [path, heading] of [
+    ["/users/new", "New user"],
+    ["/admin/lists", "Manage lists"],
+    ["/admin/lists/new", "New list"],
+    ["/admin/lists/1", "Edit list"],
+  ] as const) {
+    test(`${path} opens directly for an admin`, async ({ as }) => {
+      const page = await as("admin");
+
+      await page.goto(path);
+
+      await expect(
+        page.getByRole("heading", { name: heading, level: 1 }),
+      ).toBeVisible();
+    });
+  }
+});

@@ -958,6 +958,24 @@ describe("chooseMatch", () => {
     );
   });
 
+  it("should count a release called an album as unfinished recordings when it is named for demos", () => {
+    const demos = {
+      ...exact,
+      albumName: "Heaven's Youth (Reptilians Demos)",
+      kind: "album" as const,
+      releaseYear: 2012,
+    };
+    const album = {
+      ...exact,
+      albumName: "Reptilians",
+      kind: "album" as const,
+      releaseYear: 2013,
+    };
+
+    expect(chooseMatch(wanted, [demos, album])).toBe(album);
+    expect(chooseMatch(wanted, [demos])).toBe(demos);
+  });
+
   it("should take a soundtrack over a compilation just called Greatest, of the same year", () => {
     const compilation = { ...exact, albumName: "Greatest", releaseYear: 1977 };
     const soundtrack = {

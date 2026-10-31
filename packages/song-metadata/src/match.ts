@@ -88,6 +88,13 @@ const HITS_PATTERN =
   /\b(greatest hits|best of|the very best|anthology|essentials?|number ones|hits|original (?:motion picture )?score)\b|\b\d{4}\s*[–-]\s*\d{2,4}\b/i;
 
 /**
+ * Wording that marks a release as unfinished recordings, however the service
+ * that names it types it: "Heaven's Youth (Reptilians Demos)" is a service's
+ * "Album", but it is the demos of another.
+ */
+const UNFINISHED_PATTERN = /\b(demos?|rehearsals?|outtakes?)\b/i;
+
+/**
  * How a service labels a release that is a single rather than an album: "7 (E
  * Flat Version) - Single", "Apache / Rapper's Delight [Digital 45]".
  */
@@ -518,7 +525,9 @@ function notAnAlbumPenalty(
   const isCompilation =
     candidate.kind === undefined
       ? COMPILATION_PATTERN.test(album)
-      : candidate.kind === "compilation" || HITS_PATTERN.test(album);
+      : candidate.kind === "compilation" ||
+        HITS_PATTERN.test(album) ||
+        UNFINISHED_PATTERN.test(album);
   const isSingle =
     candidate.kind === undefined
       ? SINGLE_PATTERN.test(album)

@@ -71,7 +71,7 @@ square, ideally at least 600 px; the largest scan there is is best, since the so
 | `pretenders-back-on-the-chain-gang-1982.jpg` | Back On The Chain Gang | 1982 | Pretenders - Back On The Chain Gang |
 | `prince-breakfast-can-wait-2013.jpg` | Breakfast Can Wait | 2013 | Prince - Breakfast Can Wait |
 | `foo-fighters-next-year-2000.jpg` | Next Year | 2000 | Foo Fighters - Baker Street |
-| `goldie-lookin-chain-greatest-hits-2004.jpg` | Greatest Hits | 2004 | Goldie Lookin Chain - Self Suicide; Goldie Lookin Chain - Guns Don't Kill People, Rappers Do |
+| `goldie-lookin-chain-greatest-hits-2004.jpg` | Greatest Hits | 2004 | Goldie Lookin Chain - Self Suicide; Goldie Lookin Chain - Guns Don't Kill People, Rappers Do; Goldie Lookin Chain - Soap Bar |
 | `johnny-rivers-coast-to-coast-1980.jpg` | Coast To Coast | 1980 | Johnny Rivers - Swayin' To The Music (Slow Dancin') |
 | `the-refreshments-wheelie-1994.jpg` | Wheelie | 1994 | The Refreshments - Banditos |
 | `the-rolling-stones-honky-tonk-women-you-can-t-always-get-what-you-want-1969.jpg` | Honky Tonk Women / You Can't Always Get What You Want | 1969 | The Rolling Stones - Honky Tonk Women |
@@ -109,14 +109,13 @@ square, ideally at least 600 px; the largest scan there is is best, since the so
 | `boogie-down-productions-you-must-learn-and-you-don-t-stop-1989.jpg` | You Must Learn / And You Don't Stop | 1989 | Boogie Down Productions - You Must Learn (Live From Caucus Mountain Remix) |
 | `bracket-stinky-fingers-1994.jpg` | Stinky Fingers | 1994 | Bracket - 2RAK005 |
 | `bracket-like-you-know-1996.jpg` | Like You Know | 1996 | Bracket - Hermit; Bracket - Speed Bump (cropped from the promo CD inlay) |
-| `buddy-holly-everyday-peggy-sue-1957-everyday.jpg` | Peggy Sue / Everyday | 1957 | Buddy Holly - Everyday (the record's Coral label) |
-| `buddy-holly-everyday-peggy-sue-1957-peggy-sue.jpg` | Peggy Sue / Everyday | 1957 | Buddy Holly - Peggy Sue (the record's Coral label) |
+| `buddy-holly-everyday-peggy-sue-1957-peggy-sue.jpg` | Peggy Sue / Everyday | 1957 | Buddy Holly - Peggy Sue; Buddy Holly - Everyday (the record's Coral label) |
 | `the-cult-love-1985.jpg` | Love | 1985 | The Cult - She Sells Sanctuary |
 | `cyndi-lauper-true-colors-1986.jpg` | True Colors | 1986 | Cyndi Lauper - Change Of Heart |
 | `czarface-mf-doom-czarface-meets-metal-face-2018.jpg` | Czarface Meets Metal Face | 2018 | Czarface & MF DOOM - Bomb Thrown; Captain Crunch |
 | `descendents-i-don-t-want-to-grow-up-1985.jpg` | I Don't Want To Grow Up | 1985 | Descendents - No FB |
 | `dilated-peoples-work-the-angles-the-main-event-triple-optics-1998.jpg` | Work The Angles / The Main Event / Triple Optics | 1998 | Dilated Peoples - Work The Angles (the record's ABB Records label) |
-| `dwarves-the-dwarves-are-young-and-good-looking-1997.jpg` | The Dwarves Are Young And Good Looking | 1997 | Dwarves - Everybody's Girl |
+| `dwarves-the-dwarves-are-young-and-good-looking-1997.jpg` | The Dwarves Are Young And Good Looking | 1997 | Dwarves - Everybody's Girl; Dwarves - I Will Deny |
 | `dwarves-the-dwarves-invented-rock-and-roll-2014.jpg` | The Dwarves Invented Rock & Roll | 2014 | Dwarves - Anything You Want (the original, uncensored cover) |
 | `geto-boys-uncut-dope-geto-boys-best-1992.jpg` | Uncut Dope: Geto Boys' Best | 1992 | Geto Boys - Damn It Feels Good To Be A Gangster |
 | `goldfinger-richter-1995.jpg` | Richter (EP) | 1995 | Goldfinger - Here In Your Bedroom |

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { Button } from "@/components/ui/button";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { getUsers } from "@/lib/queries/users";
 import { countLabel } from "@/lib/text/count-label";
@@ -13,9 +14,14 @@ async function Users() {
 
   return (
     <>
-      <p className="mb-6 text-sm text-muted-foreground">
-        {countLabel(users.length, "user")}
-      </p>
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <p className="text-sm text-muted-foreground">
+          {countLabel(users.length, "user")}
+        </p>
+        <Button nativeButton={false} render={<Link href="/users/new" />}>
+          New user
+        </Button>
+      </div>
       <ul className="divide-y divide-border rounded-xl bg-card ring-1 ring-foreground/10">
         {users.map((user) => (
           <li key={user.id}>

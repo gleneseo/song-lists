@@ -18,6 +18,28 @@ function sameAlbumKey(name: string | null): string {
     .replaceAll(/[^\p{L}\p{N}]/gu, "");
 }
 
+/** The note in parentheses at the end of an album's name, if there is one. */
+function noteOf(name: string | null): string | null {
+  return /\(([^)]+)\)\s*$/.exec(name ?? "")?.[1] ?? null;
+}
+
+/**
+ * Whether two names are for one album: they are alike, or one of them carries
+ * the other as its note ("Heaven's Youth (Reptilians)" and "Reptilians", the
+ * album's title and what it was first called). Only used to tell the services'
+ * answers apart; the year of an album named differently is still the chosen
+ * answer's own.
+ */
+function isSameAlbum(a: string | null, b: string | null): boolean {
+  const [noteA, noteB] = [noteOf(a), noteOf(b)];
+
+  return (
+    sameAlbumKey(a) === sameAlbumKey(b) ||
+    (noteA !== null && sameAlbumKey(noteA) === sameAlbumKey(b)) ||
+    (noteB !== null && sameAlbumKey(noteB) === sameAlbumKey(a))
+  );
+}
+
 /**
  * An album's key without a qualifier at the end of its name: a number, as a
  * band numbers its albums of the same name ("The Bronx (III)"), or a note in
@@ -46,7 +68,7 @@ function better(itunes: Matched, musicbrainz: Matched): Matched {
     return itunes.isAlbum ? itunes : musicbrainz;
   }
 
-  if (sameAlbumKey(itunes.albumName) === sameAlbumKey(musicbrainz.albumName)) {
+  if (isSameAlbum(itunes.albumName, musicbrainz.albumName)) {
     return itunes;
   }
 

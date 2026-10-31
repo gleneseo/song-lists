@@ -254,6 +254,35 @@ describe("doubting an iTunes album that only just predates MusicBrainz's", () =>
   });
 });
 
+describe("knowing two names for one album", () => {
+  const retitled = {
+    ...musicbrainz,
+    albumName: "Heaven's Youth (Reptilians)",
+    releaseYear: 2012,
+  };
+  const original = { ...itunes, albumName: "Reptilians", releaseYear: 2011 };
+
+  it("should take them for one album when one name carries the other in its note", () => {
+    expect(combineLookups(original, retitled)).toEqual(original);
+  });
+
+  it("should not take a note that names no other album for one", () => {
+    expect(
+      combineLookups(
+        { ...original, releaseYear: 2008 },
+        {
+          ...retitled,
+          albumName: "Heaven's Youth (Deluxe)",
+          releaseYear: 2009,
+        },
+      ),
+    ).toMatchObject({ source: "musicbrainz", releaseYear: 2009 });
+    expect(
+      combineLookups({ ...original, albumName: null }, retitled),
+    ).toMatchObject({ source: "musicbrainz", releaseYear: 2012 });
+  });
+});
+
 describe("showing the cover an album first came out with", () => {
   const reissue = {
     ...itunes,

@@ -54,7 +54,8 @@ describe("looking songs up and keeping the results, in the database", () => {
     db.insert(schema.songMetadata).values({
       songId,
       status,
-      matchedBy,
+      detailsMatchedBy: matchedBy,
+      artworkMatchedBy: matchedBy,
       source: status === "matched" ? "itunes" : null,
       albumName: status === "matched" ? "Saved Album" : null,
       fetchedAt: new Date(),
@@ -95,7 +96,8 @@ describe("looking songs up and keeping the results, in the database", () => {
       others.map((songId) => ({
         songId,
         status: "not_found",
-        matchedBy: "auto",
+        detailsMatchedBy: "auto",
+        artworkMatchedBy: "auto",
         fetchedAt: new Date(),
         createdBy: SYSTEM_USER_ID,
         updatedBy: SYSTEM_USER_ID,
@@ -125,7 +127,8 @@ describe("looking songs up and keeping the results, in the database", () => {
         source: "itunes",
         sourceTrackId: "1234",
         artworkUrl: "https://example.test/art/100x100bb.jpg",
-        matchedBy: "auto",
+        detailsMatchedBy: "auto",
+        artworkMatchedBy: "auto",
         createdBy: SYSTEM_USER_ID,
       });
     });
@@ -208,7 +211,8 @@ describe("looking songs up and keeping the results, in the database", () => {
 
       expect(await rowOf(id)).toMatchObject({
         albumName: "Saved Album",
-        matchedBy: "manual",
+        detailsMatchedBy: "manual",
+        artworkMatchedBy: "manual",
       });
     });
 

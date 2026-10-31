@@ -669,10 +669,10 @@ test.describe("an admin editing a song's album details", () => {
       const { rows } = await pool.query<{
         album_name: string | null;
         release_year: number | null;
-        matched_by: string;
+        details_matched_by: string;
         source: string | null;
       }>(
-        `select album_name, release_year, matched_by, source
+        `select album_name, release_year, details_matched_by, source
          from song_lists.song_metadata where song_id = $1`,
         [song.id],
       );
@@ -726,7 +726,7 @@ test.describe("an admin editing a song's album details", () => {
       {
         album_name: "The Right Album",
         release_year: 1975,
-        matched_by: "manual",
+        details_matched_by: "manual",
         source: "itunes",
       },
     ]);
@@ -764,7 +764,7 @@ test.describe("an admin editing a song's album details", () => {
       dialog(page).getByText(`Stub Album for ${song.title} · 1999`),
     ).toBeVisible();
     expect(await savedDetails(song)).toMatchObject([
-      { release_year: 1999, matched_by: "manual", source: "itunes" },
+      { release_year: 1999, details_matched_by: "manual", source: "itunes" },
     ]);
   });
 
@@ -787,7 +787,7 @@ test.describe("an admin editing a song's album details", () => {
 
     await expect(noteLines(page)).toHaveCount(1);
     expect(await savedDetails(song)).toMatchObject([
-      { album_name: "Old Album", matched_by: "auto" },
+      { album_name: "Old Album", details_matched_by: "auto" },
     ]);
   });
 
@@ -809,7 +809,7 @@ test.describe("an admin editing a song's album details", () => {
       {
         album_name: "Brand New Album",
         release_year: 2024,
-        matched_by: "manual",
+        details_matched_by: "manual",
       },
     ]);
   });
@@ -849,7 +849,7 @@ test.describe("an admin editing a song's album details", () => {
       {
         album_name: null,
         release_year: null,
-        matched_by: "manual",
+        details_matched_by: "manual",
         source: null,
       },
     ]);
@@ -873,7 +873,7 @@ test.describe("an admin editing a song's album details", () => {
     await dialog(page).getByRole("button", { name: "Save changes" }).click();
     await expect(dialog(page).getByText("Spared Album · 1975")).toBeVisible();
     expect(await savedDetails(song)).toMatchObject([
-      { album_name: "Spared Album", matched_by: "auto" },
+      { album_name: "Spared Album", details_matched_by: "auto" },
     ]);
   });
 

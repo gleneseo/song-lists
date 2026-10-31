@@ -615,9 +615,9 @@ async function savedDetails(title: string) {
       release_year: number | null;
       artwork_url: string | null;
       source: string | null;
-      matched_by: string;
+      details_matched_by: string;
     }>(
-      `select m.status, m.album_name, m.release_year, m.artwork_url, m.source, m.matched_by
+      `select m.status, m.album_name, m.release_year, m.artwork_url, m.source, m.details_matched_by
        from song_lists.song_metadata m join song_lists.songs s on s.id = m.song_id
        where s.title = $1`,
       [title],
@@ -656,7 +656,7 @@ test.describe("looking up album details while adding a song", () => {
       {
         album_name: `Stub Album for ${title}`,
         release_year: 1999,
-        matched_by: "manual",
+        details_matched_by: "manual",
       },
     ]);
   });
@@ -727,7 +727,7 @@ test.describe("looking up album details while adding a song", () => {
         release_year: 2001,
         artwork_url: "https://example.test/stub/100x100bb.jpg",
         source: "itunes",
-        matched_by: "manual",
+        details_matched_by: "manual",
       },
     ]);
   });
@@ -802,7 +802,7 @@ test.describe("looking up album details while adding a song", () => {
         album_name: "Typed By Hand",
         release_year: 1977,
         artwork_url: null,
-        matched_by: "manual",
+        details_matched_by: "manual",
       },
     ]);
   });

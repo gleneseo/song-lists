@@ -115,7 +115,8 @@ async function saveSongDetails(
     artworkUrl: details.artworkUrl,
     albumName: details.albumName,
     releaseYear: details.releaseYear,
-    matchedBy: SONG_METADATA_MATCHED_BY.MANUAL,
+    detailsMatchedBy: SONG_METADATA_MATCHED_BY.MANUAL,
+    artworkMatchedBy: SONG_METADATA_MATCHED_BY.MANUAL,
     fetchedAt: now,
   };
 
@@ -146,7 +147,8 @@ async function removeSongDetails(
     artworkUrl: null,
     albumName: null,
     releaseYear: null,
-    matchedBy: SONG_METADATA_MATCHED_BY.MANUAL,
+    detailsMatchedBy: SONG_METADATA_MATCHED_BY.MANUAL,
+    artworkMatchedBy: SONG_METADATA_MATCHED_BY.MANUAL,
     fetchedAt: now,
   };
 

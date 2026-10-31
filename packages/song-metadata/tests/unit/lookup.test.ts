@@ -211,12 +211,103 @@ describe("combining lookups", () => {
     expect(
       combineLookups(
         { ...itunes, releaseYear: 1990 },
-        { ...musicbrainz, albumName: "Another", releaseYear: 1991 },
+        { ...musicbrainz, albumName: "Another", releaseYear: 1995 },
       ),
     ).toMatchObject({ releaseYear: 1990 });
     expect(
       combineLookups(itunes, { ...musicbrainz, albumName: null }),
     ).toMatchObject({ releaseYear: 1981 });
+  });
+});
+
+describe("doubting an iTunes album that only just predates MusicBrainz's", () => {
+  const collection = {
+    ...itunes,
+    albumName: "Country Spotlight",
+    releaseYear: 1974,
+  };
+  const album = {
+    ...musicbrainz,
+    albumName: "Take This Job And Shove It",
+    releaseYear: 1977,
+  };
+
+  it("should believe MusicBrainz when its album is no more than two years later", () => {
+    const near = { ...album, releaseYear: 1976 };
+
+    expect(combineLookups(collection, near)).toEqual(near);
+    expect(
+      combineLookups(collection, { ...album, releaseYear: 1975 }),
+    ).toMatchObject({ source: "musicbrainz", releaseYear: 1975 });
+  });
+
+  it("should still take the earlier iTunes release when MusicBrainz's is years later", () => {
+    expect(combineLookups(collection, album)).toEqual(collection);
+  });
+
+  it("should still take the earlier iTunes release when MusicBrainz's isn't an album", () => {
+    const single = { ...album, releaseYear: 1975, isAlbum: false };
+
+    expect(combineLookups(collection, single)).toMatchObject({
+      source: "itunes",
+    });
+  });
+});
+
+describe("knowing two names for one album", () => {
+  const retitled = {
+    ...musicbrainz,
+    albumName: "Heaven's Youth (Reptilians)",
+    releaseYear: 2012,
+  };
+  const original = { ...itunes, albumName: "Reptilians", releaseYear: 2011 };
+
+  it("should take them for one album when one name carries the other in its note", () => {
+    expect(combineLookups(original, retitled)).toEqual(original);
+  });
+
+  it("should not take a note that names no other album for one", () => {
+    expect(
+      combineLookups(
+        { ...original, releaseYear: 2008 },
+        {
+          ...retitled,
+          albumName: "Heaven's Youth (Deluxe)",
+          releaseYear: 2009,
+        },
+      ),
+    ).toMatchObject({ source: "musicbrainz", releaseYear: 2009 });
+    expect(
+      combineLookups({ ...original, albumName: null }, retitled),
+    ).toMatchObject({ source: "musicbrainz", releaseYear: 2012 });
+  });
+});
+
+describe("showing the cover an album first came out with", () => {
+  const reissue = {
+    ...itunes,
+    albumName: "Wild-Eyed Southern Boys (Deluxe Edition)",
+    artworkUrl: "https://example.test/reissue/100x100bb.jpg",
+  };
+
+  it("should use MusicBrainz's cover when iTunes names only a reissue", () => {
+    expect(combineLookups(reissue, musicbrainz)).toEqual({
+      ...itunes,
+      albumName: "Wild-Eyed Southern Boys",
+      artworkUrl: musicbrainz.artworkUrl,
+    });
+  });
+
+  it("should keep the iTunes cover when MusicBrainz has none, or iTunes names the album itself", () => {
+    expect(
+      combineLookups(reissue, { ...musicbrainz, artworkUrl: null }),
+    ).toMatchObject({ artworkUrl: reissue.artworkUrl });
+    expect(combineLookups(itunes, musicbrainz)).toMatchObject({
+      artworkUrl: itunes.artworkUrl,
+    });
+    expect(combineLookups(reissue, notFound)).toMatchObject({
+      artworkUrl: reissue.artworkUrl,
+    });
   });
 });
 

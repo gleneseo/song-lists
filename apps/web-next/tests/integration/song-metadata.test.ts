@@ -113,7 +113,8 @@ describe("looking a song up when it is added, down to the database", () => {
         artwork_url: string | null;
         album_name: string | null;
         release_year: number | null;
-        matched_by: string;
+        details_matched_by: string;
+        artwork_matched_by: string;
         created_by: string;
       }>("select * from song_lists.song_metadata where song_id = $1", [id])
     ).rows;
@@ -139,7 +140,8 @@ describe("looking a song up when it is added, down to the database", () => {
         artwork_url: "https://example.test/art/100x100bb.jpg",
         album_name: "An Album",
         release_year: 1981,
-        matched_by: "auto",
+        details_matched_by: "auto",
+        artwork_matched_by: "auto",
         created_by: "00000000-0000-0000-0000-000000000000",
       }),
     ]);
@@ -265,8 +267,8 @@ describe("looking a song up when it is added, down to the database", () => {
 
       await pool.query(
         `insert into song_lists.song_metadata
-           (song_id, status, source, album_name, matched_by, fetched_at, created_by, updated_by)
-         values ($1, 'matched', 'itunes', 'Chosen By Hand', 'manual', now(), $2, $2)`,
+           (song_id, status, source, album_name, details_matched_by, artwork_matched_by, fetched_at, created_by, updated_by)
+         values ($1, 'matched', 'itunes', 'Chosen By Hand', 'manual', 'manual', now(), $2, $2)`,
         [id, al],
       );
       background.lookup.mockResolvedValueOnce(found);
@@ -275,7 +277,70 @@ describe("looking a song up when it is added, down to the database", () => {
       expect(await metadataOf(id)).toEqual([
         expect.objectContaining({
           album_name: "Chosen By Hand",
-          matched_by: "manual",
+          details_matched_by: "manual",
+        }),
+      ]);
+    });
+
+    it("should refresh the details but keep cover art that a person chose", async () => {
+      const id = await songId(pool, "The Pod", "Hum");
+
+      await pool.query(
+        `insert into song_lists.song_metadata
+           (song_id, status, source, artwork_url, album_name, details_matched_by, artwork_matched_by, fetched_at, created_by, updated_by)
+         values ($1, 'matched', 'itunes', '/album-art/own.jpg', 'Old Album', 'auto', 'manual', now(), $2, $2)`,
+        [id, al],
+      );
+      background.lookup.mockResolvedValueOnce(found);
+      await metadata.recordSongMetadata(id);
+
+      expect(await metadataOf(id)).toEqual([
+        expect.objectContaining({
+          album_name: "An Album",
+          artwork_url: "/album-art/own.jpg",
+          details_matched_by: "auto",
+          artwork_matched_by: "manual",
+        }),
+      ]);
+    });
+
+    it("should replace cover art that an earlier lookup picked", async () => {
+      const id = await songId(pool, "The Pod", "Hum");
+
+      await pool.query(
+        `insert into song_lists.song_metadata
+           (song_id, status, source, artwork_url, album_name, details_matched_by, artwork_matched_by, fetched_at, created_by, updated_by)
+         values ($1, 'matched', 'itunes', 'https://example.test/old.jpg', 'Old Album', 'auto', 'auto', now(), $2, $2)`,
+        [id, al],
+      );
+      background.lookup.mockResolvedValueOnce(found);
+      await metadata.recordSongMetadata(id);
+
+      expect(await metadataOf(id)).toEqual([
+        expect.objectContaining({
+          artwork_url: "https://example.test/art/100x100bb.jpg",
+          artwork_matched_by: "auto",
+        }),
+      ]);
+    });
+
+    it("should drop cover art that a person chose when nothing matches any more", async () => {
+      const id = await songId(pool, "The Pod", "Hum");
+
+      await pool.query(
+        `insert into song_lists.song_metadata
+           (song_id, status, source, artwork_url, album_name, details_matched_by, artwork_matched_by, fetched_at, created_by, updated_by)
+         values ($1, 'matched', 'itunes', '/album-art/own.jpg', 'Old Album', 'auto', 'manual', now(), $2, $2)`,
+        [id, al],
+      );
+      background.lookup.mockResolvedValueOnce({ status: "not_found" });
+      await metadata.recordSongMetadata(id);
+
+      expect(await metadataOf(id)).toEqual([
+        expect.objectContaining({
+          status: "not_found",
+          artwork_url: null,
+          artwork_matched_by: "auto",
         }),
       ]);
     });

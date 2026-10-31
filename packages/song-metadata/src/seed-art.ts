@@ -60,7 +60,7 @@ function seedSongTitles(songsSql: string): Map<string, string> {
 function seedArtwork(songsSql: string, detailsSql: string): SeedArtwork[] {
   const titles = seedSongTitles(songsSql);
   const row = new RegExp(
-    `^\\t\\(\\d+, '[0-9a-f-]{36}', 'matched', ${SQL_TEXT}, ${SQL_TEXT}, (${SQL_TEXT}), ('(?:[^']|'')*'|NULL), ${SQL_TEXT}, ${SQL_TEXT}, ${SQL_TEXT}, '([0-9a-f-]{36})'\\)`,
+    `^\\t\\(\\d+, '[0-9a-f-]{36}', 'matched', ${SQL_TEXT}, ${SQL_TEXT}, (${SQL_TEXT}), ('(?:[^']|'')*'|NULL), ${SQL_TEXT}, ${SQL_TEXT}, ${SQL_TEXT}, ${SQL_TEXT}, '([0-9a-f-]{36})'\\)`,
     "gm",
   );
   const found: SeedArtwork[] = [];

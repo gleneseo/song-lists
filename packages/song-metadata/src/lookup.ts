@@ -1,5 +1,5 @@
 import { SONG_METADATA_SOURCE, SONG_METADATA_STATUS } from "@song-lists/db";
-import { cleanAlbumName, tidyAlbumName } from "./album-name.js";
+import { cleanAlbumName, hasEditionNote, tidyAlbumName } from "./album-name.js";
 import { createItunesLookup, ITUNES_MIN_INTERVAL_MS } from "./itunes.js";
 import type { WantedSong } from "./match.js";
 import {
@@ -18,6 +18,28 @@ function sameAlbumKey(name: string | null): string {
     .replaceAll(/[^\p{L}\p{N}]/gu, "");
 }
 
+/** The note in parentheses at the end of an album's name, if there is one. */
+function noteOf(name: string | null): string | null {
+  return /\(([^)]+)\)\s*$/.exec(name ?? "")?.[1] ?? null;
+}
+
+/**
+ * Whether two names are for one album: they are alike, or one of them carries
+ * the other as its note ("Heaven's Youth (Reptilians)" and "Reptilians", the
+ * album's title and what it was first called). Only used to tell the services'
+ * answers apart; the year of an album named differently is still the chosen
+ * answer's own.
+ */
+function isSameAlbum(a: string | null, b: string | null): boolean {
+  const [noteA, noteB] = [noteOf(a), noteOf(b)];
+
+  return (
+    sameAlbumKey(a) === sameAlbumKey(b) ||
+    (noteA !== null && sameAlbumKey(noteA) === sameAlbumKey(b)) ||
+    (noteB !== null && sameAlbumKey(noteB) === sameAlbumKey(a))
+  );
+}
+
 /**
  * An album's key without a qualifier at the end of its name: a number, as a
  * band numbers its albums of the same name ("The Bronx (III)"), or a note in
@@ -31,13 +53,22 @@ function unqualifiedAlbumKey(name: string | null): string {
   );
 }
 
+/**
+ * How many years an iTunes album may predate MusicBrainz's and still be
+ * doubted. iTunes dates a track by when it first came out anywhere, so a
+ * soundtrack or collection that reuses an older song carries that date and
+ * seems the earlier release; a year or two ahead is far more often that than
+ * a true earlier release (a reissue or collection comes years later).
+ */
+const NEAR_YEARS = 2;
+
 /** Which of two matches describes the song's own record better. */
 function better(itunes: Matched, musicbrainz: Matched): Matched {
   if (itunes.isAlbum !== musicbrainz.isAlbum) {
     return itunes.isAlbum ? itunes : musicbrainz;
   }
 
-  if (sameAlbumKey(itunes.albumName) === sameAlbumKey(musicbrainz.albumName)) {
+  if (isSameAlbum(itunes.albumName, musicbrainz.albumName)) {
     return itunes;
   }
 
@@ -67,7 +98,9 @@ function better(itunes: Matched, musicbrainz: Matched): Matched {
 
   return musicbrainz.releaseYear !== null &&
     (musicbrainz.releaseYear < itunes.releaseYear ||
-      (musicbrainz.releaseYear === itunes.releaseYear && musicbrainz.isAlbum))
+      (musicbrainz.releaseYear >= itunes.releaseYear &&
+        musicbrainz.releaseYear - itunes.releaseYear <= NEAR_YEARS &&
+        musicbrainz.isAlbum))
     ? musicbrainz
     : itunes;
 }
@@ -79,7 +112,8 @@ function better(itunes: Matched, musicbrainz: Matched): Matched {
  * albums, the one that came out first wins; and when they tie, MusicBrainz
  * does, for it knows a compilation by its type, not just its name. When both
  * name the same album, iTunes is kept, for its art can be asked for at any
- * size. The album's name is saved without
+ * size, unless iTunes shows only a reissue of the album, when MusicBrainz's
+ * cover, the album's first, is used instead. The album's name is saved without
  * its edition ("Insomniac", not "Insomniac (25th Anniversary Deluxe
  * Edition)"), and when both services name the same album, the earlier of
  * their years is kept, since a reissue gets a later date.
@@ -126,8 +160,19 @@ function combineLookups(
     (year): year is number => year !== null,
   );
 
+  // iTunes often has only a reissue of an album ("Odelay (Deluxe Edition)"),
+  // whose cover is the reissue's. MusicBrainz's cover for the same album is
+  // the one the album first came out with, which is the one we prefer.
+  const originalArt =
+    chosen.albumName !== null &&
+    hasEditionNote(chosen.albumName) &&
+    sameAlbum?.source === SONG_METADATA_SOURCE.MUSICBRAINZ
+      ? sameAlbum.artworkUrl
+      : null;
+
   return {
     ...chosen,
+    artworkUrl: originalArt ?? chosen.artworkUrl,
     albumName:
       chosen.albumName === null ? null : tidyAlbumName(chosen.albumName),
     releaseYear: albumYear ?? (years.length > 0 ? Math.min(...years) : null),

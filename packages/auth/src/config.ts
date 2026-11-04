@@ -17,6 +17,13 @@ const authConfig: BetterAuthOptions = {
   verification: {
     modelName: "verifications",
   },
+  rateLimit: {
+    // In the database, not server memory, so the limit holds across
+    // serverless instances and restarts. Better Auth only applies it in
+    // production.
+    storage: "database",
+    modelName: "rateLimits",
+  },
   advanced: {
     database: {
       // Defer ID generation to the database's own uuidV7() default instead

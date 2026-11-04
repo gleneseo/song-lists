@@ -52,6 +52,13 @@ describe("auth", () => {
     expect(auth.options.verification?.modelName).toBe("verifications");
   });
 
+  it("should keep its request limits in the database so they hold across servers", () => {
+    const { auth } = build();
+
+    expect(auth.options.rateLimit?.storage).toBe("database");
+    expect(auth.options.rateLimit?.modelName).toBe("rateLimits");
+  });
+
   it("should refuse a new session for a deactivated user", async () => {
     const { auth, findFirst } = build();
 

@@ -16,6 +16,7 @@ import { PasswordInput } from "@/components/password-input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signIn } from "@/lib/auth/auth-client";
+import { signUpAllowed } from "@/lib/auth/sign-up";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
@@ -90,15 +91,17 @@ export default function SignInPage() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing in…" : "Sign In"}
             </Button>
-            <p className="text-center text-sm text-muted-foreground">
-              Don&rsquo;t have an account?{" "}
-              <Link
-                href="/sign-up"
-                className="font-medium text-primary hover:underline"
-              >
-                Sign up
-              </Link>
-            </p>
+            {signUpAllowed() && (
+              <p className="text-center text-sm text-muted-foreground">
+                Don&rsquo;t have an account?{" "}
+                <Link
+                  href="/sign-up"
+                  className="font-medium text-primary hover:underline"
+                >
+                  Sign up
+                </Link>
+              </p>
+            )}
           </CardFooter>
         </form>
       </Card>

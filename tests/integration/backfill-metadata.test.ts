@@ -216,6 +216,87 @@ describe("looking songs up and keeping the results, in the database", () => {
       });
     });
 
+    it("should refresh the details but keep cover art that a person chose", async () => {
+      const id = await newSong("Zz Own Art Song");
+      await db.insert(schema.songMetadata).values({
+        songId: id,
+        status: "matched",
+        source: "itunes",
+        artworkUrl: "/album-art/own.jpg",
+        albumName: "Old Album",
+        detailsMatchedBy: "auto",
+        artworkMatchedBy: "manual",
+        fetchedAt: new Date(),
+        createdBy: SYSTEM_USER_ID,
+        updatedBy: SYSTEM_USER_ID,
+      });
+
+      await recordSongMetadata(
+        { db, lookup: () => Promise.resolve(found) },
+        id,
+      );
+
+      expect(await rowOf(id)).toMatchObject({
+        albumName: "An Album",
+        artworkUrl: "/album-art/own.jpg",
+        detailsMatchedBy: "auto",
+        artworkMatchedBy: "manual",
+      });
+    });
+
+    it("should replace cover art that an earlier lookup picked", async () => {
+      const id = await newSong("Zz Auto Art Song");
+      await db.insert(schema.songMetadata).values({
+        songId: id,
+        status: "matched",
+        source: "itunes",
+        artworkUrl: "https://example.test/old.jpg",
+        albumName: "Old Album",
+        detailsMatchedBy: "auto",
+        artworkMatchedBy: "auto",
+        fetchedAt: new Date(),
+        createdBy: SYSTEM_USER_ID,
+        updatedBy: SYSTEM_USER_ID,
+      });
+
+      await recordSongMetadata(
+        { db, lookup: () => Promise.resolve(found) },
+        id,
+      );
+
+      expect(await rowOf(id)).toMatchObject({
+        artworkUrl: "https://example.test/art/100x100bb.jpg",
+        artworkMatchedBy: "auto",
+      });
+    });
+
+    it("should drop cover art that a person chose when nothing matches any more", async () => {
+      const id = await newSong("Zz Lost Art Song");
+      await db.insert(schema.songMetadata).values({
+        songId: id,
+        status: "matched",
+        source: "itunes",
+        artworkUrl: "/album-art/own.jpg",
+        albumName: "Old Album",
+        detailsMatchedBy: "auto",
+        artworkMatchedBy: "manual",
+        fetchedAt: new Date(),
+        createdBy: SYSTEM_USER_ID,
+        updatedBy: SYSTEM_USER_ID,
+      });
+
+      await recordSongMetadata(
+        { db, lookup: () => Promise.resolve({ status: "not_found" }) },
+        id,
+      );
+
+      expect(await rowOf(id)).toMatchObject({
+        status: "not_found",
+        artworkUrl: null,
+        artworkMatchedBy: "auto",
+      });
+    });
+
     it("should report a song that doesn't exist", async () => {
       await expect(
         recordSongMetadata(

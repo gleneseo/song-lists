@@ -78,9 +78,9 @@ async function globalSetup(): Promise<() => Promise<void>> {
     // this server who is signed in -- not whichever one the repo's .env names.
     NEXT_PUBLIC_BETTER_AUTH_URL: BASE_URL,
     BETTER_AUTH_SECRET: "test-secret-used-only-in-uat-tests",
-    // Adding a song would otherwise look it up on iTunes, and the tests must
-    // not depend on (or call out to) the network.
-    SONG_METADATA_LOOKUP: "off",
+    // Public sign-up is off unless switched on, and these tests sign people up
+    // (through the form and the sign-up route) so they need it open.
+    NEXT_PUBLIC_ALLOW_SIGN_UP: "true",
     // The album-details lookup an admin can start from the song forms, answered by a stand-in.
     SONG_METADATA_PREVIEW: "stub",
     // Blank, so the app has its default name whatever the repo's .env files

@@ -64,7 +64,6 @@ npm start -w @song-lists/cli -- backfill-metadata --report results.csv
 - **Pace:** about one song every 3.3 seconds, to stay within iTunes' and MusicBrainz's limits (about 5¼ hours for the whole catalog). Each result is saved as it arrives.
 - **Stopping:** Ctrl-C finishes the song in hand and prints a summary, including the songs nothing was found for; Ctrl-C again stops at once. Running it again carries on from where it stopped. It also stops by itself after 5 failures in a row, and songs that failed are tried again on the next run.
 - **Needs** `DATABASE_URL` (read from the nearest `.env`). It runs from a checkout, not the CLI's Docker image, which doesn't include the database packages.
-- **Switching it off:** set `SONG_METADATA_LOOKUP=off` to skip the automatic lookup when songs are added (the UAT suite does this).
 - **Browsing the results:** `npm run db:studio` and open `song_metadata`.
 
 ## Scripts

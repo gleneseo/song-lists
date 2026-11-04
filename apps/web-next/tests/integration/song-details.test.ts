@@ -1,4 +1,8 @@
-import type { SongLookupResult } from "@song-lists/song-metadata";
+import {
+  recordSongMetadata,
+  type SongLookup,
+  type SongLookupResult,
+} from "@song-lists/song-metadata";
 import type { SongDetailsInput } from "@/lib/songs/song-details-input";
 import type { Pool } from "pg";
 import {
@@ -14,7 +18,6 @@ import { openAppDatabase, songId, userId } from "./support/app-database";
 
 const session = vi.hoisted(() => ({ userId: null as string | null }));
 const background = vi.hoisted(() => ({
-  tasks: [] as (() => unknown)[],
   lookup:
     vi.fn<
       (wanted: { title: string; artistName: string }) => Promise<unknown>
@@ -25,13 +28,6 @@ vi.mock("@/lib/auth/auth", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/auth/auth")>()),
   getSession: async () =>
     session.userId ? { user: { id: session.userId } } : null,
-}));
-
-vi.mock("next/server", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("next/server")>()),
-  after: (task: () => unknown) => {
-    background.tasks.push(task);
-  },
 }));
 
 // Never reaches iTunes or MusicBrainz: the lookup answers whatever the test says it does.
@@ -64,7 +60,7 @@ describe("looking up and setting a song's album details, down to the database", 
   let add: typeof import("@/lib/actions/add-song");
   let edit: typeof import("@/lib/actions/edit-song");
   let editData: typeof import("@/lib/queries/song-edit");
-  let metadata: typeof import("@/lib/queries/song-metadata");
+  let client: typeof import("@/lib/queries/client");
   let al: string;
   let cliff: string;
 
@@ -74,7 +70,7 @@ describe("looking up and setting a song's album details, down to the database", 
     add = await import("@/lib/actions/add-song");
     edit = await import("@/lib/actions/edit-song");
     editData = await import("@/lib/queries/song-edit");
-    metadata = await import("@/lib/queries/song-metadata");
+    client = await import("@/lib/queries/client");
     al = await userId(pool, "Al");
     cliff = await userId(pool, "Cliff");
   });
@@ -84,7 +80,6 @@ describe("looking up and setting a song's album details, down to the database", 
   });
 
   afterEach(() => {
-    background.tasks.length = 0;
     background.lookup.mockReset();
     vi.unstubAllEnvs();
   });
@@ -306,7 +301,7 @@ describe("looking up and setting a song's album details, down to the database", 
   });
 
   describe("adding a song with details", () => {
-    it("should save an admin's details as chosen by hand, and skip the automatic lookup", async () => {
+    it("should save an admin's details as chosen by hand, without looking anything up", async () => {
       session.userId = al;
 
       const result = await add.createSong(newSong("Zz Admin Added", typed));
@@ -327,7 +322,6 @@ describe("looking up and setting a song's album details, down to the database", 
           updated_by: al,
         }),
       ]);
-      expect(background.tasks).toHaveLength(0);
     });
 
     it("should keep the service a looked-up album came from", async () => {
@@ -350,12 +344,17 @@ describe("looking up and setting a song's album details, down to the database", 
       ]);
     });
 
-    it("should still look the song up afterwards when no details were given", async () => {
+    it("should look nothing up for a song added without details", async () => {
       session.userId = al;
 
       await add.createSong(newSong("Zz Admin Without Details"));
 
-      expect(background.tasks).toHaveLength(1);
+      expect(background.lookup).not.toHaveBeenCalled();
+      expect(
+        await rowsOf(
+          await songId(pool, "Zz Admin Without Details", "Zz Details Band"),
+        ),
+      ).toEqual([]);
     });
 
     it("should save a manager's details too, as chosen by hand", async () => {
@@ -373,7 +372,6 @@ describe("looking up and setting a song's album details, down to the database", 
           updated_by: cliff,
         }),
       ]);
-      expect(background.tasks).toHaveLength(0);
     });
 
     it("should refuse details that don't check out, and add nothing", async () => {
@@ -415,7 +413,6 @@ describe("looking up and setting a song's album details, down to the database", 
     const makeSong = async (title: string) => {
       session.userId = al;
       await add.createSong(newSong(title));
-      background.tasks.length = 0;
 
       return songId(pool, title, "Zz Details Band");
     };
@@ -550,7 +547,10 @@ describe("looking up and setting a song's album details, down to the database", 
       await edit.updateSong(editInput(id, { removeDetails: true }));
       background.lookup.mockResolvedValue(found);
 
-      await metadata.recordSongMetadata(id);
+      await recordSongMetadata(
+        { db: client.db, lookup: background.lookup as SongLookup },
+        id,
+      );
 
       expect(await rowsOf(id)).toEqual([
         expect.objectContaining({ status: "not_found", album_name: null }),

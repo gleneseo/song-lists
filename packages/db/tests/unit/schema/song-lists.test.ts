@@ -12,6 +12,7 @@ import {
   artists,
   lists,
   listSongs,
+  passwordGuesses,
   productionTypes,
   productions,
   sessions,
@@ -590,6 +591,15 @@ describe("accounts", () => {
       "issuer",
       "accountId",
     ]);
+  });
+});
+
+describe("passwordGuesses", () => {
+  it("should hang off the user who guessed and go when the user does", () => {
+    const [foreignKey] = getTableConfig(passwordGuesses).foreignKeys;
+
+    expect(foreignKey?.reference().foreignColumns).toEqual([users.id]);
+    expect(foreignKey?.onDelete).toBe("cascade");
   });
 });
 

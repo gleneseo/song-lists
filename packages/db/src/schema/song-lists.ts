@@ -1,6 +1,7 @@
 import { relations, sql } from "drizzle-orm";
 import {
   type AnyPgColumn,
+  bigint,
   boolean,
   customType,
   index,
@@ -685,6 +686,36 @@ const verifications = songListsSchema.table(
   (table) => [index().on(table.identifier)],
 );
 
+/**
+ * Better Auth's request-limit counters, one row per limited key (an address
+ * and a path). Kept here rather than in server memory so the limit holds
+ * across serverless instances and restarts.
+ */
+const rateLimits = songListsSchema.table("rate_limits", {
+  id: uuidV7().primaryKey(),
+  key: text().notNull().unique(),
+  count: integer().notNull(),
+  /** Milliseconds since the epoch of the key's most recent request. */
+  lastRequest: bigint({ mode: "number" }).notNull(),
+});
+
+/**
+ * A wrong current-password entry on the account page, one row per guess.
+ * Recent rows stop further tries; they are cleared on a right password and
+ * go when the user does.
+ */
+const passwordGuesses = songListsSchema.table(
+  "password_guesses",
+  {
+    id: uuidV7().primaryKey(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    guessedAt: timestamp().notNull(),
+  },
+  (table) => [index().on(table.userId)],
+);
+
 export {
   songListsSchema,
   actorColumns,
@@ -723,4 +754,6 @@ export {
   accounts,
   accountsRelations,
   verifications,
+  rateLimits,
+  passwordGuesses,
 };

@@ -5,11 +5,14 @@ import { schema } from "@song-lists/db";
 import { auth, getSession } from "@/lib/auth/auth";
 import {
   checkGuessLimit,
-  clearWrongGuesses,
-  recordWrongGuess,
   tooManyGuessesMessage,
 } from "@/lib/auth/password-guess-limit";
 import { db } from "@/lib/queries/client";
+import {
+  clearWrongGuesses,
+  getRecentGuessTimes,
+  recordWrongGuess,
+} from "@/lib/queries/password-guesses";
 import { validateEmail } from "@/lib/users/validate-email";
 import { validatePassword } from "@/lib/users/validate-password";
 
@@ -58,19 +61,20 @@ async function checkCurrentPassword(
   userId: string,
   password: string,
 ): Promise<string | null> {
-  const limit = checkGuessLimit(userId);
+  const now = Date.now();
+  const limit = checkGuessLimit(await getRecentGuessTimes(userId, now), now);
 
   if (!limit.allowed) {
     return tooManyGuessesMessage(limit.retryAfterMs);
   }
 
   if (await isCurrentPassword(userId, password)) {
-    clearWrongGuesses(userId);
+    await clearWrongGuesses(userId);
 
     return null;
   }
 
-  recordWrongGuess(userId);
+  await recordWrongGuess(userId, now);
 
   return WRONG_PASSWORD;
 }

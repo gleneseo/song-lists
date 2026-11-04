@@ -53,6 +53,12 @@ CREATE TABLE "song_lists"."lists" (
 	CONSTRAINT "lists_resource_id_unique" UNIQUE("resource_id")
 );
 --> statement-breakpoint
+CREATE TABLE "song_lists"."password_guesses" (
+	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
+	"user_id" uuid NOT NULL,
+	"guessed_at" timestamp NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "song_lists"."production_types" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"resource_id" uuid DEFAULT uuidv7() NOT NULL,
@@ -75,6 +81,14 @@ CREATE TABLE "song_lists"."productions" (
 	"created_by" uuid NOT NULL,
 	"updated_by" uuid NOT NULL,
 	CONSTRAINT "productions_resource_id_unique" UNIQUE("resource_id")
+);
+--> statement-breakpoint
+CREATE TABLE "song_lists"."rate_limits" (
+	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
+	"key" text NOT NULL,
+	"count" integer NOT NULL,
+	"last_request" bigint NOT NULL,
+	CONSTRAINT "rate_limits_key_unique" UNIQUE("key")
 );
 --> statement-breakpoint
 CREATE TABLE "song_lists"."sessions" (
@@ -211,6 +225,7 @@ ALTER TABLE "song_lists"."list_songs" ADD CONSTRAINT "list_songs_created_by_user
 ALTER TABLE "song_lists"."list_songs" ADD CONSTRAINT "list_songs_updated_by_users_id_fk" FOREIGN KEY ("updated_by") REFERENCES "song_lists"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "song_lists"."lists" ADD CONSTRAINT "lists_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "song_lists"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "song_lists"."lists" ADD CONSTRAINT "lists_updated_by_users_id_fk" FOREIGN KEY ("updated_by") REFERENCES "song_lists"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "song_lists"."password_guesses" ADD CONSTRAINT "password_guesses_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "song_lists"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "song_lists"."production_types" ADD CONSTRAINT "production_types_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "song_lists"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "song_lists"."production_types" ADD CONSTRAINT "production_types_updated_by_users_id_fk" FOREIGN KEY ("updated_by") REFERENCES "song_lists"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "song_lists"."productions" ADD CONSTRAINT "productions_type_id_production_types_id_fk" FOREIGN KEY ("type_id") REFERENCES "song_lists"."production_types"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -242,6 +257,7 @@ ALTER TABLE "song_lists"."songs" ADD CONSTRAINT "songs_updated_by_users_id_fk" F
 ALTER TABLE "song_lists"."users" ADD CONSTRAINT "users_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "song_lists"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "song_lists"."users" ADD CONSTRAINT "users_updated_by_users_id_fk" FOREIGN KEY ("updated_by") REFERENCES "song_lists"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "accounts_user_id_index" ON "song_lists"."accounts" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "password_guesses_user_id_index" ON "song_lists"."password_guesses" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "sessions_user_id_index" ON "song_lists"."sessions" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "verifications_identifier_index" ON "song_lists"."verifications" USING btree ("identifier");
 CREATE TABLE "song_lists"."song_notes" (

@@ -1,5 +1,3 @@
-import { switchedOn } from "@/lib/config/switched-on";
-
 /**
  * Whether anyone may create their own account. Off unless the
  * `NEXT_PUBLIC_ALLOW_SIGN_UP` environment variable is exactly `true`; with
@@ -10,7 +8,7 @@ import { switchedOn } from "@/lib/config/switched-on";
 function signUpAllowed(): boolean {
   // Written out in full, not read by a computed name, so the build can put
   // the value into the browser code.
-  return switchedOn(process.env.NEXT_PUBLIC_ALLOW_SIGN_UP);
+  return process.env.NEXT_PUBLIC_ALLOW_SIGN_UP === "true";
 }
 
 const SIGN_UP_PATH = "/api/auth/sign-up";

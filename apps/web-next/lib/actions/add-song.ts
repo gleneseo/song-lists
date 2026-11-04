@@ -1,13 +1,9 @@
 "use server";
 
 import { schema } from "@song-lists/db";
-import { after } from "next/server";
 import { getSession } from "@/lib/auth/auth";
 import { db } from "@/lib/queries/client";
-import {
-  recordSongMetadata,
-  saveSongDetails,
-} from "@/lib/queries/song-metadata";
+import { saveSongDetails } from "@/lib/queries/song-metadata";
 import {
   findExistingSong,
   type DuplicateCheckResult,
@@ -45,8 +41,7 @@ interface CreateSongInput {
    */
   styleOverrides?: string[];
   /**
-   * Album details looked up and settled on in the form, to save with the song
-   * instead of leaving it to the automatic lookup.
+   * Album details looked up and settled on in the form, to save with the song.
    */
   details?: SongDetailsInput;
 }
@@ -254,12 +249,6 @@ async function createSong(input: CreateSongInput): Promise<CreateSongResult> {
       message:
         error instanceof Error ? error.message : "Failed to add the song.",
     };
-  }
-
-  // Once the response is on its way, so the art and album never hold up
-  // adding a song (or fail it). Someone who set the details has no need.
-  if (!details) {
-    after(() => recordSongMetadata(songId));
   }
 
   return { status: "created", songId };

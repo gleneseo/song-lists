@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { ListMusic, Search, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getSession } from "@/lib/auth/auth";
+import { signUpAllowed } from "@/lib/auth/sign-up";
 
 /** Signed-in visitors have no use for the sales pitch -- send them to their dashboard. */
 async function RedirectIfSignedIn() {
@@ -17,6 +18,8 @@ async function RedirectIfSignedIn() {
 }
 
 export default function Page() {
+  const open = signUpAllowed();
+
   return (
     <main className="flex flex-col">
       <Suspense fallback={null}>
@@ -34,13 +37,15 @@ export default function Page() {
           <Button
             size="lg"
             nativeButton={false}
-            render={<Link href="/sign-up" />}
+            render={<Link href={open ? "/sign-up" : "/sign-in"} />}
           >
-            Get started
+            {open ? "Get started" : "Sign in"}
           </Button>
-          <p className="text-sm text-muted-foreground">
-            Free to join. No credit card required.
-          </p>
+          {open && (
+            <p className="text-sm text-muted-foreground">
+              Free to join. No credit card required.
+            </p>
+          )}
         </div>
       </section>
 

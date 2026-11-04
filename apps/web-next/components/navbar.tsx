@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SignOutButton } from "@/components/sign-out-button";
 import { useSession } from "@/lib/auth/auth-client";
+import { signUpAllowed } from "@/lib/auth/sign-up";
 import { APP_TITLE } from "@/lib/config/app-title";
 
 /**
@@ -99,9 +100,11 @@ function Navbar({
               >
                 Log In
               </Button>
-              <Button nativeButton={false} render={<Link href="/sign-up" />}>
-                Sign Up
-              </Button>
+              {signUpAllowed() && (
+                <Button nativeButton={false} render={<Link href="/sign-up" />}>
+                  Sign Up
+                </Button>
+              )}
             </>
           )}
         </div>

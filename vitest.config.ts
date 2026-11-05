@@ -40,6 +40,7 @@ export default defineConfig({
         "**/dist/**",
         "**/src/index.ts",
         "packages/db/src/generate-docs.ts",
+        "packages/db/src/harden-db.ts",
         "packages/db/src/reset-db.ts",
         "packages/db/src/run-migrations.ts",
         "packages/db/src/studio.ts",

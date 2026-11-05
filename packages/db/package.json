@@ -12,6 +12,10 @@
       "types": "./src/migrate.ts",
       "default": "./src/migrate.ts"
     },
+    "./harden": {
+      "types": "./src/harden.ts",
+      "default": "./src/harden.ts"
+    },
     "./load-env": {
       "types": "./src/load-env.ts",
       "default": "./src/load-env.ts"
@@ -37,10 +41,12 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/run-migrations.ts",
     "db:reset": "tsx src/reset-db.ts",
+    "db:harden": "tsx src/harden-db.ts",
     "db:docs": "tsx src/generate-docs.ts",
     "db:studio": "tsx src/studio.ts"
   },
   "dependencies": {
+    "@better-auth/utils": "^0.5.1",
     "drizzle-orm": "^0.45.4",
     "effect": "^4.1.2",
     "pg": "^8.23.1"

@@ -39,19 +39,9 @@ from the root `tsconfig.json`'s project references, with its own
 root config was never designed to give `.tsx` files. ESLint 10+ resolves
 the _nearest_ config file per linted file, so that nested config already
 applies to `apps/web-next`'s files regardless of what the root does --
-but the root config still adds `apps/web-next/**` to its `ignores`, to
-stop root's `eslint .` (running on the root's hoisted ESLint 10 engine)
-from also attempting those files via the nested config and crashing (see
-the `eslint@^9` pin below), and to avoid double-linting files that
-`lint:eslint:web-next` already covers.
-
-`apps/web-next` also pins its own `eslint` devDependency (currently `^9`)
-rather than using the root's hoisted version: `eslint-config-next`'s bundled
-`eslint-plugin-react` isn't yet compatible with ESLint 10 (a real crash --
-`context.getFilename is not a function` -- not just an unmet peer-range
-warning). npm installs the pinned version into `apps/web-next/node_modules`
-instead of hoisting, so `npm run lint -w @song-lists/web-next` resolves it
-correctly. Bump this once `eslint-config-next` catches up.
+but the root config still adds `apps/web-next/**` to its `ignores`, so that
+root's `eslint .` doesn't lint those files a second time under the wrong
+config, since `lint:eslint:web-next` already covers them.
 
 ### Why apps/web-next is pinned to webpack, not Turbopack
 

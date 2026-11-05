@@ -2,12 +2,14 @@
 
 | Name | Columns |
 |------|---------|
-| [accounts](#accounts) | 14 |
+| [accounts](#accounts) | 13 |
 | [artists](#artists) | 7 |
 | [list_songs](#list_songs) | 8 |
 | [lists](#lists) | 8 |
+| [password_guesses](#password_guesses) | 3 |
 | [production_types](#production_types) | 7 |
 | [productions](#productions) | 9 |
+| [rate_limits](#rate_limits) | 4 |
 | [sessions](#sessions) | 8 |
 | [song_advocates](#song_advocates) | 8 |
 | [song_covers](#song_covers) | 8 |
@@ -31,7 +33,6 @@
 | **id** | uuid | `uuidv7()` | NO | - | - |
 | account_id | text | - | NO | - | - |
 | provider_id | text | - | NO | - | - |
-| issuer | text | - | NO | - | - |
 | access_token | text | - | YES | - | - |
 | refresh_token | text | - | YES | - | - |
 | id_token | text | - | YES | - | - |
@@ -162,6 +163,36 @@
 
 ---
 
+## password_guesses
+
+### Columns
+
+| Name | Type | Default | Nullable | Children | Parents |
+|------|------|---------|----------|----------|---------|
+| **id** | uuid | `uuidv7()` | NO | - | - |
+| user_id | uuid | - | NO | - | [users.id](#users) |
+| guessed_at | timestamp | - | NO | - | - |
+
+### Constraints
+
+| Name | Type | Definition |
+|------|------|------------|
+| password_guesses_user_id_users_id_fk | FOREIGN KEY | (user_id) → users(id) |
+
+### Indexes
+
+| Name | Columns | Unique | Type |
+|------|---------|--------|------|
+| password_guesses_user_id_index | user_id | NO | btree |
+
+### Relations
+
+| Parent | Child | Type |
+|--------|-------|------|
+| [users.id](#users) | **[password_guesses.user_id](#password_guesses)** | Many to One |
+
+---
+
 ## production_types
 
 ### Columns
@@ -225,6 +256,19 @@
 | [users.id](#users) | **[productions.created_by](#productions)** | Many to One |
 | [production_types.id](#production_types) | **[productions.type_id](#productions)** | Many to One |
 | [users.id](#users) | **[productions.updated_by](#productions)** | Many to One |
+
+---
+
+## rate_limits
+
+### Columns
+
+| Name | Type | Default | Nullable | Children | Parents |
+|------|------|---------|----------|----------|---------|
+| **id** | uuid | `uuidv7()` | NO | - | - |
+| key | text | - | NO | - | - |
+| count | integer | - | NO | - | - |
+| last_request | bigint | - | NO | - | - |
 
 ---
 
@@ -561,7 +605,7 @@
 
 | Name | Type | Default | Nullable | Children | Parents |
 |------|------|---------|----------|----------|---------|
-| **id** | uuid | `uuidv7()` | NO | [accounts.user_id](#accounts), [artists.created_by](#artists), [artists.updated_by](#artists), [list_songs.created_by](#list_songs), [list_songs.updated_by](#list_songs), [lists.created_by](#lists), [lists.updated_by](#lists), [production_types.created_by](#production_types), [production_types.updated_by](#production_types), [productions.created_by](#productions), [productions.updated_by](#productions), [sessions.user_id](#sessions), [song_advocates.created_by](#song_advocates), [song_advocates.updated_by](#song_advocates), [song_advocates.user_id](#song_advocates), [song_covers.created_by](#song_covers), [song_covers.updated_by](#song_covers), [song_featured_artists.created_by](#song_featured_artists), [song_featured_artists.updated_by](#song_featured_artists), [song_metadata.created_by](#song_metadata), [song_metadata.updated_by](#song_metadata), [song_notes.created_by](#song_notes), [song_notes.updated_by](#song_notes), [song_productions.created_by](#song_productions), [song_productions.updated_by](#song_productions), [songs.created_by](#songs), [songs.updated_by](#songs), [users.created_by](#users), [users.updated_by](#users) | - |
+| **id** | uuid | `uuidv7()` | NO | [accounts.user_id](#accounts), [artists.created_by](#artists), [artists.updated_by](#artists), [list_songs.created_by](#list_songs), [list_songs.updated_by](#list_songs), [lists.created_by](#lists), [lists.updated_by](#lists), [password_guesses.user_id](#password_guesses), [production_types.created_by](#production_types), [production_types.updated_by](#production_types), [productions.created_by](#productions), [productions.updated_by](#productions), [sessions.user_id](#sessions), [song_advocates.created_by](#song_advocates), [song_advocates.updated_by](#song_advocates), [song_advocates.user_id](#song_advocates), [song_covers.created_by](#song_covers), [song_covers.updated_by](#song_covers), [song_featured_artists.created_by](#song_featured_artists), [song_featured_artists.updated_by](#song_featured_artists), [song_metadata.created_by](#song_metadata), [song_metadata.updated_by](#song_metadata), [song_notes.created_by](#song_notes), [song_notes.updated_by](#song_notes), [song_productions.created_by](#song_productions), [song_productions.updated_by](#song_productions), [songs.created_by](#songs), [songs.updated_by](#songs), [users.created_by](#users), [users.updated_by](#users) | - |
 | email | text | - | NO | - | - |
 | email_verified | boolean | `false` | NO | - | - |
 | name | text | - | NO | - | - |
@@ -594,6 +638,7 @@
 | **[users.id](#users)** | [list_songs.updated_by](#list_songs) | Many to One |
 | **[users.id](#users)** | [lists.created_by](#lists) | Many to One |
 | **[users.id](#users)** | [lists.updated_by](#lists) | Many to One |
+| **[users.id](#users)** | [password_guesses.user_id](#password_guesses) | Many to One |
 | **[users.id](#users)** | [production_types.created_by](#production_types) | Many to One |
 | **[users.id](#users)** | [production_types.updated_by](#production_types) | Many to One |
 | **[users.id](#users)** | [productions.created_by](#productions) | Many to One |
@@ -655,6 +700,7 @@ erDiagram
     list_songs }o--|| users : "updated_by"
     lists }o--|| users : "created_by"
     lists }o--|| users : "updated_by"
+    password_guesses }o--|| users : "user_id"
     production_types }o--|| users : "created_by"
     production_types }o--|| users : "updated_by"
     productions }o--|| users : "created_by"
@@ -692,9 +738,8 @@ erDiagram
 
     accounts {
         uuid id PK
-        text account_id UK
+        text account_id
         text provider_id
-        text issuer UK
         text access_token
         text refresh_token
         text id_token
@@ -735,6 +780,11 @@ erDiagram
         uuid created_by FK
         uuid updated_by FK
     }
+    password_guesses {
+        uuid id PK
+        uuid user_id FK
+        timestamp guessed_at
+    }
     production_types {
         serial id PK
         uuid resource_id UK
@@ -754,6 +804,12 @@ erDiagram
         timestamp updated_at
         uuid created_by FK
         uuid updated_by FK
+    }
+    rate_limits {
+        uuid id PK
+        text key UK
+        integer count
+        bigint last_request
     }
     sessions {
         uuid id PK

@@ -645,7 +645,6 @@ const accounts = songListsSchema.table(
     id: uuidV7().primaryKey(),
     accountId: text().notNull(),
     providerId: text().notNull(),
-    issuer: text().notNull(),
     accessToken: text(),
     refreshToken: text(),
     idToken: text(),
@@ -658,13 +657,7 @@ const accounts = songListsSchema.table(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
   },
-  (table) => [
-    index().on(table.userId),
-    unique("accounts_issuer_account_id_unique").on(
-      table.issuer,
-      table.accountId,
-    ),
-  ],
+  (table) => [index().on(table.userId)],
 );
 
 const accountsRelations = relations(accounts, ({ one }) => ({

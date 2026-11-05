@@ -27,12 +27,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "issuer": {
-          "name": "issuer",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "access_token": {
           "name": "access_token",
           "type": "text",
@@ -126,13 +120,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "accounts_issuer_account_id_unique": {
-          "name": "accounts_issuer_account_id_unique",
-          "columns": ["issuer", "account_id"],
-          "nullsNotDistinct": false
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

@@ -6,6 +6,11 @@ const nextConfig: NextConfig = {
   // them never touches the one a running dev server is using.
   distDir: process.env.NEXT_DIST_DIR ?? ".next",
   cacheComponents: true,
+  // Next 16.4 sends the browser into an endless loop of prefetch requests
+  // (thousands a second) for a page under a root parallel slot's catch-all,
+  // as our modal slot has (see vercel/next.js#100055, still open). Turning
+  // optimistic routing off avoids it; remove this once a release fixes it.
+  experimental: { optimisticRouting: false },
   // Cover art from the music services is fetched, resized, and kept by this
   // server (see SongArtwork), not hotlinked from every viewer's browser. Art
   // hardly ever changes, so it is kept for 31 days rather than the default

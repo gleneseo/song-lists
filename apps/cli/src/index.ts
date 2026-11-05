@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Console, Effect, Option } from "effect";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
-import { Argument, Command, Flag } from "effect/unstable/cli";
+import { Argument, Command, Flag } from "effect/cli";
 import packageJson from "../package.json" with { type: "json" };
 
 const banner = `
@@ -15,9 +15,9 @@ const banner = `
 
 `;
 
-const message = Argument.string("message");
+const message = Argument.String("message");
 
-const upper = Flag.boolean("upper").pipe(
+const upper = Flag.Boolean("upper").pipe(
   Flag.withAlias("u"),
   Flag.withDescription("Uppercase the echoed message"),
   Flag.withDefault(false),
@@ -27,24 +27,24 @@ const echo = Command.make("echo", { message, upper }, (config) =>
   Console.log(config.upper ? config.message.toUpperCase() : config.message),
 ).pipe(Command.withDescription("Echo back the provided message"));
 
-const limit = Flag.integer("limit").pipe(
+const limit = Flag.Int("limit").pipe(
   Flag.withDescription("Look up no more than this many songs"),
   Flag.optional,
 );
 
-const retryNotFound = Flag.boolean("retry-not-found").pipe(
+const retryNotFound = Flag.Boolean("retry-not-found").pipe(
   Flag.withDescription(
     "Also look up again the songs nothing was found for (after tuning the matching)",
   ),
   Flag.withDefault(false),
 );
 
-const dryRun = Flag.boolean("dry-run").pipe(
+const dryRun = Flag.Boolean("dry-run").pipe(
   Flag.withDescription("Only say how many songs would be looked up"),
   Flag.withDefault(false),
 );
 
-const report = Flag.string("report").pipe(
+const report = Flag.String("report").pipe(
   Flag.withDescription(
     "Write every song's lookup result to this file as CSV when the run ends",
   ),

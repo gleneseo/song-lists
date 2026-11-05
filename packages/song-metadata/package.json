@@ -21,6 +21,6 @@
   },
   "dependencies": {
     "@song-lists/db": "1.0.0",
-    "drizzle-orm": "^0.45.2"
+    "drizzle-orm": "^0.45.4"
   }
 }

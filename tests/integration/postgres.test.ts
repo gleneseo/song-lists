@@ -149,7 +149,7 @@ describe("database integration", () => {
       .from(schema.accounts)
       .where(eq(schema.accounts.userId, result.user.id));
 
-    expect(account?.issuer).toBe("local:credential");
+    expect(account?.providerId).toBe("credential");
   });
 
   it("should let every seeded sample user sign in with the shared sample password", async () => {

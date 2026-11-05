@@ -16,6 +16,7 @@
     "db:generate": "npm run db:generate -w @song-lists/db",
     "db:migrate": "npm run db:migrate -w @song-lists/db",
     "db:reset": "npm run db:reset -w @song-lists/db",
+    "db:harden": "npm run db:harden -w @song-lists/db",
     "db:docs": "npm run db:docs -w @song-lists/db",
     "db:studio": "npm run db:studio -w @song-lists/db",
     "check:seed-art": "npm run check-seed-art -w @song-lists/song-metadata",

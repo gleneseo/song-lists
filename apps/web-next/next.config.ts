@@ -6,6 +6,10 @@ const nextConfig: NextConfig = {
   // them never touches the one a running dev server is using.
   distDir: process.env.NEXT_DIST_DIR ?? ".next",
   cacheComponents: true,
+  // A production build checks the app, not its tests: the tests import
+  // helpers (and testcontainers) from the repository root that a deploy
+  // doesn't need. `npm run typecheck` still checks everything, tests included.
+  typescript: { tsconfigPath: "tsconfig.build.json" },
   // Next 16.4 sends the browser into an endless loop of prefetch requests
   // (thousands a second) for a page under a root parallel slot's catch-all,
   // as our modal slot has (see vercel/next.js#100055, still open). Turning

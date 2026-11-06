@@ -11,7 +11,9 @@ square, ideally at least 600 px; the largest scan there is is best, since the so
 | `the-bo-hog-barbarians-every-hog-has-its-day-2006.jpg` | Every Hog Has Its Day | 2006 | The Bo$$ Hog Barbarians - Hog Hop |
 | `bob-marley-the-wailers-mr-brown-single-1971.jpg` | Mr. Brown - Single | 1971 | Bob Marley & The Wailers - Mr. Brown |
 | `booker-t-the-mg-s-boot-leg-outrage-1965.jpg` | Boot-Leg / Outrage | 1965 | Booker T. & The MG's - Boot-Leg |
+| `desmond-dekker-israelites-single-1968.jpg` | Israelites - Single | 1968 | Desmond Dekker - Israelites |
 | `desmond-dekker-shing-a-ling-single-1968.jpg` | Shing-A-Ling - Single | 1968 | Desmond Dekker - Shing A Ling |
+| `desmond-dekker-the-aces-gimmie-gimmie-foo-man-chu-1968.jpg` | Gimmie Gimmie / Foo Man Chu | 1968 | Desmond Dekker - Gimmie Gimmie |
 | `dj-d-man-dooky-boody-single-1995.jpg` | Dooky Boody - Single | 1995 | DJ D-Man - Dooky Boody (D-Man Club Mix) |
 | `elmore-james-the-sky-is-crying-held-my-baby-last-night-1960.jpg` | The Sky Is Crying / Held My Baby Last Night | 1960 | Elmore James - The Sky Is Crying |
 | `expulsion-expulsion-1991.jpg` | Expulsion | 1991 | Expulsion - Honor Among Thieves |
@@ -124,6 +126,7 @@ square, ideally at least 600 px; the largest scan there is is best, since the so
 | `hepcat-out-of-nowhere-1993.jpg` | Out Of Nowhere | 1993 | Hepcat - Hooligans |
 | `the-hombres-let-it-out-let-it-all-hang-out-1967.jpg` | Let It Out (Let It All Hang Out) | 1967 | The Hombres - Let It Out (Let It All Hang Out) |
 | `the-honey-drippers-impeach-the-president-roy-c-s-theme-1973.jpg` | Impeach The President / Roy C's Theme | 1973 | The Honey Drippers - Impeach The President (the record's Alaga label) |
+| `hopeton-lewis-take-it-easy-why-must-i-cry-1966.jpg` | Take It Easy / Why Must I Cry | 1966 | Hopeton Lewis - Take It Easy |
 | `hurricane-the-hurra-1995.jpg` | The Hurra | 1995 | Hurricane - Get Blind |
 | `iron-butterfly-in-a-gadda-da-vida-1968.jpg` | In-A-Gadda-Da-Vida | 1968 | Iron Butterfly - Most Anything You Want |
 | `public-enemy-it-takes-a-nation-of-millions-to-hold-us-back-1988.jpg` | It Takes A Nation Of Millions To Hold Us Back | 1988 | Public Enemy - Bring The Noise; Don't Believe The Hype; Louder Than A Bomb; Party For Your Right To Fight; Prophets Of Rage; Rebel Without A Pause; Terminator X To The Edge Of Panic |
